@@ -1,0 +1,117 @@
+CREATE TABLE IF NOT EXISTS Company (
+    cid SERIAL,
+    symbol TEXT NOT NULL,
+    company_name TEXT NULL,
+    sector TEXT NULL,
+    industry TEXT NULL,
+    exchange TEXT NOT NULL,
+    market_cap NUMERIC,
+    shares_outstanding NUMERIC,
+    PRIMARY KEY (symbol),
+    UNIQUE(cid)
+);
+
+CREATE TABLE IF NOT EXISTS BalanceSheet (
+    id SERIAL,
+    cid INTEGER NOT NULL,
+    dt TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    preferred_stock NUMERIC,
+    common_stock_par NUMERIC NOT NULL,
+    capital_surplus NUMERIC NOT NULL,
+    retained_earnings NUMERIC NOT NULL,
+    other_equity NUMERIC NOT NULL,
+    treasury_stock NUMERIC NOT NULL,
+    total_shareholders_equity NUMERIC NOT NULL,
+    total_liabilities_shareholders_equity NUMERIC NOT NULL,
+    total_common_equity NUMERIC NOT NULL,
+    shares_outstanding NUMERIC NOT NULL,
+    book_value_per_share NUMERIC NOT NULL,
+    reporting_period TEXT NOT NULL,
+    PRIMARY KEY (cid, dt, reporting_period),
+    CONSTRAINT fk_balance_sheet FOREIGN KEY (cid) REFERENCES Company (cid)
+);
+
+CREATE TABLE IF NOT EXISTS EarningsSurprise (
+    id SERIAL,
+    cid INTEGER NOT NULL,
+    dt TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    reporting_period TEXT NOT NULL,
+    eps_estimate NUMERIC NOT NULL,
+    eps_reported NUMERIC NOT NULL,
+    sales_estimate NUMERIC NOT NULL,
+    sales_reported NUMERIC NOT NULL,
+    PRIMARY KEY (cid, dt, reporting_period),
+    CONSTRAINT fk_earnings_surprise FOREIGN KEY (cid) REFERENCES Company (cid)
+);
+
+CREATE TABLE IF NOT EXISTS CompanyGeography (
+    id SERIAL,
+    cid INTEGER NOT NULL,
+    region TEXT NOT NULL,
+    revenue TEXT NOT NULL,
+    PRIMARY KEY (cid, region),
+    CONSTRAINT fk_geography FOREIGN KEY (cid) REFERENCES Company (cid)
+);
+
+CREATE TABLE IF NOT EXISTS CompanyRatio (
+    id SERIAL,
+    cid INTEGER NOT NULL,
+    pe TEXT NULL,
+    eps_ttm TEXT NULL,
+    pe_forward TEXT NULL,
+    eps_y1 TEXT NULL,
+    peg TEXT NULL,
+    eps_y0 TEXT NULL,
+    price_book TEXT NULL,
+    price_sales TEXT NULL,
+    target_price TEXT NULL,
+    roe TEXT NULL,
+    range_52w TEXT NULL,
+    quick_ratio TEXT NULL,
+    gross_margin TEXT NULL,
+    current_ratio TEXT NULL,
+    PRIMARY KEY (cid),
+    CONSTRAINT fk_companyratio FOREIGN KEY (cid) REFERENCES Company (cid)
+);
+
+CREATE TABLE IF NOT EXISTS CompanyForecast (
+    id SERIAL,
+    cid INTEGER NOT NULL,
+    forecast_year TEXT NOT NULL,
+    sales NUMERIC,
+    ebit NUMERIC,
+    net_income NUMERIC,
+    pe_ratio NUMERIC,
+    earnings_per_share NUMERIC,
+    cash_flow_per_share NUMERIC,
+    book_value_per_share NUMERIC,
+    total_debt NUMERIC,
+    ebitda NUMERIC,
+    PRIMARY KEY (cid, forecast_year),
+    CONSTRAINT fk_companyforecast FOREIGN KEY (cid) REFERENCES Company (cid)
+);
+
+CREATE TABLE IF NOT EXISTS CompanyMovingAverage (
+    id SERIAL,
+    cid INTEGER NOT NULL,
+    market_cap TEXT NOT NULL,
+    ev TEXT NULL,
+    avg_vol_3m TEXT NULL,
+    avg_vol_10d TEXT NULL,
+    moving_avg_50d NUMERIC,
+    moving_avg_200d NUMERIC,
+    ev_revenue TEXT NULL,
+    ev_ebitda TEXT NULL,
+    price_book TEXT NULL,
+    PRIMARY KEY (cid),
+    CONSTRAINT fk_companyforecast FOREIGN KEY (cid) REFERENCES Company (cid)
+);
+
+CREATE TABLE IF NOT EXISTS CompanyPeerComparison (
+    id SERIAL,
+    cid INTEGER NOT NULL,
+    peer_company TEXT NULL,
+    peer_ticker TEXT NOT NULL,
+    PRIMARY KEY (cid, peer_ticker),
+    CONSTRAINT fk_companyforecast FOREIGN KEY (cid) REFERENCES Company (cid)
+);
