@@ -102,7 +102,7 @@ if option == 'Download Data':
         df_tickers1, df_tickers2, df_tickers3, df_tickers4, df_tickers5 = np.array_split(df_tickers, 5)
 
         #DEBUG CODE
-        #df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL','ACWI'])]
+        df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL','AIMC'])]
         # Write the output of all these functions into the database
         #e1p1 = get_zacks_balance_sheet_shares(df_tickers1)
         #e2p1 = get_zacks_earnings_surprises(df_tickers1)
@@ -110,8 +110,7 @@ if option == 'Download Data':
         #e4p1 = get_finwiz_stock_data(df_tickers1)
         #e5p1 = get_stockrow_stock_data(df_tickers1)
         #e6p1 = get_yf_key_stats(df_tickers1) 
-        #e7p1 = get_zacks_peer_comparison(df_tickers1)
-
+        e7p1 = get_zacks_peer_comparison(df_tickers1)
         import pdb; pdb.set_trace()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:

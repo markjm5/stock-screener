@@ -696,20 +696,19 @@ def get_zacks_peer_comparison(df_tickers):
       df_peer_comparison = df_peer_comparison.rename(columns={df_peer_comparison.columns[0]: 'PEER_COMPANY'})
       df_peer_comparison = df_peer_comparison.rename(columns={df_peer_comparison.columns[1]: 'PEER_TICKER'})
 
+      # get ticker cid
+      cid = sql_get_cid(ticker)
+      if(cid):
+        # write records to database
+        rename_cols = {}
+        add_col_values = {"cid": cid}
+        conflict_cols = "cid, peer_ticker"
+        success = sql_write_df_to_db(df_peer_comparison, "CompanyPeerComparison", rename_cols, add_col_values, conflict_cols)
+
     except AttributeError as e:
       print(f'Did not return Zacks Peer Comparison for {ticker}')      
     except KeyError as e:
       print(f'Did not return Zacks Peer Comparison for {ticker}')      
-
-    # get ticker cid
-    cid = sql_get_cid(ticker)
-    if(cid):
-      # write records to database
-      rename_cols = {}
-      add_col_values = {"cid": cid}
-      conflict_cols = "cid, peer_ticker"
-
-      success = sql_write_df_to_db(df_peer_comparison, "CompanyPeerComparison", rename_cols, add_col_values, conflict_cols)
 
   return success
 

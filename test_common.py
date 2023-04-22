@@ -46,5 +46,8 @@ class TestCommon(unittest.TestCase):
         df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL'])]
         self.assertEqual(get_zacks_peer_comparison(df_tickers1),True)
 
+        df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AIMC'])]
+        self.assertEqual(get_zacks_peer_comparison(df_tickers1),False)
+
 if __name__ == '__main__':
     unittest.main()
