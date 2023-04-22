@@ -215,7 +215,7 @@ def get_yf_key_stats(df_tickers):
     except Exception as e:
       #For some reason YF page did not load. Continue on and handle the exception below
       pass
-
+    #import pdb; pdb.set_trace()
     try:
       df_company_data.loc[ticker, 'MARKET_CAP'] = statsDict['Market Cap (intraday)']
       df_company_data.loc[ticker, 'EV'] = statsDict['Enterprise Value']
@@ -234,13 +234,13 @@ def get_yf_key_stats(df_tickers):
 
     # get ticker cid
     cid = sql_get_cid(ticker)
+    if(cid):
+      # write records to database
+      rename_cols = {"50_DAY_MOVING_AVG": "MOVING_AVG_50D", "200_DAY_MOVING_AVG": "MOVING_AVG_200D"}
+      add_col_values = {"cid": cid}
+      conflict_cols = "cid"
 
-    # write records to database
-    rename_cols = {"50_DAY_MOVING_AVG": "MOVING_AVG_50D", "200_DAY_MOVING_AVG": "MOVING_AVG_200D"}
-    add_col_values = {"cid": cid}
-    conflict_cols = "cid"
-
-    success = sql_write_df_to_db(df_company_data, "CompanyMovingAverage", rename_cols, add_col_values, conflict_cols)
+      success = sql_write_df_to_db(df_company_data, "CompanyMovingAverage", rename_cols, add_col_values, conflict_cols)
 
   return success
 
@@ -305,13 +305,13 @@ def get_finwiz_stock_data(df_tickers):
 
       # get ticker cid
       cid = sql_get_cid(ticker)
+      if(cid):
+        #TODO: write records to database
+        rename_cols = {"52W_RANGE": "RANGE_52W"}
+        add_col_values = {"cid": cid}
+        conflict_cols = "cid"
 
-      #TODO: write records to database
-      rename_cols = {"52W_RANGE": "RANGE_52W"}
-      add_col_values = {"cid": cid}
-      conflict_cols = "cid"
-
-      success = sql_write_df_to_db(df_company_data, "CompanyRatio", rename_cols, add_col_values, conflict_cols)
+        success = sql_write_df_to_db(df_company_data, "CompanyRatio", rename_cols, add_col_values, conflict_cols)
 
     except Exception as e:
       print(f'Did not return finwiz stock data for {ticker}: {e}')    
@@ -561,17 +561,18 @@ def get_stockrow_stock_data(df_tickers):
 
       # get ticker cid
       cid = sql_get_cid(ticker)
+      if(cid):
+        # write records to database
+        rename_cols = {"YEAR": "FORECAST_YEAR"}
+        add_col_values = {"cid": cid}
+        conflict_cols = "cid, forecast_year"
 
-      # write records to database
-      rename_cols = {"YEAR": "FORECAST_YEAR"}
-      add_col_values = {"cid": cid}
-      conflict_cols = "cid, forecast_year"
-
-      success = sql_write_df_to_db(df_transposed, "CompanyForecast", rename_cols, add_col_values, conflict_cols)
+        success = sql_write_df_to_db(df_transposed, "CompanyForecast", rename_cols, add_col_values, conflict_cols)
 
   return success
 
 def get_zacks_balance_sheet_shares(df_tickers):
+  success = False
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
     print(f'Getting zacks balance sheet for {ticker}')
@@ -650,21 +651,22 @@ def get_zacks_balance_sheet_shares(df_tickers):
 
       # get ticker cid
       cid = sql_get_cid(ticker)
-      #TODO: write records to database
-      rename_cols = {"DATE": "DT"}
-      add_col_values_annually = {"REPORTING_PERIOD": "annual", "cid": cid}
-      conflict_cols = "cid, DT, REPORTING_PERIOD"
+      if(cid):
+        #TODO: write records to database
+        rename_cols = {"DATE": "DT"}
+        add_col_values_annually = {"REPORTING_PERIOD": "annual", "cid": cid}
+        conflict_cols = "cid, DT, REPORTING_PERIOD"
 
-      success = sql_write_df_to_db(df_balance_sheet_annual, "BalanceSheet", rename_cols, add_col_values_annually, conflict_cols)
+        success = sql_write_df_to_db(df_balance_sheet_annual, "BalanceSheet", rename_cols, add_col_values_annually, conflict_cols)
 
-      add_col_values_quarterly = {"REPORTING_PERIOD": "quarterly", "cid": cid}
-      success = sql_write_df_to_db(df_balance_sheet_quarterly, "BalanceSheet", rename_cols, add_col_values_quarterly, conflict_cols)
+        add_col_values_quarterly = {"REPORTING_PERIOD": "quarterly", "cid": cid}
+        success = sql_write_df_to_db(df_balance_sheet_quarterly, "BalanceSheet", rename_cols, add_col_values_quarterly, conflict_cols)
       
     except IndexError as e:
       print(f'No balance sheet for {ticker}')
       pass
 
-  return True
+  return success
 
 def get_zacks_peer_comparison(df_tickers):
   success = False
@@ -701,13 +703,13 @@ def get_zacks_peer_comparison(df_tickers):
 
     # get ticker cid
     cid = sql_get_cid(ticker)
+    if(cid):
+      # write records to database
+      rename_cols = {}
+      add_col_values = {"cid": cid}
+      conflict_cols = "cid, peer_ticker"
 
-    # write records to database
-    rename_cols = {}
-    add_col_values = {"cid": cid}
-    conflict_cols = "cid, peer_ticker"
-
-    success = sql_write_df_to_db(df_peer_comparison, "CompanyPeerComparison", rename_cols, add_col_values, conflict_cols)
+      success = sql_write_df_to_db(df_peer_comparison, "CompanyPeerComparison", rename_cols, add_col_values, conflict_cols)
 
   return success
 
@@ -772,13 +774,13 @@ def get_zacks_earnings_surprises(df_tickers):
 
       # get ticker cid
       cid = sql_get_cid(ticker)
+      if(cid):
+        #TODO: write records to database
+        rename_cols = {"DATE": "DT", "PERIOD": "REPORTING_PERIOD"}
+        add_col_values = {"cid": cid}
+        conflict_cols = "cid, DT, REPORTING_PERIOD"
 
-      #TODO: write records to database
-      rename_cols = {"DATE": "DT", "PERIOD": "REPORTING_PERIOD"}
-      add_col_values = {"cid": cid}
-      conflict_cols = "cid, DT, REPORTING_PERIOD"
-
-      success = sql_write_df_to_db(new_df_earnings, "EarningsSurprise", rename_cols, add_col_values, conflict_cols)
+        success = sql_write_df_to_db(new_df_earnings, "EarningsSurprise", rename_cols, add_col_values, conflict_cols)
 
     except json.decoder.JSONDecodeError as e:
       pass
@@ -865,13 +867,13 @@ def get_zacks_product_line_geography(df_tickers):
 
         # get ticker cid
         cid = sql_get_cid(ticker)
+        if(cid):
+          #TODO: write records to database
+          rename_cols = {}
+          add_col_values = {"cid": cid}
+          conflict_cols = "cid, REGION"
 
-        #TODO: write records to database
-        rename_cols = {}
-        add_col_values = {"cid": cid}
-        conflict_cols = "cid, REGION"
-
-        success = sql_write_df_to_db(df_geography, "CompanyGeography", rename_cols, add_col_values, conflict_cols)
+          success = sql_write_df_to_db(df_geography, "CompanyGeography", rename_cols, add_col_values, conflict_cols)
 
       except KeyError as e:
         pass
@@ -1090,10 +1092,10 @@ def sql_get_cid(ticker):
 
   sqlCmd = """SELECT cid FROM company WHERE symbol='{}'""".format(sql_escape_str(ticker))
   cursor.execute(sqlCmd)
-  cid = cursor.fetchone()[0]
-
-  # cursor.close()
-  # connection.close()
+  try:
+    cid = cursor.fetchone()[0]
+  except TypeError as e:
+    cid = None
 
   success = sql_close_db(connection, cursor)
 
