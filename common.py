@@ -21,6 +21,19 @@ from datetime import datetime as dt
 from bs4 import BeautifulSoup
 import psycopg2, psycopg2.extras
 import config
+import logging
+
+#logger = logging.getLogger(__name__)
+#logger.setLevel(logging.DEBUG)
+
+#formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+
+#file_handler = logging.FileHandler('logger.log', mode='w')
+#file_handler.setFormatter(formatter)
+
+#logger.addHandler(file_handler)
+
+#logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s',filename='logger.log', filemode='w', level=logging.DEBUG)
 
 isWindows = False
 
@@ -172,12 +185,12 @@ def get_yf_analysis(ticker):
   opt = company.option_chain('YYYY-MM-DD')
   # data available via: opt.calls, opt.puts
 
-def get_yf_key_stats(df_tickers):
+def get_yf_key_stats(df_tickers, logger):
   success = False
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
 
-    print(f'Getting YF Key Stats for {ticker}')
+    logger.info(f'Getting YF Key Stats for {ticker}')
 
     df_company_data = pd.DataFrame()
     url = "https://finance.yahoo.com/quote/%s/key-statistics?p=%s" % (ticker, ticker)
@@ -230,7 +243,7 @@ def get_yf_key_stats(df_tickers):
       df_company_data = dataframe_convert_to_numeric(df_company_data, '50_DAY_MOVING_AVG')
       df_company_data = dataframe_convert_to_numeric(df_company_data, '200_DAY_MOVING_AVG')
     except KeyError as e:
-      print(f'Did not return YF stock data for {ticker}')      
+      logger.info(f'Did not return YF stock data for {ticker}')      
 
     # get ticker cid
     cid = sql_get_cid(ticker)
@@ -250,12 +263,52 @@ def get_yf_price_action(ticker):
 
     return json_yf_modules
 
-def get_finwiz_stock_data(df_tickers):
+def write_zacks_ticker_data_to_db(df_tickers, logger):
+  connection, cursor = sql_open_db()
+  for index, row in df_tickers.iterrows():
+      symbol = row["Ticker"]
+      company = row["Company Name"] 
+      sector = row["Sector"] 
+      industry = row["Industry"] 
+      exchange = row["Exchange"] 
+
+      # Get market cap as well, because we want to use it in the earnings calendar
+      market_cap = row["Market Cap (mil)"] 
+      exchanges = ['NYSE', 'NSDQ']
+      # Check that Company is not empty, and only add to the master ticker file if company is not empty
+      if(company != '' and exchange in exchanges):
+          try:
+              shares_outstanding = float(row["Shares Outstanding (mil)"])
+              shares_outstanding = shares_outstanding *1000000                    
+          except Exception as e:
+              shares_outstanding = 0
+          logger.info(f'Loading Zacks stock data for {symbol}')
+      try:
+          # Write to database        
+          sqlCmd = """INSERT INTO company (symbol, company_name, sector, industry, exchange, market_cap, shares_outstanding) VALUES
+              ('{}','{}','{}','{}','{}','{}','{}')
+              ON CONFLICT (symbol)
+              DO
+                  UPDATE SET company_name=excluded.company_name,sector=excluded.sector,industry=excluded.industry,exchange=excluded.exchange,market_cap=excluded.market_cap,shares_outstanding=excluded.shares_outstanding;
+          """.format(sql_escape_str(symbol), sql_escape_str(company), sql_escape_str(sector), sql_escape_str(industry), sql_escape_str(exchange), market_cap, shares_outstanding)
+          cursor.execute(sqlCmd)
+
+          #Make the changes to the database persistent
+          connection.commit()
+      except AttributeError as e:
+          logger.error(f'Most likely an ETF and therefore not written to database: {symbol}')
+
+  success = sql_close_db(connection, cursor)
+
+  return success
+
+
+def get_finwiz_stock_data(df_tickers, logger):
   success = False
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
 
-    print(f'Getting finwiz stock data for {ticker}')
+    logger.info(f'Getting finwiz stock data for {ticker}')
 
     df_company_data = pd.DataFrame()
     url_finviz = "https://finviz.com/quote.ashx?t=%s" % (ticker)
@@ -314,19 +367,17 @@ def get_finwiz_stock_data(df_tickers):
         success = sql_write_df_to_db(df_company_data, "CompanyRatio", rename_cols, add_col_values, conflict_cols)
 
     except Exception as e:
-      print(f'Did not return finwiz stock data for {ticker}: {e}')    
+      logger.error(f'Did not return finwiz stock data for {ticker}: {e}')    
 
   return success
 
-def get_stockrow_stock_data(df_tickers):
+def get_stockrow_stock_data(df_tickers, logger):
   success = False
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
     count = index
     #import pdb; pdb.set_trace()
-    print('************************************')
-    print(f'Getting stockrow data for ({index}) {ticker}')
-    print('************************************')
+    logger.info(f'Getting stockrow data for ({index}) {ticker}')
 
     df = pd.DataFrame()
     df2 = pd.DataFrame()
@@ -375,7 +426,7 @@ def get_stockrow_stock_data(df_tickers):
       df = df.loc[:, cols]
 
     except IndexError as e:
-      print(f'Did not load table for {ticker} from stockrow')
+      logger.error(f'Did not load table for {ticker} from stockrow')
 
     #print("df before df2 is populated. Does it contain data?")
     #print(df)
@@ -424,13 +475,13 @@ def get_stockrow_stock_data(df_tickers):
               df2.loc[len(df2.index)] = temp_row
             except ValueError as e:
               #Handling when the html of the table is incorrect and results in an additional element in the row
-              print(f'Mismatched df2 row for {ticker}')
+              logger.error(f'Mismatched df2 row for {ticker}')
               pass
             break
       #print(df2)
       #df2.drop([" "], axis=1) #Hack: Drop any null columns. Better to just remove them upstream
     except IndexError as e:
-      print(f'Did not load table for {ticker} from wsj')
+      logger.error(f'Did not load table for {ticker} from wsj')
 
     #Only proceed to format the data and write to database if we have data about the ticker at this point
     if(df.empty == False):      
@@ -468,7 +519,7 @@ def get_stockrow_stock_data(df_tickers):
       try:
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'EBITDA')
       except KeyError as e:
-        print(f'EBITDA does not exist for {ticker}')
+        logger.error(f'EBITDA does not exist for {ticker}')
       #print("df_transposed before numeric conversion")
       #print(df_transposed)
 
@@ -479,42 +530,42 @@ def get_stockrow_stock_data(df_tickers):
         #import pdb; pdb.set_trace()
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'SALES')
       except KeyError as e:
-        print(f'SALES does not exist for {ticker}')
+        logger.error(f'SALES does not exist for {ticker}')
 
       try:
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'EBIT')
       except KeyError as e:
-        print(f'EBIT does not exist for {ticker}')
+        logger.error(f'EBIT does not exist for {ticker}')
 
       try:
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'NET_INCOME')
       except KeyError as e:
-        print(f'NET_INCOME does not exist for {ticker}')
+        logger.error(f'NET_INCOME does not exist for {ticker}')
 
       try:
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'PE_RATIO')
       except KeyError as e:
-        print(f'PE_RATIO does not exist for {ticker}')
+        logger.error(f'PE_RATIO does not exist for {ticker}')
 
       try:
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'EARNINGS_PER_SHARE')
       except KeyError as e:
-        print(f'EARNINGS_PER_SHARE does not exist for {ticker}')
+        logger.error(f'EARNINGS_PER_SHARE does not exist for {ticker}')
 
       try:
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'CASH_FLOW_PER_SHARE')
       except KeyError as e:
-        print(f'CASH_FLOW_PER_SHARE does not exist for {ticker}')
+        logger.error(f'CASH_FLOW_PER_SHARE does not exist for {ticker}')
 
       try:
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'BOOK_VALUE_PER_SHARE')
       except KeyError as e:
-        print(f'BOOK_VALUE_PER_SHARE does not exist for {ticker}')
+        logger.error(f'BOOK_VALUE_PER_SHARE does not exist for {ticker}')
 
       try:
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'TOTAL_DEBT')
       except KeyError as e:
-        print(f'TOTAL_DEBT does not exist for {ticker}')
+        logger.error(f'TOTAL_DEBT does not exist for {ticker}')
 
       #import pdb; pdb.set_trace()
       todays_date = date.today()
@@ -571,11 +622,11 @@ def get_stockrow_stock_data(df_tickers):
 
   return success
 
-def get_zacks_balance_sheet_shares(df_tickers):
+def get_zacks_balance_sheet_shares(df_tickers, logger):
   success = False
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
-    print(f'Getting zacks balance sheet for {ticker}')
+    logger.info(f'Getting zacks balance sheet for {ticker}')
     df_balance_sheet_annual = pd.DataFrame()
     df_balance_sheet_quarterly = pd.DataFrame()
 
@@ -663,17 +714,17 @@ def get_zacks_balance_sheet_shares(df_tickers):
         success = sql_write_df_to_db(df_balance_sheet_quarterly, "BalanceSheet", rename_cols, add_col_values_quarterly, conflict_cols)
       
     except IndexError as e:
-      print(f'No balance sheet for {ticker}')
+      logger.error(f'No balance sheet for {ticker}')
       pass
 
   return success
 
-def get_zacks_peer_comparison(df_tickers):
+def get_zacks_peer_comparison(df_tickers, logger):
   success = False
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
 
-    print(f'Getting zacks peer comparison for {ticker}')
+    logger.info(f'Getting zacks peer comparison for {ticker}')
 
     df_peer_comparison = pd.DataFrame()
     url = "https://www.zacks.com/stock/research/%s/industry-comparison" % (ticker)
@@ -706,16 +757,16 @@ def get_zacks_peer_comparison(df_tickers):
         success = sql_write_df_to_db(df_peer_comparison, "CompanyPeerComparison", rename_cols, add_col_values, conflict_cols)
 
     except AttributeError as e:
-      print(f'Did not return Zacks Peer Comparison for {ticker}')      
+      logger.error(f'Did not return Zacks Peer Comparison for {ticker}')      
     except KeyError as e:
-      print(f'Did not return Zacks Peer Comparison for {ticker}')      
+      logger.error(f'Did not return Zacks Peer Comparison for {ticker}')      
 
   return success
 
-def get_zacks_earnings_surprises(df_tickers):
+def get_zacks_earnings_surprises(df_tickers, logger):
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
-    print(f'Getting zacks earnings surprises for {ticker}')
+    logger.info(f'Getting zacks earnings surprises for {ticker}')
 
     df_earnings_release_date = pd.DataFrame()
     df_earnings_surprises = pd.DataFrame()
@@ -735,10 +786,10 @@ def get_zacks_earnings_surprises(df_tickers):
       df_earnings_release_date = df_earnings_release_date.drop(['Zacks Consensus Estimate', 'Earnings ESP','Report Date'], axis=1)
       df_earnings_release_date['Release Date'] = pd.to_datetime(df_earnings_release_date['Release Date'],format='%m/%d/%Y')
     except (IndexError,AttributeError) as e:
-      print(f'No earnings date for {ticker}. It is probably an ETF')
+      logger.error(f'No earnings date for {ticker}. It is probably an ETF')
       pass
     except (ValueError, KeyError) as e:
-      print(f'Earnings Date is NA for {ticker}')
+      logger.error(f'Earnings Date is NA for {ticker}')
 
     #Need to extract Earnings and Sales Surprises data from json object in javascript on page
     #scripts = soup.find_all('script')[29]
@@ -784,15 +835,15 @@ def get_zacks_earnings_surprises(df_tickers):
     except json.decoder.JSONDecodeError as e:
       pass
     except IndexError as e:
-      print(f'Did not load earnings or sales surprises for {ticker}')
+      logger.error(f'Did not load earnings or sales surprises for {ticker}')
 
   return success
 
-def get_zacks_product_line_geography(df_tickers):
+def get_zacks_product_line_geography(df_tickers, logger):
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
 
-    print(f'Getting zacks product line and geography for {ticker}')
+    logger.info(f'Getting zacks product line and geography for {ticker}')
 
     df_product_line = pd.DataFrame()
     df_geography = pd.DataFrame()
@@ -1055,8 +1106,8 @@ def dataframe_convert_to_numeric(df, column):
     df[column] = df[column].str.replace(')','', regex=True)
 
   except KeyError as e:
-    print(df)
-    print(column)
+    logger.error(df)
+    logger.error(column)
 
   df[column] = pd.to_numeric(df[column])
   if(contains_mill):
@@ -1072,13 +1123,14 @@ def transpose_df(df):
 
   return df
   
-def handle_exceptions_print_result(future, executor_num, process_num):
+def handle_exceptions_print_result(future, executor_num, process_num, logger):
   exception = future.exception()
   if exception:
+    logger.error(f'EXCEPTION of Executor {executor_num} Process {process_num}: {exception}')
     st.write(f'EXCEPTION of Executor {executor_num} Process {process_num}: {exception}')
   else:
+    logger.info(f'Status of Executor {executor_num} Process {process_num}: {future.result()}')
     st.write(f'Status of Executor {executor_num} Process {process_num}: {future.result()}')
-
 ######################
 # Database Functions #
 ######################
@@ -1168,3 +1220,27 @@ def sql_close_db(connection, cursor):
   connection.close()
   cursor.close()
   return True
+
+def get_logger():
+  logger = logging.getLogger(__name__)
+  logger.setLevel(logging.DEBUG)
+
+  formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+
+  file_handler_errors = logging.FileHandler('log_error.log', mode='w')
+  file_handler_errors.setFormatter(formatter)
+  file_handler_errors.setLevel(logging.ERROR)
+
+  file_handler_all = logging.FileHandler('log_debug.log', mode='w')
+  file_handler_all.setFormatter(formatter)
+  file_handler_all.setLevel(logging.DEBUG)
+
+  stream_handler = logging.StreamHandler()
+  stream_handler.setFormatter(formatter)
+
+  logger.addHandler(file_handler_errors)
+  logger.addHandler(file_handler_all)
+
+  logger.addHandler(stream_handler)
+
+  return logger

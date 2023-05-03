@@ -12,15 +12,17 @@ import glob
 import os
 import json
 import concurrent.futures
-
 from datetime import date
 from datetime import datetime as dt
-from common import get_page, get_finwiz_stock_data, get_stockrow_stock_data, get_zacks_balance_sheet_shares
+from common import get_finwiz_stock_data, get_stockrow_stock_data, get_zacks_balance_sheet_shares
 from common import get_zacks_peer_comparison, get_zacks_earnings_surprises, get_zacks_product_line_geography
-from common import get_yf_key_stats,transpose_df, get_zacks_us_companies, handle_exceptions_print_result
-from common import sql_escape_str, sql_open_db, sql_close_db
+from common import get_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
+from common import write_zacks_ticker_data_to_db, get_logger
+import logging
 
-debug = False
+debug = True
+
+logger = get_logger()
 
 #Dates
 todays_date = date.today()
@@ -57,61 +59,27 @@ if option == 'Download Data':
     if(clicked):
         now_start = dt.now()
         start_time = now_start.strftime("%H:%M:%S")    
-        connection, cursor = sql_open_db()
 
         print("Clicked!")
         #Download data from zacks and other sources and store it in the database.
         #Use mutithreading to make the download process faster
 
         df_tickers = get_zacks_us_companies()
-        for index, row in df_tickers.iterrows():
-            symbol = row["Ticker"]
-            company = row["Company Name"] 
-            sector = row["Sector"] 
-            industry = row["Industry"] 
-            exchange = row["Exchange"] 
-
-            # Get market cap as well, because we want to use it in the earnings calendar
-            market_cap = row["Market Cap (mil)"] 
-            exchanges = ['NYSE', 'NSDQ']
-            # Check that Company is not empty, and only add to the master ticker file if company is not empty
-            if(company != '' and exchange in exchanges):
-                try:
-                    shares_outstanding = float(row["Shares Outstanding (mil)"])
-                    shares_outstanding = shares_outstanding *1000000                    
-                except Exception as e:
-                    shares_outstanding = 0
-                print(symbol)
-            try:
-                # Write to database        
-                sqlCmd = """INSERT INTO company (symbol, company_name, sector, industry, exchange, market_cap, shares_outstanding) VALUES
-                    ('{}','{}','{}','{}','{}','{}','{}')
-                    ON CONFLICT (symbol)
-                    DO
-                        UPDATE SET company_name=excluded.company_name,sector=excluded.sector,industry=excluded.industry,exchange=excluded.exchange,market_cap=excluded.market_cap,shares_outstanding=excluded.shares_outstanding;
-                """.format(sql_escape_str(symbol), sql_escape_str(company), sql_escape_str(sector), sql_escape_str(industry), sql_escape_str(exchange), market_cap, shares_outstanding)
-                cursor.execute(sqlCmd)
-
-                #Make the changes to the database persistent
-                connection.commit()
-            except AttributeError as e:
-                print(f'Most likely an ETF and therefore not written to database: {symbol}')
-
-        success = sql_close_db(connection, cursor)        
-
+        success = write_zacks_ticker_data_to_db(df_tickers, logger)
         df_tickers1, df_tickers2, df_tickers3, df_tickers4, df_tickers5 = np.array_split(df_tickers, 5)
 
-        #DEBUG CODE
-        df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL','AIMC'])]
-        # Write the output of all these functions into the database
-        #e1p1 = get_zacks_balance_sheet_shares(df_tickers1)
-        #e2p1 = get_zacks_earnings_surprises(df_tickers1)
-        #e3p1 = get_zacks_product_line_geography(df_tickers1)
-        #e4p1 = get_finwiz_stock_data(df_tickers1)
-        #e5p1 = get_stockrow_stock_data(df_tickers1)
-        #e6p1 = get_yf_key_stats(df_tickers1) 
-        e7p1 = get_zacks_peer_comparison(df_tickers1)
-        import pdb; pdb.set_trace()
+        if(debug):
+            #DEBUG CODE
+            df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL','AIMC'])]
+            # Write the output of all these functions into the database
+            e1p1 = get_zacks_balance_sheet_shares(df_tickers1, logger)
+            #e2p1 = get_zacks_earnings_surprises(df_tickers1, logger)
+            #e3p1 = get_zacks_product_line_geography(df_tickers1, logger)
+            #e4p1 = get_finwiz_stock_data(df_tickers1, logger)
+            #e5p1 = get_stockrow_stock_data(df_tickers2, logger)
+            #e6p1 = get_yf_key_stats(df_tickers1, logger) 
+            #e7p1 = get_zacks_peer_comparison(df_tickers1, logger)
+            import pdb; pdb.set_trace()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
             #Executor 1: get_zacks_balance_sheet_shares
@@ -172,47 +140,47 @@ if option == 'Download Data':
         st.write(finish_time)
         st.write(divmod(difference.days * seconds_in_day + difference.seconds, 60))
 
-        handle_exceptions_print_result(e1p1, 1, 1)
-        handle_exceptions_print_result(e1p2, 1, 2)
-        handle_exceptions_print_result(e1p3, 1, 3)
-        handle_exceptions_print_result(e1p4, 1, 4)
-        handle_exceptions_print_result(e1p5, 1, 5)
+        handle_exceptions_print_result(e1p1, 1, 1, logger)
+        handle_exceptions_print_result(e1p2, 1, 2, logger)
+        handle_exceptions_print_result(e1p3, 1, 3, logger)
+        handle_exceptions_print_result(e1p4, 1, 4, logger)
+        handle_exceptions_print_result(e1p5, 1, 5, logger)
 
-        handle_exceptions_print_result(e2p1, 2, 1)
-        handle_exceptions_print_result(e2p2, 2, 2)
-        handle_exceptions_print_result(e2p3, 2, 3)
-        handle_exceptions_print_result(e2p4, 2, 4)
-        handle_exceptions_print_result(e2p5, 2, 5)
+        handle_exceptions_print_result(e2p1, 2, 1, logger)
+        handle_exceptions_print_result(e2p2, 2, 2, logger)
+        handle_exceptions_print_result(e2p3, 2, 3, logger)
+        handle_exceptions_print_result(e2p4, 2, 4, logger)
+        handle_exceptions_print_result(e2p5, 2, 5, logger)
 
-        handle_exceptions_print_result(e3p1, 3, 1)
-        handle_exceptions_print_result(e3p2, 3, 2)
-        handle_exceptions_print_result(e3p3, 3, 3)
-        handle_exceptions_print_result(e3p4, 3, 4)
-        handle_exceptions_print_result(e3p5, 3, 5)
+        handle_exceptions_print_result(e3p1, 3, 1, logger)
+        handle_exceptions_print_result(e3p2, 3, 2, logger)
+        handle_exceptions_print_result(e3p3, 3, 3, logger)
+        handle_exceptions_print_result(e3p4, 3, 4, logger)
+        handle_exceptions_print_result(e3p5, 3, 5, logger)
 
-        handle_exceptions_print_result(e4p1, 4, 1)
-        handle_exceptions_print_result(e4p2, 4, 2)
-        handle_exceptions_print_result(e4p3, 4, 3)
-        handle_exceptions_print_result(e4p4, 4, 4)
-        handle_exceptions_print_result(e4p5, 4, 5)
+        handle_exceptions_print_result(e4p1, 4, 1, logger)
+        handle_exceptions_print_result(e4p2, 4, 2, logger)
+        handle_exceptions_print_result(e4p3, 4, 3, logger)
+        handle_exceptions_print_result(e4p4, 4, 4, logger)
+        handle_exceptions_print_result(e4p5, 4, 5, logger)
 
-        handle_exceptions_print_result(e5p1, 5, 1)
-        handle_exceptions_print_result(e5p2, 5, 2)
-        handle_exceptions_print_result(e5p3, 5, 3)
-        handle_exceptions_print_result(e5p4, 5, 4)
-        handle_exceptions_print_result(e5p5, 5, 5)
+        handle_exceptions_print_result(e5p1, 5, 1, logger)
+        handle_exceptions_print_result(e5p2, 5, 2, logger)
+        handle_exceptions_print_result(e5p3, 5, 3, logger)
+        handle_exceptions_print_result(e5p4, 5, 4, logger)
+        handle_exceptions_print_result(e5p5, 5, 5, logger)
 
-        handle_exceptions_print_result(e6p1, 6, 1)
-        handle_exceptions_print_result(e6p2, 6, 2)
-        handle_exceptions_print_result(e6p3, 6, 3)
-        handle_exceptions_print_result(e6p4, 6, 4)
-        handle_exceptions_print_result(e6p5, 6, 5)
+        handle_exceptions_print_result(e6p1, 6, 1, logger)
+        handle_exceptions_print_result(e6p2, 6, 2, logger)
+        handle_exceptions_print_result(e6p3, 6, 3, logger)
+        handle_exceptions_print_result(e6p4, 6, 4, logger)
+        handle_exceptions_print_result(e6p5, 6, 5, logger)
 
-        handle_exceptions_print_result(e7p1, 7, 1)
-        handle_exceptions_print_result(e7p2, 7, 2)
-        handle_exceptions_print_result(e7p3, 7, 3)
-        handle_exceptions_print_result(e7p4, 7, 4)
-        handle_exceptions_print_result(e7p5, 7, 5)
+        handle_exceptions_print_result(e7p1, 7, 1, logger)
+        handle_exceptions_print_result(e7p2, 7, 2, logger)
+        handle_exceptions_print_result(e7p3, 7, 3, logger)
+        handle_exceptions_print_result(e7p4, 7, 4, logger)
+        handle_exceptions_print_result(e7p5, 7, 5, logger)
 
 if option == 'One Pager':
     clicked = st.markdown("Get quantitative data for ticker")
