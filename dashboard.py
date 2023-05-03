@@ -20,7 +20,7 @@ from common import get_yf_key_stats, get_zacks_us_companies, handle_exceptions_p
 from common import write_zacks_ticker_data_to_db, get_logger
 import logging
 
-debug = True
+debug = False
 
 logger = get_logger()
 
@@ -83,53 +83,53 @@ if option == 'Download Data':
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
             #Executor 1: get_zacks_balance_sheet_shares
-            e1p1 = executor.submit(get_zacks_balance_sheet_shares, df_tickers1)
-            e1p2 = executor.submit(get_zacks_balance_sheet_shares, df_tickers2)
-            e1p3 = executor.submit(get_zacks_balance_sheet_shares, df_tickers3)
-            e1p4 = executor.submit(get_zacks_balance_sheet_shares, df_tickers4)
-            e1p5 = executor.submit(get_zacks_balance_sheet_shares, df_tickers5)
+            e1p1 = executor.submit(get_zacks_balance_sheet_shares, df_tickers1, logger)
+            e1p2 = executor.submit(get_zacks_balance_sheet_shares, df_tickers2, logger)
+            e1p3 = executor.submit(get_zacks_balance_sheet_shares, df_tickers3, logger)
+            e1p4 = executor.submit(get_zacks_balance_sheet_shares, df_tickers4, logger)
+            e1p5 = executor.submit(get_zacks_balance_sheet_shares, df_tickers5, logger)
 
             #Executor 2: get_zacks_earnings_surprises
-            e2p1 = executor.submit(get_zacks_earnings_surprises, df_tickers1)
-            e2p2 = executor.submit(get_zacks_earnings_surprises, df_tickers2)
-            e2p3 = executor.submit(get_zacks_earnings_surprises, df_tickers3)
-            e2p4 = executor.submit(get_zacks_earnings_surprises, df_tickers4)
-            e2p5 = executor.submit(get_zacks_earnings_surprises, df_tickers5)
+            e2p1 = executor.submit(get_zacks_earnings_surprises, df_tickers1, logger)
+            e2p2 = executor.submit(get_zacks_earnings_surprises, df_tickers2, logger)
+            e2p3 = executor.submit(get_zacks_earnings_surprises, df_tickers3, logger)
+            e2p4 = executor.submit(get_zacks_earnings_surprises, df_tickers4, logger)
+            e2p5 = executor.submit(get_zacks_earnings_surprises, df_tickers5, logger)
 
             #Executor 3: get_zacks_product_line_geography
-            e3p1 = executor.submit(get_zacks_product_line_geography, df_tickers1)
-            e3p2 = executor.submit(get_zacks_product_line_geography, df_tickers2)
-            e3p3 = executor.submit(get_zacks_product_line_geography, df_tickers3)
-            e3p4 = executor.submit(get_zacks_product_line_geography, df_tickers4)
-            e3p5 = executor.submit(get_zacks_product_line_geography, df_tickers5)
+            e3p1 = executor.submit(get_zacks_product_line_geography, df_tickers1, logger)
+            e3p2 = executor.submit(get_zacks_product_line_geography, df_tickers2, logger)
+            e3p3 = executor.submit(get_zacks_product_line_geography, df_tickers3, logger)
+            e3p4 = executor.submit(get_zacks_product_line_geography, df_tickers4, logger)
+            e3p5 = executor.submit(get_zacks_product_line_geography, df_tickers5, logger)
 
             #Executor 4: get_finwiz_stock_data
-            e4p1 = executor.submit(get_finwiz_stock_data, df_tickers1)
-            e4p2 = executor.submit(get_finwiz_stock_data, df_tickers2)
-            e4p3 = executor.submit(get_finwiz_stock_data, df_tickers3)
-            e4p4 = executor.submit(get_finwiz_stock_data, df_tickers4)
-            e4p5 = executor.submit(get_finwiz_stock_data, df_tickers5)
+            e4p1 = executor.submit(get_finwiz_stock_data, df_tickers1, logger)
+            e4p2 = executor.submit(get_finwiz_stock_data, df_tickers2, logger)
+            e4p3 = executor.submit(get_finwiz_stock_data, df_tickers3, logger)
+            e4p4 = executor.submit(get_finwiz_stock_data, df_tickers4, logger)
+            e4p5 = executor.submit(get_finwiz_stock_data, df_tickers5, logger)
 
             #Executor 5: get_stockrow_stock_data
-            e5p1 = executor.submit(get_stockrow_stock_data, df_tickers1)
-            e5p2 = executor.submit(get_stockrow_stock_data, df_tickers2)
-            e5p3 = executor.submit(get_stockrow_stock_data, df_tickers3)
-            e5p4 = executor.submit(get_stockrow_stock_data, df_tickers4)
-            e5p5 = executor.submit(get_stockrow_stock_data, df_tickers5)
+            e5p1 = executor.submit(get_stockrow_stock_data, df_tickers1, logger)
+            e5p2 = executor.submit(get_stockrow_stock_data, df_tickers2, logger)
+            e5p3 = executor.submit(get_stockrow_stock_data, df_tickers3, logger)
+            e5p4 = executor.submit(get_stockrow_stock_data, df_tickers4, logger)
+            e5p5 = executor.submit(get_stockrow_stock_data, df_tickers5, logger)
 
             #Executor 6: get_yf_key_stats
-            e6p1 = executor.submit(get_yf_key_stats, df_tickers1)
-            e6p2 = executor.submit(get_yf_key_stats, df_tickers2)
-            e6p3 = executor.submit(get_yf_key_stats, df_tickers3)
-            e6p4 = executor.submit(get_yf_key_stats, df_tickers4)
-            e6p5 = executor.submit(get_yf_key_stats, df_tickers5)
+            e6p1 = executor.submit(get_yf_key_stats, df_tickers1, logger)
+            e6p2 = executor.submit(get_yf_key_stats, df_tickers2, logger)
+            e6p3 = executor.submit(get_yf_key_stats, df_tickers3, logger)
+            e6p4 = executor.submit(get_yf_key_stats, df_tickers4, logger)
+            e6p5 = executor.submit(get_yf_key_stats, df_tickers5, logger)
 
             #Executor 7: get_zacks_peer_comparison
-            e7p1 = executor.submit(get_zacks_peer_comparison, df_tickers1)
-            e7p2 = executor.submit(get_zacks_peer_comparison, df_tickers2)
-            e7p3 = executor.submit(get_zacks_peer_comparison, df_tickers3)
-            e7p4 = executor.submit(get_zacks_peer_comparison, df_tickers4)
-            e7p5 = executor.submit(get_zacks_peer_comparison, df_tickers5)
+            e7p1 = executor.submit(get_zacks_peer_comparison, df_tickers1, logger)
+            e7p2 = executor.submit(get_zacks_peer_comparison, df_tickers2, logger)
+            e7p3 = executor.submit(get_zacks_peer_comparison, df_tickers3, logger)
+            e7p4 = executor.submit(get_zacks_peer_comparison, df_tickers4, logger)
+            e7p5 = executor.submit(get_zacks_peer_comparison, df_tickers5, logger)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
