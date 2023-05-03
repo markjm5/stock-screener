@@ -242,6 +242,8 @@ def get_yf_key_stats(df_tickers, logger):
 
       df_company_data = dataframe_convert_to_numeric(df_company_data, '50_DAY_MOVING_AVG')
       df_company_data = dataframe_convert_to_numeric(df_company_data, '200_DAY_MOVING_AVG')
+
+      logger.info(f'Successfully Retrieved YF Key Stats for {ticker}')
     except KeyError as e:
       logger.info(f'Did not return YF stock data for {ticker}')      
 
@@ -295,6 +297,8 @@ def write_zacks_ticker_data_to_db(df_tickers, logger):
 
           #Make the changes to the database persistent
           connection.commit()
+          logger.info(f'Successfully Written Zacks data into database {symbol}')
+
       except AttributeError as e:
           logger.error(f'Most likely an ETF and therefore not written to database: {symbol}')
 
@@ -365,6 +369,8 @@ def get_finwiz_stock_data(df_tickers, logger):
         conflict_cols = "cid"
 
         success = sql_write_df_to_db(df_company_data, "CompanyRatio", rename_cols, add_col_values, conflict_cols)
+
+      logger.info(f'Successfully retrieved finwiz stock data for {ticker}')
 
     except Exception as e:
       logger.error(f'Did not return finwiz stock data for {ticker}: {e}')    
@@ -712,6 +718,8 @@ def get_zacks_balance_sheet_shares(df_tickers, logger):
 
         add_col_values_quarterly = {"REPORTING_PERIOD": "quarterly", "cid": cid}
         success = sql_write_df_to_db(df_balance_sheet_quarterly, "BalanceSheet", rename_cols, add_col_values_quarterly, conflict_cols)
+
+      logger.info(f'Successfully retrieved zacks balance sheet data for {ticker}')
       
     except IndexError as e:
       logger.error(f'No balance sheet for {ticker}')
@@ -756,6 +764,7 @@ def get_zacks_peer_comparison(df_tickers, logger):
         conflict_cols = "cid, peer_ticker"
         success = sql_write_df_to_db(df_peer_comparison, "CompanyPeerComparison", rename_cols, add_col_values, conflict_cols)
 
+      logger.info(f'Successfully retrieved Zacks Peer Comparison for {ticker}')
     except AttributeError as e:
       logger.error(f'Did not return Zacks Peer Comparison for {ticker}')      
     except KeyError as e:
@@ -832,8 +841,12 @@ def get_zacks_earnings_surprises(df_tickers, logger):
 
         success = sql_write_df_to_db(new_df_earnings, "EarningsSurprise", rename_cols, add_col_values, conflict_cols)
 
+      logger.info(f'Successfully retrieved Zacks Searnings Surprises for {ticker}')
+
     except json.decoder.JSONDecodeError as e:
+      logger.error(f'JSON Loading error in Zacks Earnings Surprises for {ticker}')
       pass
+
     except IndexError as e:
       logger.error(f'Did not load earnings or sales surprises for {ticker}')
 
@@ -902,7 +915,10 @@ def get_zacks_product_line_geography(df_tickers, logger):
         df_product_line = df_product_line.rename(columns={df_product_line.columns[0]: 'BUSINESS_SEGMENT'})
         df_product_line = df_product_line.rename(columns={df_product_line.columns[1]: 'REVENUE'})
 
+        logger.info(f'Successfully retrieved Zacks Product Line for {ticker}')
+
       except KeyError as e:
+        logger.error(f'Did not load Zacks Product Line for {ticker}')
         pass
 
       try:
@@ -925,7 +941,10 @@ def get_zacks_product_line_geography(df_tickers, logger):
 
           success = sql_write_df_to_db(df_geography, "CompanyGeography", rename_cols, add_col_values, conflict_cols)
 
+        logger.info(f'Successfully retrieved Zacks Geography for {ticker}')
+
       except KeyError as e:
+        logger.error(f'Failed to retrieve Zacks Geography for {ticker}')
         pass
   
   return success
