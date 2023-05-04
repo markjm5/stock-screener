@@ -733,9 +733,8 @@ def get_zacks_peer_comparison(df_tickers, logger):
     soup = BeautifulSoup(page.content, 'html.parser')
     table = soup.find_all('table')
 
-    table_peer_comparison = table[2]
-
     try:
+      table_peer_comparison = table[2]
       df_peer_comparison = convert_html_table_to_df(table_peer_comparison,True)
       new = df_peer_comparison["Symbol"].str.split(' ',n=1,expand=True)
       df_peer_comparison["Ticker"] = new[0]
@@ -756,7 +755,8 @@ def get_zacks_peer_comparison(df_tickers, logger):
         conflict_cols = "cid, peer_ticker"
         success = sql_write_df_to_db(df_peer_comparison, "CompanyPeerComparison", rename_cols, add_col_values, conflict_cols)
         logger.info(f'Successfully retrieved Zacks Peer Comparison for {ticker}')
-
+    except IndexError as e:
+      logger.exception(f'Did not return Zacks Peer Comparison for {ticker}')      
     except AttributeError as e:
       logger.exception(f'Did not return Zacks Peer Comparison for {ticker}')      
     except KeyError as e:

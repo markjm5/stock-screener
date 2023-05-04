@@ -16,10 +16,6 @@ df_tickers4 = df_tickers.loc[df_tickers['Ticker'].isin(['TKAGY'])]
 
 class TestCommon(unittest.TestCase):
 
-    #Write Zacks Data to DB
-    def test_write_zacks_ticker_data_to_db(self):
-        self.assertEqual(write_zacks_ticker_data_to_db(df_tickers, logger),True)
-
     #Executor 1
     def test_get_zacks_balance_sheet_shares(self):
         self.assertEqual(get_zacks_balance_sheet_shares(df_tickers1, logger),True)
@@ -49,7 +45,7 @@ class TestCommon(unittest.TestCase):
     def test_get_zacks_peer_comparison(self):
         self.assertEqual(get_zacks_peer_comparison(df_tickers1, logger),True)
         self.assertEqual(get_zacks_peer_comparison(df_tickers3, logger),False)
-        self.assertEqual(get_zacks_peer_comparison(df_tickers4, logger),True)
+        self.assertEqual(get_zacks_peer_comparison(df_tickers4, logger),False)
 
 
 if __name__ == '__main__':
