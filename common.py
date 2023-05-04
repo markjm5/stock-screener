@@ -514,56 +514,32 @@ def get_stockrow_stock_data(df_tickers, logger):
         "EBITDA": "EBITDA"                   
         })  
 
-      try:
+      if('EBITDA' in df_transposed.columns):
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'EBITDA', logger)
-      except KeyError as e:
-        logger.exception(f'EBITDA does not exist for {ticker}')
-      #print("df_transposed before numeric conversion")
-      #print(df_transposed)
-
-      #format numeric values in dataframe
-      #df_transposed = df_transposed.squeeze()
-      #import pdb; pdb.set_trace()
-      try:
-        #import pdb; pdb.set_trace()
+        
+      if('SALES' in df_transposed.columns):
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'SALES', logger)
-      except KeyError as e:
-        logger.error(f'SALES does not exist for {ticker}')
 
-      try:
+      if('EBIT' in df_transposed.columns):
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'EBIT', logger)
-      except KeyError as e:
-        logger.error(f'EBIT does not exist for {ticker}')
 
-      try:
+      if('NET_INCOME' in df_transposed.columns):
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'NET_INCOME', logger)
-      except KeyError as e:
-        logger.error(f'NET_INCOME does not exist for {ticker}')
 
-      try:
+      if('PE_RATIO' in df_transposed.columns):
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'PE_RATIO', logger)
-      except KeyError as e:
-        logger.error(f'PE_RATIO does not exist for {ticker}')
 
-      try:
+      if('EARNINGS_PER_SHARE' in df_transposed.columns):
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'EARNINGS_PER_SHARE', logger)
-      except KeyError as e:
-        logger.error(f'EARNINGS_PER_SHARE does not exist for {ticker}')
 
-      try:
+      if('CASH_FLOW_PER_SHARE' in df_transposed.columns):
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'CASH_FLOW_PER_SHARE', logger)
-      except KeyError as e:
-        logger.error(f'CASH_FLOW_PER_SHARE does not exist for {ticker}')
 
-      try:
+      if('BOOK_VALUE_PER_SHARE' in df_transposed.columns):
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'BOOK_VALUE_PER_SHARE', logger)
-      except KeyError as e:
-        logger.error(f'BOOK_VALUE_PER_SHARE does not exist for {ticker}')
 
-      try:
+      if('TOTAL_DEBT' in df_transposed.columns):
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'TOTAL_DEBT', logger)
-      except KeyError as e:
-        logger.error(f'TOTAL_DEBT does not exist for {ticker}')
 
       #import pdb; pdb.set_trace()
       todays_date = date.today()

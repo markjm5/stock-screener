@@ -103,11 +103,11 @@ if option == 'Download Data':
             e3p5 = executor.submit(get_zacks_product_line_geography, df_tickers5, logger)
 
             #Executor 5: get_stockrow_stock_data
-            #e5p1 = executor.submit(get_stockrow_stock_data, df_tickers1, logger)
-            #e5p2 = executor.submit(get_stockrow_stock_data, df_tickers2, logger)
-            #e5p3 = executor.submit(get_stockrow_stock_data, df_tickers3, logger)
-            #e5p4 = executor.submit(get_stockrow_stock_data, df_tickers4, logger)
-            #e5p5 = executor.submit(get_stockrow_stock_data, df_tickers5, logger)
+            e5p1 = executor.submit(get_stockrow_stock_data, df_tickers1, logger)
+            e5p2 = executor.submit(get_stockrow_stock_data, df_tickers2, logger)
+            e5p3 = executor.submit(get_stockrow_stock_data, df_tickers3, logger)
+            e5p4 = executor.submit(get_stockrow_stock_data, df_tickers4, logger)
+            e5p5 = executor.submit(get_stockrow_stock_data, df_tickers5, logger)
 
             #Executor 6: get_yf_key_stats
             e6p1 = executor.submit(get_yf_key_stats, df_tickers1, logger)
@@ -153,11 +153,11 @@ if option == 'Download Data':
         handle_exceptions_print_result(e3p4, 3, 4, logger)
         handle_exceptions_print_result(e3p5, 3, 5, logger)
 
-        #handle_exceptions_print_result(e5p1, 5, 1, logger)
-        #handle_exceptions_print_result(e5p2, 5, 2, logger)
-        #handle_exceptions_print_result(e5p3, 5, 3, logger)
-        #handle_exceptions_print_result(e5p4, 5, 4, logger)
-        #handle_exceptions_print_result(e5p5, 5, 5, logger)
+        handle_exceptions_print_result(e5p1, 5, 1, logger)
+        handle_exceptions_print_result(e5p2, 5, 2, logger)
+        handle_exceptions_print_result(e5p3, 5, 3, logger)
+        handle_exceptions_print_result(e5p4, 5, 4, logger)
+        handle_exceptions_print_result(e5p5, 5, 5, logger)
 
         handle_exceptions_print_result(e6p1, 6, 1, logger)
         handle_exceptions_print_result(e6p2, 6, 2, logger)
