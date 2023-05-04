@@ -301,6 +301,8 @@ def write_zacks_ticker_data_to_db(df_tickers, logger):
 
 def get_finwiz_stock_data(df_tickers, logger):
   success = False
+  #TODO: Load finwiz exclusion list
+  
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
 
@@ -1209,16 +1211,20 @@ def sql_close_db(connection, cursor):
   return True
 
 def get_logger():
+
+  error_logfile = dt.now().strftime('log_error_%Y%m%d%H%M%S.log')
+  debug_logfile = dt.now().strftime('log_debug_%Y%m%d%H%M%S.log')
+
   logger = logging.getLogger(__name__)
   logger.setLevel(logging.DEBUG)
 
   formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
 
-  file_handler_errors = logging.FileHandler('log_error.log', mode='w')
+  file_handler_errors = logging.FileHandler(error_logfile, mode='w')
   file_handler_errors.setFormatter(formatter)
   file_handler_errors.setLevel(logging.ERROR)
 
-  file_handler_all = logging.FileHandler('log_debug.log', mode='w')
+  file_handler_all = logging.FileHandler(debug_logfile, mode='w')
   file_handler_all.setFormatter(formatter)
   file_handler_all.setLevel(logging.DEBUG)
 
