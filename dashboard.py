@@ -123,7 +123,7 @@ if option == 'Download Data':
             e7p4 = executor.submit(get_zacks_peer_comparison, df_tickers4, logger)
             e7p5 = executor.submit(get_zacks_peer_comparison, df_tickers5, logger)
 
-        #Finwiz does not handle concurrent connections so need to run it without multiprocessing
+        #Finwiz does not handle concurrent connections so need to run it without multithreading
         finwiz_stock_data_status = get_finwiz_stock_data(df_tickers, logger)
 
         now_finish = dt.now()
