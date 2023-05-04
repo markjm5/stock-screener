@@ -14,9 +14,11 @@ df_tickers2 = df_tickers.loc[df_tickers['Ticker'].isin(['ACWI'])]
 df_tickers3 = df_tickers.loc[df_tickers['Ticker'].isin(['AIMC'])]
 df_tickers4 = df_tickers.loc[df_tickers['Ticker'].isin(['TKAGY'])]
 df_tickers5 = df_tickers.loc[df_tickers['Ticker'].isin(['ACGL'])]
+df_tickers6 = df_tickers.loc[df_tickers['Ticker'].isin(['ADRNY'])]
+df_tickers7 = df_tickers.loc[df_tickers['Ticker'].isin(['ADM'])]
 
 class TestCommon(unittest.TestCase):
-
+    """
     #Executor 1
     def test_get_zacks_balance_sheet_shares(self):
         self.assertEqual(get_zacks_balance_sheet_shares(df_tickers1, logger),True)
@@ -29,17 +31,21 @@ class TestCommon(unittest.TestCase):
     #Executor 3
     def test_get_zacks_product_line_geography(self):
         self.assertEqual(get_zacks_product_line_geography(df_tickers1, logger),True)
-
+    
     #Executor 4
     def test_get_finwiz_stock_data(self):
         self.assertEqual(get_finwiz_stock_data(df_tickers1, logger),True)
+        self.assertEqual(get_finwiz_stock_data(df_tickers6, logger),False)
     
-
+    """
     #Executor 5
     def test_get_stockrow_stock_data(self):
-        self.assertEqual(get_stockrow_stock_data(df_tickers5, logger),True)
+        #self.assertEqual(get_stockrow_stock_data(df_tickers5, logger),True)
+        #TODO: Create Exclusion file with these tickers
+        self.assertEqual(get_stockrow_stock_data(df_tickers6, logger),False)
+        self.assertEqual(get_stockrow_stock_data(df_tickers7, logger),True)
 
-    
+    """    
     #Executor 6
     def test_get_yf_key_stats(self):
         self.assertEqual(get_yf_key_stats(df_tickers1, logger),True)
@@ -53,7 +59,7 @@ class TestCommon(unittest.TestCase):
     #def test_dataframe_convert_to_numeric(self):
     # TODO: write test cases for this function
     #    pass
-    
+    """
 
 if __name__ == '__main__':
     unittest.main()

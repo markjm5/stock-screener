@@ -301,73 +301,76 @@ def write_zacks_ticker_data_to_db(df_tickers, logger):
 
 def get_finwiz_stock_data(df_tickers, logger):
   success = False
-  #TODO: Load finwiz exclusion list
-  
+  # Load finwiz exclusion list
+  csv_file_path = '/finwiz_exclusion_list.csv'
+  df_exclusion_list = convert_csv_to_dataframe(csv_file_path)
+
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
+    
+    if(df_exclusion_list['Ticker'].str.contains(ticker).any() == False):   
+      logger.info(f'Getting finwiz stock data for {ticker}')
 
-    logger.info(f'Getting finwiz stock data for {ticker}')
+      df_company_data = pd.DataFrame()
+      url_finviz = "https://finviz.com/quote.ashx?t=%s" % (ticker)
+      try:
+        page = get_page(url_finviz)
 
-    df_company_data = pd.DataFrame()
-    url_finviz = "https://finviz.com/quote.ashx?t=%s" % (ticker)
-    try:
-      page = get_page(url_finviz)
+        soup = BeautifulSoup(page.content, 'html.parser')
 
-      soup = BeautifulSoup(page.content, 'html.parser')
+        table = soup.find_all('table')
+        table_rows = table[9].find_all('tr', recursive=False)
 
-      table = soup.find_all('table')
-      table_rows = table[9].find_all('tr', recursive=False)
+        emptyDict = {}
 
-      emptyDict = {}
+        #Get rows of data.
+        for tr in table_rows:
+            tds = tr.find_all('td')
+            boolKey = True
+            keyValueSet = False
+            for td in tds:
+                if boolKey:
+                    key = td.text.strip()
+                    boolKey = False                
+                else:
+                    value = td.text.strip()
+                    boolKey = True
+                    keyValueSet = True                
 
-      #Get rows of data.
-      for tr in table_rows:
-          tds = tr.find_all('td')
-          boolKey = True
-          keyValueSet = False
-          for td in tds:
-              if boolKey:
-                  key = td.text.strip()
-                  boolKey = False                
-              else:
-                  value = td.text.strip()
-                  boolKey = True
-                  keyValueSet = True                
+                if keyValueSet:
+                    emptyDict[key] = value
+                    keyValueSet = False
 
-              if keyValueSet:
-                  emptyDict[key] = value
-                  keyValueSet = False
+        df_company_data.loc[ticker, 'PE'] = emptyDict['P/E']
+        df_company_data.loc[ticker, 'EPS_TTM'] = emptyDict['EPS (ttm)']
+        df_company_data.loc[ticker, 'PE_FORWARD'] = emptyDict['Forward P/E']
+        df_company_data.loc[ticker, 'EPS_Y1'] = emptyDict['EPS next Y']
+        df_company_data.loc[ticker, 'PEG'] = emptyDict['PEG']
+        df_company_data.loc[ticker, 'EPS_Y0'] = emptyDict['EPS this Y']
+        df_company_data.loc[ticker, 'PRICE_BOOK'] = emptyDict['P/B']
+        df_company_data.loc[ticker, 'PRICE_BOOK'] = emptyDict['P/B']
+        df_company_data.loc[ticker, 'PRICE_SALES'] = emptyDict['P/S']
+        df_company_data.loc[ticker, 'TARGET_PRICE'] = emptyDict['Target Price']
+        df_company_data.loc[ticker, 'ROE'] = emptyDict['ROE']
+        df_company_data.loc[ticker, '52W_RANGE'] = emptyDict['52W Range']
+        df_company_data.loc[ticker, 'QUICK_RATIO'] = emptyDict['Quick Ratio']
+        df_company_data.loc[ticker, 'GROSS_MARGIN'] = emptyDict['Gross Margin']
+        df_company_data.loc[ticker, 'CURRENT_RATIO'] = emptyDict['Current Ratio']
 
-      df_company_data.loc[ticker, 'PE'] = emptyDict['P/E']
-      df_company_data.loc[ticker, 'EPS_TTM'] = emptyDict['EPS (ttm)']
-      df_company_data.loc[ticker, 'PE_FORWARD'] = emptyDict['Forward P/E']
-      df_company_data.loc[ticker, 'EPS_Y1'] = emptyDict['EPS next Y']
-      df_company_data.loc[ticker, 'PEG'] = emptyDict['PEG']
-      df_company_data.loc[ticker, 'EPS_Y0'] = emptyDict['EPS this Y']
-      df_company_data.loc[ticker, 'PRICE_BOOK'] = emptyDict['P/B']
-      df_company_data.loc[ticker, 'PRICE_BOOK'] = emptyDict['P/B']
-      df_company_data.loc[ticker, 'PRICE_SALES'] = emptyDict['P/S']
-      df_company_data.loc[ticker, 'TARGET_PRICE'] = emptyDict['Target Price']
-      df_company_data.loc[ticker, 'ROE'] = emptyDict['ROE']
-      df_company_data.loc[ticker, '52W_RANGE'] = emptyDict['52W Range']
-      df_company_data.loc[ticker, 'QUICK_RATIO'] = emptyDict['Quick Ratio']
-      df_company_data.loc[ticker, 'GROSS_MARGIN'] = emptyDict['Gross Margin']
-      df_company_data.loc[ticker, 'CURRENT_RATIO'] = emptyDict['Current Ratio']
+        # get ticker cid
+        cid = sql_get_cid(ticker)
+        if(cid):
+          #TODO: write records to database
+          rename_cols = {"52W_RANGE": "RANGE_52W"}
+          add_col_values = {"cid": cid}
+          conflict_cols = "cid"
 
-      # get ticker cid
-      cid = sql_get_cid(ticker)
-      if(cid):
-        #TODO: write records to database
-        rename_cols = {"52W_RANGE": "RANGE_52W"}
-        add_col_values = {"cid": cid}
-        conflict_cols = "cid"
+          success = sql_write_df_to_db(df_company_data, "CompanyRatio", rename_cols, add_col_values, conflict_cols)
 
-        success = sql_write_df_to_db(df_company_data, "CompanyRatio", rename_cols, add_col_values, conflict_cols)
+        logger.info(f'Successfully retrieved finwiz stock data for {ticker}')
 
-      logger.info(f'Successfully retrieved finwiz stock data for {ticker}')
-
-    except Exception as e:
-      logger.exception(f'Did not return finwiz stock data for {ticker}: {e}')    
+      except Exception as e:
+        logger.exception(f'Did not return finwiz stock data for {ticker}: {e}')    
 
   return success
 
@@ -413,7 +416,10 @@ def get_stockrow_stock_data(df_tickers, logger):
                 temp_row.append(td.text.strip().replace("Created with Highcharts 8.2.2foo",""))        
 
               df.loc[len(df.index)] = temp_row
+    except IndexError as e:
+      logger.exception(f'Did not load table for {ticker} from stockrow')
 
+    try:
       df.rename(columns={ df.columns[13]: "YEAR" }, inplace = True)
 
       # get a list of columns
@@ -424,9 +430,8 @@ def get_stockrow_stock_data(df_tickers, logger):
 
       # reorder
       df = df.loc[:, cols]
-
     except IndexError as e:
-      logger.exception(f'Did not load table for {ticker} from stockrow')
+      logger.exception(f'No YEAR column for {ticker} from stockrow')
 
     #print("df before df2 is populated. Does it contain data?")
     #print(df)
@@ -593,7 +598,6 @@ def get_stockrow_stock_data(df_tickers, logger):
         rename_cols = {"YEAR": "FORECAST_YEAR"}
         add_col_values = {"cid": cid}
         conflict_cols = "cid, forecast_year"
-
         success = sql_write_df_to_db(df_transposed, "CompanyForecast", rename_cols, add_col_values, conflict_cols)
 
   return success
