@@ -12,6 +12,7 @@ df_tickers = get_zacks_us_companies()
 df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL'])]
 df_tickers2 = df_tickers.loc[df_tickers['Ticker'].isin(['ACWI'])]
 df_tickers3 = df_tickers.loc[df_tickers['Ticker'].isin(['AIMC'])]
+df_tickers4 = df_tickers.loc[df_tickers['Ticker'].isin(['TKAGY'])]
 
 class TestCommon(unittest.TestCase):
 
@@ -48,6 +49,8 @@ class TestCommon(unittest.TestCase):
     def test_get_zacks_peer_comparison(self):
         self.assertEqual(get_zacks_peer_comparison(df_tickers1, logger),True)
         self.assertEqual(get_zacks_peer_comparison(df_tickers3, logger),False)
+        self.assertEqual(get_zacks_peer_comparison(df_tickers4, logger),True)
+
 
 if __name__ == '__main__':
     unittest.main()

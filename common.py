@@ -23,18 +23,6 @@ import psycopg2, psycopg2.extras
 import config
 import logging
 
-#logger = logging.getLogger(__name__)
-#logger.setLevel(logging.DEBUG)
-
-#formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
-
-#file_handler = logging.FileHandler('logger.log', mode='w')
-#file_handler.setFormatter(formatter)
-
-#logger.addHandler(file_handler)
-
-#logging.basicConfig(format='%(asctime)s:%(levelname)s:%(message)s',filename='logger.log', filemode='w', level=logging.DEBUG)
-
 isWindows = False
 
 if(sys.platform == 'win32'):
@@ -240,8 +228,8 @@ def get_yf_key_stats(df_tickers, logger):
       df_company_data.loc[ticker, 'EV_EBITDA'] = statsDict['Enterprise Value/EBITDA']
       df_company_data.loc[ticker, 'PRICE_BOOK'] = statsDict['Price/Book (mrq)']
 
-      df_company_data = dataframe_convert_to_numeric(df_company_data, '50_DAY_MOVING_AVG')
-      df_company_data = dataframe_convert_to_numeric(df_company_data, '200_DAY_MOVING_AVG')
+      df_company_data = dataframe_convert_to_numeric(df_company_data, '50_DAY_MOVING_AVG', logger)
+      df_company_data = dataframe_convert_to_numeric(df_company_data, '200_DAY_MOVING_AVG', logger)
 
       logger.info(f'Successfully Retrieved YF Key Stats for {ticker}')
     except KeyError as e:
@@ -266,7 +254,10 @@ def get_yf_price_action(ticker):
     return json_yf_modules
 
 def write_zacks_ticker_data_to_db(df_tickers, logger):
+  #create new df using columns from old df
+  df_tickers_updated = pd.DataFrame(columns=df_tickers.columns)
   connection, cursor = sql_open_db()
+
   for index, row in df_tickers.iterrows():
       symbol = row["Ticker"]
       company = row["Company Name"] 
@@ -297,14 +288,15 @@ def write_zacks_ticker_data_to_db(df_tickers, logger):
 
           #Make the changes to the database persistent
           connection.commit()
-          logger.info(f'Successfully Written Zacks data into database {symbol}')
+          df_tickers_updated = df_tickers_updated.append(row)
 
+          logger.info(f'Successfully Written Zacks data into database {symbol}')
       except AttributeError as e:
-          logger.error(f'Most likely an ETF and therefore not written to database: {symbol}')
+          logger.error(f'Most likely an ETF and therefore not written to database, removed from df_tickers: {symbol}')
 
   success = sql_close_db(connection, cursor)
 
-  return success
+  return df_tickers_updated, success
 
 
 def get_finwiz_stock_data(df_tickers, logger):
@@ -373,7 +365,7 @@ def get_finwiz_stock_data(df_tickers, logger):
       logger.info(f'Successfully retrieved finwiz stock data for {ticker}')
 
     except Exception as e:
-      logger.error(f'Did not return finwiz stock data for {ticker}: {e}')    
+      logger.exception(f'Did not return finwiz stock data for {ticker}: {e}')    
 
   return success
 
@@ -432,7 +424,7 @@ def get_stockrow_stock_data(df_tickers, logger):
       df = df.loc[:, cols]
 
     except IndexError as e:
-      logger.error(f'Did not load table for {ticker} from stockrow')
+      logger.exception(f'Did not load table for {ticker} from stockrow')
 
     #print("df before df2 is populated. Does it contain data?")
     #print(df)
@@ -481,13 +473,13 @@ def get_stockrow_stock_data(df_tickers, logger):
               df2.loc[len(df2.index)] = temp_row
             except ValueError as e:
               #Handling when the html of the table is incorrect and results in an additional element in the row
-              logger.error(f'Mismatched df2 row for {ticker}')
+              logger.exception(f'Mismatched df2 row for {ticker}')
               pass
             break
       #print(df2)
       #df2.drop([" "], axis=1) #Hack: Drop any null columns. Better to just remove them upstream
     except IndexError as e:
-      logger.error(f'Did not load table for {ticker} from wsj')
+      logger.exception(f'Did not load table for {ticker} from wsj')
 
     #Only proceed to format the data and write to database if we have data about the ticker at this point
     if(df.empty == False):      
@@ -523,9 +515,9 @@ def get_stockrow_stock_data(df_tickers, logger):
         })  
 
       try:
-        df_transposed = dataframe_convert_to_numeric(df_transposed, 'EBITDA')
+        df_transposed = dataframe_convert_to_numeric(df_transposed, 'EBITDA', logger)
       except KeyError as e:
-        logger.error(f'EBITDA does not exist for {ticker}')
+        logger.exception(f'EBITDA does not exist for {ticker}')
       #print("df_transposed before numeric conversion")
       #print(df_transposed)
 
@@ -534,42 +526,42 @@ def get_stockrow_stock_data(df_tickers, logger):
       #import pdb; pdb.set_trace()
       try:
         #import pdb; pdb.set_trace()
-        df_transposed = dataframe_convert_to_numeric(df_transposed, 'SALES')
+        df_transposed = dataframe_convert_to_numeric(df_transposed, 'SALES', logger)
       except KeyError as e:
         logger.error(f'SALES does not exist for {ticker}')
 
       try:
-        df_transposed = dataframe_convert_to_numeric(df_transposed, 'EBIT')
+        df_transposed = dataframe_convert_to_numeric(df_transposed, 'EBIT', logger)
       except KeyError as e:
         logger.error(f'EBIT does not exist for {ticker}')
 
       try:
-        df_transposed = dataframe_convert_to_numeric(df_transposed, 'NET_INCOME')
+        df_transposed = dataframe_convert_to_numeric(df_transposed, 'NET_INCOME', logger)
       except KeyError as e:
         logger.error(f'NET_INCOME does not exist for {ticker}')
 
       try:
-        df_transposed = dataframe_convert_to_numeric(df_transposed, 'PE_RATIO')
+        df_transposed = dataframe_convert_to_numeric(df_transposed, 'PE_RATIO', logger)
       except KeyError as e:
         logger.error(f'PE_RATIO does not exist for {ticker}')
 
       try:
-        df_transposed = dataframe_convert_to_numeric(df_transposed, 'EARNINGS_PER_SHARE')
+        df_transposed = dataframe_convert_to_numeric(df_transposed, 'EARNINGS_PER_SHARE', logger)
       except KeyError as e:
         logger.error(f'EARNINGS_PER_SHARE does not exist for {ticker}')
 
       try:
-        df_transposed = dataframe_convert_to_numeric(df_transposed, 'CASH_FLOW_PER_SHARE')
+        df_transposed = dataframe_convert_to_numeric(df_transposed, 'CASH_FLOW_PER_SHARE', logger)
       except KeyError as e:
         logger.error(f'CASH_FLOW_PER_SHARE does not exist for {ticker}')
 
       try:
-        df_transposed = dataframe_convert_to_numeric(df_transposed, 'BOOK_VALUE_PER_SHARE')
+        df_transposed = dataframe_convert_to_numeric(df_transposed, 'BOOK_VALUE_PER_SHARE', logger)
       except KeyError as e:
         logger.error(f'BOOK_VALUE_PER_SHARE does not exist for {ticker}')
 
       try:
-        df_transposed = dataframe_convert_to_numeric(df_transposed, 'TOTAL_DEBT')
+        df_transposed = dataframe_convert_to_numeric(df_transposed, 'TOTAL_DEBT', logger)
       except KeyError as e:
         logger.error(f'TOTAL_DEBT does not exist for {ticker}')
 
@@ -662,17 +654,17 @@ def get_zacks_balance_sheet_shares(df_tickers, logger):
       df_balance_sheet_annual = df_balance_sheet_annual.rename(columns={"Total Common Equity":"TOTAL_COMMON_EQUITY"})                         
       df_balance_sheet_annual = df_balance_sheet_annual.rename(columns={"Shares Outstanding":"SHARES_OUTSTANDING"})                          
       df_balance_sheet_annual = df_balance_sheet_annual.rename(columns={"Book Value Per Share":"BOOK_VALUE_PER_SHARE"})  
-      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'PREFERRED_STOCK')
-      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'COMMON_STOCK_PAR')
-      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'CAPITAL_SURPLUS')
-      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'RETAINED_EARNINGS')
-      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'OTHER_EQUITY')
-      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'TREASURY_STOCK')
-      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'TOTAL_SHAREHOLDERS_EQUITY')
-      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'TOTAL_LIABILITIES_SHAREHOLDERS_EQUITY')
-      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'TOTAL_COMMON_EQUITY')
-      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'SHARES_OUTSTANDING')
-      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'BOOK_VALUE_PER_SHARE')
+      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'PREFERRED_STOCK', logger)
+      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'COMMON_STOCK_PAR', logger)
+      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'CAPITAL_SURPLUS', logger)
+      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'RETAINED_EARNINGS', logger)
+      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'OTHER_EQUITY', logger)
+      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'TREASURY_STOCK', logger)
+      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'TOTAL_SHAREHOLDERS_EQUITY', logger)
+      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'TOTAL_LIABILITIES_SHAREHOLDERS_EQUITY', logger)
+      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'TOTAL_COMMON_EQUITY', logger)
+      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'SHARES_OUTSTANDING', logger)
+      df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'BOOK_VALUE_PER_SHARE', logger)
       df_balance_sheet_annual.reset_index(inplace=True)
       df_balance_sheet_annual = df_balance_sheet_annual.rename(columns = {'index':'DATE'})
       df_balance_sheet_annual['DATE'] = pd.to_datetime(df_balance_sheet_annual['DATE'],format='%m/%d/%Y')
@@ -690,17 +682,17 @@ def get_zacks_balance_sheet_shares(df_tickers, logger):
       df_balance_sheet_quarterly = df_balance_sheet_quarterly.rename(columns={"Total Common Equity":"TOTAL_COMMON_EQUITY"})                         
       df_balance_sheet_quarterly = df_balance_sheet_quarterly.rename(columns={"Shares Outstanding":"SHARES_OUTSTANDING"})                          
       df_balance_sheet_quarterly = df_balance_sheet_quarterly.rename(columns={"Book Value Per Share":"BOOK_VALUE_PER_SHARE"})  
-      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'PREFERRED_STOCK')
-      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'COMMON_STOCK_PAR')
-      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'CAPITAL_SURPLUS')
-      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'RETAINED_EARNINGS')
-      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'OTHER_EQUITY')
-      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'TREASURY_STOCK')
-      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'TOTAL_SHAREHOLDERS_EQUITY')
-      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'TOTAL_LIABILITIES_SHAREHOLDERS_EQUITY')
-      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'TOTAL_COMMON_EQUITY')
-      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'SHARES_OUTSTANDING')
-      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'BOOK_VALUE_PER_SHARE')
+      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'PREFERRED_STOCK', logger)
+      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'COMMON_STOCK_PAR', logger)
+      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'CAPITAL_SURPLUS', logger)
+      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'RETAINED_EARNINGS', logger)
+      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'OTHER_EQUITY', logger)
+      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'TREASURY_STOCK', logger)
+      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'TOTAL_SHAREHOLDERS_EQUITY', logger)
+      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'TOTAL_LIABILITIES_SHAREHOLDERS_EQUITY', logger)
+      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'TOTAL_COMMON_EQUITY', logger)
+      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'SHARES_OUTSTANDING', logger)
+      df_balance_sheet_quarterly = dataframe_convert_to_numeric(df_balance_sheet_quarterly,'BOOK_VALUE_PER_SHARE', logger)
       df_balance_sheet_quarterly.reset_index(inplace=True)
       df_balance_sheet_quarterly = df_balance_sheet_quarterly.rename(columns = {'index':'DATE'})
       df_balance_sheet_quarterly['DATE'] = pd.to_datetime(df_balance_sheet_quarterly['DATE'],format='%m/%d/%Y')
@@ -763,12 +755,12 @@ def get_zacks_peer_comparison(df_tickers, logger):
         add_col_values = {"cid": cid}
         conflict_cols = "cid, peer_ticker"
         success = sql_write_df_to_db(df_peer_comparison, "CompanyPeerComparison", rename_cols, add_col_values, conflict_cols)
+        logger.info(f'Successfully retrieved Zacks Peer Comparison for {ticker}')
 
-      logger.info(f'Successfully retrieved Zacks Peer Comparison for {ticker}')
     except AttributeError as e:
-      logger.error(f'Did not return Zacks Peer Comparison for {ticker}')      
+      logger.exception(f'Did not return Zacks Peer Comparison for {ticker}')      
     except KeyError as e:
-      logger.error(f'Did not return Zacks Peer Comparison for {ticker}')      
+      logger.exception(f'Did not return Zacks Peer Comparison for {ticker}')      
 
   return success
 
@@ -795,10 +787,10 @@ def get_zacks_earnings_surprises(df_tickers, logger):
       df_earnings_release_date = df_earnings_release_date.drop(['Zacks Consensus Estimate', 'Earnings ESP','Report Date'], axis=1)
       df_earnings_release_date['Release Date'] = pd.to_datetime(df_earnings_release_date['Release Date'],format='%m/%d/%Y')
     except (IndexError,AttributeError) as e:
-      logger.error(f'No earnings date for {ticker}. It is probably an ETF')
+      logger.exception(f'No earnings date for {ticker}. It is probably an ETF')
       pass
     except (ValueError, KeyError) as e:
-      logger.error(f'Earnings Date is NA for {ticker}')
+      logger.exception(f'Earnings Date is NA for {ticker}')
 
     #Need to extract Earnings and Sales Surprises data from json object in javascript on page
     #scripts = soup.find_all('script')[29]
@@ -817,15 +809,15 @@ def get_zacks_earnings_surprises(df_tickers, logger):
       df_earnings_surprises = df_earnings_surprises.drop(df_earnings_surprises.iloc[:, 4:7],axis = 1)
       df_earnings_surprises.rename(columns={ df_earnings_surprises.columns[0]: "DATE",df_earnings_surprises.columns[1]: "PERIOD",df_earnings_surprises.columns[2]: "EPS_ESTIMATE",df_earnings_surprises.columns[3]: "EPS_REPORTED" }, inplace = True)
       df_earnings_surprises['DATE'] = pd.to_datetime(df_earnings_surprises['DATE'],format='%m/%d/%y')
-      df_earnings_surprises = dataframe_convert_to_numeric(df_earnings_surprises,'EPS_ESTIMATE')
-      df_earnings_surprises = dataframe_convert_to_numeric(df_earnings_surprises,'EPS_REPORTED')
+      df_earnings_surprises = dataframe_convert_to_numeric(df_earnings_surprises,'EPS_ESTIMATE', logger)
+      df_earnings_surprises = dataframe_convert_to_numeric(df_earnings_surprises,'EPS_REPORTED', logger)
 
       df_sales_surprises = convert_list_to_df(list_earnings_announcements_sales)
       df_sales_surprises = df_sales_surprises.drop(df_sales_surprises.iloc[:, 4:7],axis = 1)
       df_sales_surprises.rename(columns={ df_sales_surprises.columns[0]: "DATE",df_sales_surprises.columns[1]: "PERIOD",df_sales_surprises.columns[2]: "SALES_ESTIMATE",df_sales_surprises.columns[3]: "SALES_REPORTED" }, inplace = True)
       df_sales_surprises['DATE'] = pd.to_datetime(df_sales_surprises['DATE'],format='%m/%d/%y')
-      df_sales_surprises = dataframe_convert_to_numeric(df_sales_surprises,'SALES_ESTIMATE')
-      df_sales_surprises = dataframe_convert_to_numeric(df_sales_surprises,'SALES_REPORTED')
+      df_sales_surprises = dataframe_convert_to_numeric(df_sales_surprises,'SALES_ESTIMATE', logger)
+      df_sales_surprises = dataframe_convert_to_numeric(df_sales_surprises,'SALES_REPORTED', logger)
 
       new_df_earnings = pd.merge(df_earnings_surprises, df_sales_surprises,  how='left', left_on=['DATE','PERIOD'], right_on = ['DATE','PERIOD'])
 
@@ -844,11 +836,11 @@ def get_zacks_earnings_surprises(df_tickers, logger):
       logger.info(f'Successfully retrieved Zacks Searnings Surprises for {ticker}')
 
     except json.decoder.JSONDecodeError as e:
-      logger.error(f'JSON Loading error in Zacks Earnings Surprises for {ticker}')
+      logger.exception(f'JSON Loading error in Zacks Earnings Surprises for {ticker}')
       pass
 
     except IndexError as e:
-      logger.error(f'Did not load earnings or sales surprises for {ticker}')
+      logger.exception(f'Did not load earnings or sales surprises for {ticker}')
 
   return success
 
@@ -909,7 +901,7 @@ def get_zacks_product_line_geography(df_tickers, logger):
         df_product_line = df_product_line.drop(columns='YR Estimate', axis=1)
         df_product_line = df_product_line.iloc[:, 0:2]
         colname = df_product_line.columns[1]
-        df_product_line = dataframe_convert_to_numeric(df_product_line,colname)
+        df_product_line = dataframe_convert_to_numeric(df_product_line,colname, logger)
         df_product_line = df_product_line.iloc[:4,:]
 
         df_product_line = df_product_line.rename(columns={df_product_line.columns[0]: 'BUSINESS_SEGMENT'})
@@ -918,7 +910,7 @@ def get_zacks_product_line_geography(df_tickers, logger):
         logger.info(f'Successfully retrieved Zacks Product Line for {ticker}')
 
       except KeyError as e:
-        logger.error(f'Did not load Zacks Product Line for {ticker}')
+        logger.exception(f'Did not load Zacks Product Line for {ticker}')
         pass
 
       try:
@@ -926,7 +918,7 @@ def get_zacks_product_line_geography(df_tickers, logger):
         df_geography = df_geography.drop(columns='YR Estimate', axis=1)
         df_geography = df_geography.iloc[:, 0:2]
         colname = df_geography.columns[1]
-        df_geography = dataframe_convert_to_numeric(df_geography,colname)
+        df_geography = dataframe_convert_to_numeric(df_geography,colname, logger)
         df_geography = df_geography.iloc[:4,:]
         df_geography = df_geography.rename(columns={df_geography.columns[0]: 'REGION'})
         df_geography = df_geography.rename(columns={df_geography.columns[1]: 'REVENUE'})
@@ -944,7 +936,7 @@ def get_zacks_product_line_geography(df_tickers, logger):
         logger.info(f'Successfully retrieved Zacks Geography for {ticker}')
 
       except KeyError as e:
-        logger.error(f'Failed to retrieve Zacks Geography for {ticker}')
+        logger.exception(f'Failed to retrieve Zacks Geography for {ticker}')
         pass
   
   return success
@@ -1105,7 +1097,7 @@ def _util_check_diff_list(li1, li2):
   # Python code to get difference of two lists
   return list(set(li1) - set(li2))
 
-def dataframe_convert_to_numeric(df, column):
+def dataframe_convert_to_numeric(df, column, logger):
   #TODO: Deal with percentages and negative values in brackets
   try:
     contains_mill = False
@@ -1125,8 +1117,8 @@ def dataframe_convert_to_numeric(df, column):
     df[column] = df[column].str.replace(')','', regex=True)
 
   except KeyError as e:
-    logger.error(df)
-    logger.error(column)
+    logger.exception(df)
+    logger.exception(column)
 
   df[column] = pd.to_numeric(df[column])
   if(contains_mill):

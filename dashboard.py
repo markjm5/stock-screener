@@ -20,7 +20,7 @@ from common import get_yf_key_stats, get_zacks_us_companies, handle_exceptions_p
 from common import write_zacks_ticker_data_to_db, get_logger
 import logging
 
-debug = False
+debug = True
 
 logger = get_logger()
 
@@ -64,21 +64,21 @@ if option == 'Download Data':
         #Download data from zacks and other sources and store it in the database.
         #Use mutithreading to make the download process faster
 
-        df_tickers = get_zacks_us_companies()
-        success = write_zacks_ticker_data_to_db(df_tickers, logger)
+        df_tickers_all = get_zacks_us_companies()
+        df_tickers, success = write_zacks_ticker_data_to_db(df_tickers_all, logger)
         df_tickers1, df_tickers2, df_tickers3, df_tickers4, df_tickers5 = np.array_split(df_tickers, 5)
 
         if(debug):
             #DEBUG CODE
-            df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL','AIMC'])]
+            #df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL','AIMC'])]
             # Write the output of all these functions into the database
-            e1p1 = get_zacks_balance_sheet_shares(df_tickers1, logger)
+            #e1p1 = get_zacks_balance_sheet_shares(df_tickers1, logger)
             #e2p1 = get_zacks_earnings_surprises(df_tickers1, logger)
             #e3p1 = get_zacks_product_line_geography(df_tickers1, logger)
             #e4p1 = get_finwiz_stock_data(df_tickers1, logger)
-            #e5p1 = get_stockrow_stock_data(df_tickers2, logger)
+            #e5p1 = get_stockrow_stock_data(df_tickers1, logger)
             #e6p1 = get_yf_key_stats(df_tickers1, logger) 
-            #e7p1 = get_zacks_peer_comparison(df_tickers1, logger)
+            e7p1 = get_zacks_peer_comparison(df_tickers5, logger)
             import pdb; pdb.set_trace()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -111,11 +111,11 @@ if option == 'Download Data':
             e4p5 = executor.submit(get_finwiz_stock_data, df_tickers5, logger)
 
             #Executor 5: get_stockrow_stock_data
-            e5p1 = executor.submit(get_stockrow_stock_data, df_tickers1, logger)
-            e5p2 = executor.submit(get_stockrow_stock_data, df_tickers2, logger)
-            e5p3 = executor.submit(get_stockrow_stock_data, df_tickers3, logger)
-            e5p4 = executor.submit(get_stockrow_stock_data, df_tickers4, logger)
-            e5p5 = executor.submit(get_stockrow_stock_data, df_tickers5, logger)
+            #e5p1 = executor.submit(get_stockrow_stock_data, df_tickers1, logger)
+            #e5p2 = executor.submit(get_stockrow_stock_data, df_tickers2, logger)
+            #e5p3 = executor.submit(get_stockrow_stock_data, df_tickers3, logger)
+            #e5p4 = executor.submit(get_stockrow_stock_data, df_tickers4, logger)
+            #e5p5 = executor.submit(get_stockrow_stock_data, df_tickers5, logger)
 
             #Executor 6: get_yf_key_stats
             e6p1 = executor.submit(get_yf_key_stats, df_tickers1, logger)
@@ -129,6 +129,7 @@ if option == 'Download Data':
             e7p2 = executor.submit(get_zacks_peer_comparison, df_tickers2, logger)
             e7p3 = executor.submit(get_zacks_peer_comparison, df_tickers3, logger)
             e7p4 = executor.submit(get_zacks_peer_comparison, df_tickers4, logger)
+            #EXCEPTION of Executor 7 Process 5: list index out of range
             e7p5 = executor.submit(get_zacks_peer_comparison, df_tickers5, logger)
 
         now_finish = dt.now()
@@ -164,11 +165,11 @@ if option == 'Download Data':
         handle_exceptions_print_result(e4p4, 4, 4, logger)
         handle_exceptions_print_result(e4p5, 4, 5, logger)
 
-        handle_exceptions_print_result(e5p1, 5, 1, logger)
-        handle_exceptions_print_result(e5p2, 5, 2, logger)
-        handle_exceptions_print_result(e5p3, 5, 3, logger)
-        handle_exceptions_print_result(e5p4, 5, 4, logger)
-        handle_exceptions_print_result(e5p5, 5, 5, logger)
+        #handle_exceptions_print_result(e5p1, 5, 1, logger)
+        #handle_exceptions_print_result(e5p2, 5, 2, logger)
+        #handle_exceptions_print_result(e5p3, 5, 3, logger)
+        #handle_exceptions_print_result(e5p4, 5, 4, logger)
+        #handle_exceptions_print_result(e5p5, 5, 5, logger)
 
         handle_exceptions_print_result(e6p1, 6, 1, logger)
         handle_exceptions_print_result(e6p2, 6, 2, logger)
