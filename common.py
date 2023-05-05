@@ -13,15 +13,15 @@ import copy
 import re
 import math
 import yfinance as yf
+import psycopg2, psycopg2.extras
+import config
+import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from datetime import date
 from datetime import datetime as dt
 from bs4 import BeautifulSoup
-import psycopg2, psycopg2.extras
-import config
-import logging
 
 isWindows = False
 
@@ -301,7 +301,7 @@ def write_zacks_ticker_data_to_db(df_tickers, logger):
 
 def get_finwiz_stock_data(df_tickers, logger):
   success = False
-  
+
   # Load finwiz exclusion list
   csv_file_path = '/data/finwiz_exclusion_list.csv'
   df_exclusion_list = convert_csv_to_dataframe(csv_file_path)

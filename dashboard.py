@@ -6,12 +6,12 @@ import requests
 import tweepy
 import config 
 import psycopg2, psycopg2.extras
-from psycopg2 import sql
 import plotly.graph_objects as go
 import glob
 import os
 import json
 import concurrent.futures
+from psycopg2 import sql
 from datetime import date
 from datetime import datetime as dt
 from common import get_finwiz_stock_data, get_stockrow_stock_data, get_zacks_balance_sheet_shares
