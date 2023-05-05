@@ -301,8 +301,9 @@ def write_zacks_ticker_data_to_db(df_tickers, logger):
 
 def get_finwiz_stock_data(df_tickers, logger):
   success = False
+  
   # Load finwiz exclusion list
-  csv_file_path = '/finwiz_exclusion_list.csv'
+  csv_file_path = '/data/finwiz_exclusion_list.csv'
   df_exclusion_list = convert_csv_to_dataframe(csv_file_path)
 
   for index, row in df_tickers.iterrows():
@@ -976,7 +977,7 @@ def get_api_json_data_no_file(url):
     return data_list
 
 def get_zacks_us_companies():
-  list_of_files = glob.glob('data/*.csv',) # * means all if need specific format then *.csv
+  list_of_files = glob.glob('data/zacks_custom_screen_*.csv',) # * means all if need specific format then *.csv
   latest_zacks_file = max(list_of_files, key=os.path.getctime)
   latest_zacks_file = latest_zacks_file.replace("data\\", "")
   temp_excel_file_path = '/data/{}'.format(latest_zacks_file)
@@ -1216,6 +1217,7 @@ def sql_close_db(connection, cursor):
 
 def get_logger():
 
+  logs_dir = 'logs/'
   error_logfile = dt.now().strftime('log_error_%Y%m%d%H%M%S.log')
   debug_logfile = dt.now().strftime('log_debug_%Y%m%d%H%M%S.log')
 
@@ -1224,11 +1226,11 @@ def get_logger():
 
   formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
 
-  file_handler_errors = logging.FileHandler(error_logfile, mode='w')
+  file_handler_errors = logging.FileHandler(logs_dir + error_logfile, mode='w')
   file_handler_errors.setFormatter(formatter)
   file_handler_errors.setLevel(logging.ERROR)
 
-  file_handler_all = logging.FileHandler(debug_logfile, mode='w')
+  file_handler_all = logging.FileHandler(logs_dir + debug_logfile, mode='w')
   file_handler_all.setFormatter(formatter)
   file_handler_all.setLevel(logging.DEBUG)
 
