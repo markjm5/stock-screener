@@ -14,14 +14,12 @@ import concurrent.futures
 from psycopg2 import sql
 from datetime import date
 from datetime import datetime as dt
-from common import get_finwiz_stock_data, get_stockrow_stock_data, get_zacks_balance_sheet_shares
-from common import get_zacks_peer_comparison, get_zacks_earnings_surprises, get_zacks_product_line_geography
-from common import get_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
-from common import write_zacks_ticker_data_to_db, get_logger
+from common import set_finwiz_stock_data, set_stockrow_stock_data, get_zacks_balance_sheet_shares
+from common import set_zacks_peer_comparison, set_zacks_earnings_surprises, set_zacks_product_line_geography
+from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
+from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager
 
 debug = False
-
-logger = get_logger()
 
 #Dates
 todays_date = date.today()
@@ -51,6 +49,8 @@ option = st.sidebar.selectbox("Which Option?", ('Download Data', 'One Pager'), 1
 st.header(option)
 
 if option == 'Download Data':
+    logger = get_logger()
+
     #num_days = st.sidebar.slider('Number of days', 1, 30, 3)
     clicked = st.markdown("Takes approximately 9 hours")
 
@@ -72,12 +72,12 @@ if option == 'Download Data':
             #df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL','AIMC'])]
             # Write the output of all these functions into the database
             #e1p1 = get_zacks_balance_sheet_shares(df_tickers1, logger)
-            #e2p1 = get_zacks_earnings_surprises(df_tickers1, logger)
-            #e3p1 = get_zacks_product_line_geography(df_tickers1, logger)
-            e4p1 = get_finwiz_stock_data(df_tickers, logger)
-            #e5p1 = get_stockrow_stock_data(df_tickers1, logger)
-            #e6p1 = get_yf_key_stats(df_tickers1, logger) 
-            #e7p1 = get_zacks_peer_comparison(df_tickers5, logger)
+            #e2p1 = set_zacks_earnings_surprises(df_tickers1, logger)
+            #e3p1 = set_zacks_product_line_geography(df_tickers1, logger)
+            e4p1 = set_finwiz_stock_data(df_tickers, logger)
+            #e5p1 = set_stockrow_stock_data(df_tickers1, logger)
+            #e6p1 = set_yf_key_stats(df_tickers1, logger) 
+            #e7p1 = set_zacks_peer_comparison(df_tickers5, logger)
             import pdb; pdb.set_trace()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -88,43 +88,43 @@ if option == 'Download Data':
             e1p4 = executor.submit(get_zacks_balance_sheet_shares, df_tickers4, logger)
             e1p5 = executor.submit(get_zacks_balance_sheet_shares, df_tickers5, logger)
 
-            #Executor 2: get_zacks_earnings_surprises
-            e2p1 = executor.submit(get_zacks_earnings_surprises, df_tickers1, logger)
-            e2p2 = executor.submit(get_zacks_earnings_surprises, df_tickers2, logger)
-            e2p3 = executor.submit(get_zacks_earnings_surprises, df_tickers3, logger)
-            e2p4 = executor.submit(get_zacks_earnings_surprises, df_tickers4, logger)
-            e2p5 = executor.submit(get_zacks_earnings_surprises, df_tickers5, logger)
+            #Executor 2: set_zacks_earnings_surprises
+            e2p1 = executor.submit(set_zacks_earnings_surprises, df_tickers1, logger)
+            e2p2 = executor.submit(set_zacks_earnings_surprises, df_tickers2, logger)
+            e2p3 = executor.submit(set_zacks_earnings_surprises, df_tickers3, logger)
+            e2p4 = executor.submit(set_zacks_earnings_surprises, df_tickers4, logger)
+            e2p5 = executor.submit(set_zacks_earnings_surprises, df_tickers5, logger)
 
-            #Executor 3: get_zacks_product_line_geography
-            e3p1 = executor.submit(get_zacks_product_line_geography, df_tickers1, logger)
-            e3p2 = executor.submit(get_zacks_product_line_geography, df_tickers2, logger)
-            e3p3 = executor.submit(get_zacks_product_line_geography, df_tickers3, logger)
-            e3p4 = executor.submit(get_zacks_product_line_geography, df_tickers4, logger)
-            e3p5 = executor.submit(get_zacks_product_line_geography, df_tickers5, logger)
+            #Executor 3: set_zacks_product_line_geography
+            e3p1 = executor.submit(set_zacks_product_line_geography, df_tickers1, logger)
+            e3p2 = executor.submit(set_zacks_product_line_geography, df_tickers2, logger)
+            e3p3 = executor.submit(set_zacks_product_line_geography, df_tickers3, logger)
+            e3p4 = executor.submit(set_zacks_product_line_geography, df_tickers4, logger)
+            e3p5 = executor.submit(set_zacks_product_line_geography, df_tickers5, logger)
 
-            #Executor 5: get_stockrow_stock_data
-            e5p1 = executor.submit(get_stockrow_stock_data, df_tickers1, logger)
-            e5p2 = executor.submit(get_stockrow_stock_data, df_tickers2, logger)
-            e5p3 = executor.submit(get_stockrow_stock_data, df_tickers3, logger)
-            e5p4 = executor.submit(get_stockrow_stock_data, df_tickers4, logger)
-            e5p5 = executor.submit(get_stockrow_stock_data, df_tickers5, logger)
+            #Executor 5: set_stockrow_stock_data
+            e5p1 = executor.submit(set_stockrow_stock_data, df_tickers1, logger)
+            e5p2 = executor.submit(set_stockrow_stock_data, df_tickers2, logger)
+            e5p3 = executor.submit(set_stockrow_stock_data, df_tickers3, logger)
+            e5p4 = executor.submit(set_stockrow_stock_data, df_tickers4, logger)
+            e5p5 = executor.submit(set_stockrow_stock_data, df_tickers5, logger)
 
-            #Executor 6: get_yf_key_stats
-            e6p1 = executor.submit(get_yf_key_stats, df_tickers1, logger)
-            e6p2 = executor.submit(get_yf_key_stats, df_tickers2, logger)
-            e6p3 = executor.submit(get_yf_key_stats, df_tickers3, logger)
-            e6p4 = executor.submit(get_yf_key_stats, df_tickers4, logger)
-            e6p5 = executor.submit(get_yf_key_stats, df_tickers5, logger)
+            #Executor 6: set_yf_key_stats
+            e6p1 = executor.submit(set_yf_key_stats, df_tickers1, logger)
+            e6p2 = executor.submit(set_yf_key_stats, df_tickers2, logger)
+            e6p3 = executor.submit(set_yf_key_stats, df_tickers3, logger)
+            e6p4 = executor.submit(set_yf_key_stats, df_tickers4, logger)
+            e6p5 = executor.submit(set_yf_key_stats, df_tickers5, logger)
 
-            #Executor 7: get_zacks_peer_comparison
-            e7p1 = executor.submit(get_zacks_peer_comparison, df_tickers1, logger)
-            e7p2 = executor.submit(get_zacks_peer_comparison, df_tickers2, logger)
-            e7p3 = executor.submit(get_zacks_peer_comparison, df_tickers3, logger)
-            e7p4 = executor.submit(get_zacks_peer_comparison, df_tickers4, logger)
-            e7p5 = executor.submit(get_zacks_peer_comparison, df_tickers5, logger)
+            #Executor 7: set_zacks_peer_comparison
+            e7p1 = executor.submit(set_zacks_peer_comparison, df_tickers1, logger)
+            e7p2 = executor.submit(set_zacks_peer_comparison, df_tickers2, logger)
+            e7p3 = executor.submit(set_zacks_peer_comparison, df_tickers3, logger)
+            e7p4 = executor.submit(set_zacks_peer_comparison, df_tickers4, logger)
+            e7p5 = executor.submit(set_zacks_peer_comparison, df_tickers5, logger)
 
         #Finwiz does not handle concurrent connections so need to run it without multithreading
-        finwiz_stock_data_status = get_finwiz_stock_data(df_tickers, logger)
+        finwiz_stock_data_status = set_finwiz_stock_data(df_tickers, logger)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
@@ -181,5 +181,25 @@ if option == 'One Pager':
     if(clicked):
         #get the value from the text input and get data
         st.subheader(f'One Pager For: {symbol}')
+        df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data = get_one_pager(symbol)
+        st.markdown("Balance Sheet")
+        df_zacks_balance_sheet_shares
 
+        st.markdown("Earnings Surprises")
+        df_zacks_earnings_surprises
+
+        st.markdown("Geography")
+        df_zacks_product_line_geography
+
+        st.markdown("Stockrow Data")
+        df_stockrow_stock_data
+
+        st.markdown("YF Key Stats")
+        df_yf_key_stats
+
+        st.markdown("Peer Comparison")
+        df_zacks_peer_comparison
+
+        st.markdown("Finwiz Ratios")
+        df_finwiz_stock_data
 

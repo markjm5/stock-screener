@@ -173,7 +173,7 @@ def get_yf_analysis(ticker):
   opt = company.option_chain('YYYY-MM-DD')
   # data available via: opt.calls, opt.puts
 
-def get_yf_key_stats(df_tickers, logger):
+def set_yf_key_stats(df_tickers, logger):
   success = False
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
@@ -300,7 +300,7 @@ def write_zacks_ticker_data_to_db(df_tickers, logger):
   return df_tickers_updated, success
 
 
-def get_finwiz_stock_data(df_tickers, logger):
+def set_finwiz_stock_data(df_tickers, logger):
   success = False
 
   # Load finwiz exclusion list
@@ -376,7 +376,7 @@ def get_finwiz_stock_data(df_tickers, logger):
 
   return success
 
-def get_stockrow_stock_data(df_tickers, logger):
+def set_stockrow_stock_data(df_tickers, logger):
   success = False
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
@@ -593,7 +593,7 @@ def get_stockrow_stock_data(df_tickers, logger):
 
   return success
 
-def get_zacks_balance_sheet_shares(df_tickers, logger):
+def set_zacks_balance_sheet_shares(df_tickers, logger):
   success = False
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
@@ -692,7 +692,7 @@ def get_zacks_balance_sheet_shares(df_tickers, logger):
 
   return success
 
-def get_zacks_peer_comparison(df_tickers, logger):
+def set_zacks_peer_comparison(df_tickers, logger):
   success = False
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
@@ -737,7 +737,7 @@ def get_zacks_peer_comparison(df_tickers, logger):
 
   return success
 
-def get_zacks_earnings_surprises(df_tickers, logger):
+def set_zacks_earnings_surprises(df_tickers, logger):
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
     logger.info(f'Getting zacks earnings surprises for {ticker}')
@@ -817,7 +817,7 @@ def get_zacks_earnings_surprises(df_tickers, logger):
 
   return success
 
-def get_zacks_product_line_geography(df_tickers, logger):
+def set_zacks_product_line_geography(df_tickers, logger):
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
 
@@ -914,6 +914,13 @@ def get_zacks_product_line_geography(df_tickers, logger):
   
   return success
 
+############
+#  GETTERS #
+############
+
+
+
+
 def get_api_json_data(url, filename):
 
     #check if current file has todays system date, and if it does load from current file. Otherwise, continue to call the api
@@ -976,6 +983,68 @@ def get_zacks_us_companies():
   df_us_companies = convert_csv_to_dataframe(temp_excel_file_path)
 
   return df_us_companies
+
+def get_one_pager(ticker):
+
+  #Initialize dataframes
+  df_zacks_balance_sheet_shares = pd.DataFrame()
+  df_zacks_earnings_surprises = pd.DataFrame()
+  df_zacks_product_line_geography = pd.DataFrame()
+  df_stockrow_stock_data = pd.DataFrame()
+  df_yf_key_stats = pd.DataFrame()
+  df_zacks_peer_comparison = pd.DataFrame()
+  df_finwiz_stock_data = pd.DataFrame()
+
+  # get ticker cid
+  cid = sql_get_cid(ticker)
+
+  if(cid):
+    #TODO: Query database tables and retrieve all data for the ticker
+    df_zacks_balance_sheet_shares = get_zacks_balance_sheet_shares(cid)
+    df_zacks_earnings_surprises = get_zacks_earnings_surprises(cid)
+    df_zacks_product_line_geography = get_zacks_product_line_geography(cid)
+    df_stockrow_stock_data = get_stockrow_stock_data(cid)
+    df_yf_key_stats = get_yf_key_stats(cid)
+    df_zacks_peer_comparison = get_zacks_peer_comparison(cid)
+    df_finwiz_stock_data = get_finwiz_stock_data(cid)
+
+  return df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data
+
+def get_zacks_balance_sheet_shares(cid):
+  table = "balancesheet"
+  df_zacks_balance_sheet_shares = sql_get_records_as_df(table, cid)
+  return df_zacks_balance_sheet_shares
+
+def get_zacks_earnings_surprises(cid):
+  table = "earningssurprise"
+  df_zacks_earnings_surprises = sql_get_records_as_df(table, cid)
+  return df_zacks_earnings_surprises
+
+def get_zacks_product_line_geography(cid):
+  table = "companygeography"
+  df_zacks_product_line_geography = sql_get_records_as_df(table, cid)
+  return df_zacks_product_line_geography
+
+def get_stockrow_stock_data(cid):
+  table = "companyforecast"
+  df_stockrow_stock_data = sql_get_records_as_df(table, cid)
+  return df_stockrow_stock_data
+
+def get_yf_key_stats(cid):
+  table = "companymovingaverage"
+  df_yf_key_stats = sql_get_records_as_df(table, cid)
+  return df_yf_key_stats
+
+
+def get_zacks_peer_comparison(cid):
+  table = "companypeercomparison"
+  df_zacks_peer_comparison = sql_get_records_as_df(table, cid)
+  return df_zacks_peer_comparison
+
+def get_finwiz_stock_data(cid):
+  table = "companyratio"
+  df_yf_key_stats = sql_get_records_as_df(table, cid)
+  return df_yf_key_stats
 
 ####################
 # Output Functions #
@@ -1115,6 +1184,7 @@ def handle_exceptions_print_result(future, executor_num, process_num, logger):
   else:
     logger.info(f'Status of Executor {executor_num} Process {process_num}: {future.result()}')
     st.write(f'Status of Executor {executor_num} Process {process_num}: {future.result()}')
+
 ######################
 # Database Functions #
 ######################
@@ -1133,6 +1203,22 @@ def sql_get_cid(ticker):
   success = sql_close_db(connection, cursor)
 
   return cid
+
+def sql_get_cid(ticker):
+
+  connection, cursor = sql_open_db()
+
+  sqlCmd = """SELECT cid FROM company WHERE symbol='{}'""".format(sql_escape_str(ticker))
+  cursor.execute(sqlCmd)
+  try:
+    cid = cursor.fetchone()[0]
+  except TypeError as e:
+    cid = None
+
+  success = sql_close_db(connection, cursor)
+
+  return cid
+
 
 def sql_write_df_to_db(df, db_table, rename_cols, additional_col_values, conflict_cols):
 
@@ -1191,6 +1277,18 @@ def sql_format_str(value):
   else:
     return f'\'{sql_escape_str(value)}\','
 
+def sql_get_records_as_df(table, cid):
+  #df = pd.DataFrame()
+  connection, cursor = sql_open_db()
+  sqlCmd = """SELECT * FROM {} WHERE cid={}""".format(table, cid)
+  cursor.execute(sqlCmd)
+  colnames = [desc[0] for desc in cursor.description]
+  df = pd.DataFrame(cursor.fetchall())
+  if(len(df) > 0):
+    df.columns = colnames
+  success = sql_close_db(connection, cursor)
+  return df
+
 def sql_open_db():
   connection = psycopg2.connect(host=config.DB_HOST, database=config.DB_NAME, user=config.DB_USER, password=config.DB_PASS)
   cursor = connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
@@ -1200,6 +1298,10 @@ def sql_close_db(connection, cursor):
   connection.close()
   cursor.close()
   return True
+
+#####################
+# Logging Functions #
+#####################
 
 def get_logger():
 
