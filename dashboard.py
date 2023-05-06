@@ -18,6 +18,7 @@ from common import set_finwiz_stock_data, set_stockrow_stock_data, get_zacks_bal
 from common import set_zacks_peer_comparison, set_zacks_earnings_surprises, set_zacks_product_line_geography
 from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
 from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager
+from common import scrape_table_earningswhispers_earnings_calendar, scrape_table_marketscreener_economic_calendar
 
 debug = False
 
@@ -51,9 +52,7 @@ st.markdown(f'''
     </style>
 ''',unsafe_allow_html=True)
 
-option = st.sidebar.selectbox("Which Option?", ('Download Data','Macroeconomic Data', 'Single Stock One Pager', 'Bottom Up Ideas'), 2)
-
-
+option = st.sidebar.selectbox("Which Option?", ('Download Data','Macro Economic Data','Calendar', 'Single Stock One Pager', 'Bottom Up Ideas'), 2)
 
 st.header(option)
 
@@ -70,7 +69,11 @@ if option == 'Download Data':
     clicked3 = st.button(label="Click to Download ALL Data", key="all_data")
 
     if(clicked1):
-        st.write(f'You clicked button 1!')
+        st.write(f'Downloading Macro Econimic Data...')
+        df_tickers_all = get_zacks_us_companies()        
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            f1 = executor.submit(scrape_table_earningswhispers_earnings_calendar, df_tickers_all)
+            f2 = executor.submit(scrape_table_marketscreener_economic_calendar)
 
     if(clicked2):
         logger = get_logger()
@@ -193,68 +196,98 @@ if option == 'Download Data':
 
     if(clicked3):
         st.write(f'You clicked button 3!')
-        
+
+if option == 'Calendar':
+    st.subheader(f'Calendar')
+
+if option == 'Macro Economic Data':
+    st.subheader(f'Macro Economic Data')
+
 if option == 'Single Stock One Pager':
-    clicked = st.markdown("Get quantitative data for ticker")
 
     symbol = st.sidebar.text_input("Symbol", value='MSFT', max_chars=None, key=None, type='default')
     clicked = st.sidebar.button("Get One Pager")
+
+    if('single_stock_one_pager_clicked' in st.session_state):
+        clicked = st.session_state['single_stock_one_pager_clicked']
+
     if(clicked):
-        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Quantitative Data', 'Chart'), 0)
-        #get the value from the text input and get data
-        st.subheader(f'One Pager For: {symbol}')
+        if('single_stock_one_pager_clicked' not in st.session_state):
+            st.session_state['single_stock_one_pager_clicked'] = True
 
-        #Get all the data for this stock from the database
-        df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data = get_one_pager(symbol)
+        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Quantitative Data', 'Chart', 'Stock Twits'), 0)
 
-        st.markdown("Balance Sheet")
-        st.dataframe(df_zacks_balance_sheet_shares)
+        if option_one_pager == 'Quantitative Data':
+            #get the value from the text input and get data
+            st.subheader(f'One Pager For: {symbol}')
+            st.write(option_one_pager)
+            #Get all the data for this stock from the database
+            df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data = get_one_pager(symbol)
 
-        st.markdown("Earnings Surprises")
-        st.dataframe(df_zacks_earnings_surprises)
+            st.markdown("Balance Sheet")
+            st.dataframe(df_zacks_balance_sheet_shares)
 
-        st.markdown("Geography")
-        st.dataframe(df_zacks_product_line_geography)
+            st.markdown("Earnings Surprises")
+            st.dataframe(df_zacks_earnings_surprises)
 
-        st.markdown("Stockrow Data")
-        st.dataframe(df_stockrow_stock_data)
+            st.markdown("Geography")
+            st.dataframe(df_zacks_product_line_geography)
 
-        st.markdown("YF Key Stats")
-        st.dataframe(df_yf_key_stats)
+            st.markdown("Stockrow Data")
+            st.dataframe(df_stockrow_stock_data)
 
-        st.markdown("Peer Comparison")
-        st.dataframe(df_zacks_peer_comparison)
+            st.markdown("YF Key Stats")
+            st.dataframe(df_yf_key_stats)
 
-        st.markdown("Finwiz Ratios")
-        st.dataframe(df_finwiz_stock_data)
+            st.markdown("Peer Comparison")
+            st.dataframe(df_zacks_peer_comparison)
 
-        #st.subheader(f'STOCK TWITS FOR: {symbol}')
+            st.markdown("Finwiz Ratios")
+            st.dataframe(df_finwiz_stock_data)
 
-        #r = requests.get(f"https://api.stocktwits.com/api/2/streams/symbol/{symbol}.json")
+        if option_one_pager == 'Chart':
+            st.subheader(f'Chart For: {symbol}')
+            st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
 
-        #data = r.json()
+        if option_one_pager == 'Stock Twits':
 
-        #for message in data['messages']:
-        #    st.image(message['user']['avatar_url'])
-        #    st.write(message['user']['username'])
-        #    st.write(message['created_at'])
-        #    st.write(message['body'])
+            st.subheader(f'Stock Twit News For: {symbol}')
+
+            r = requests.get(f"https://api.stocktwits.com/api/2/streams/symbol/{symbol}.json")
+
+            data = r.json()
+
+            for message in data['messages']:
+                st.image(message['user']['avatar_url'])
+                st.write(message['user']['username'])
+                st.write(message['created_at'])
+                st.write(message['body'])
 
 if option == 'Bottom Up Ideas':
-        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Twitter', 'Insider Trading', 'Volume', 'Country Exposure'), 0)
-        
-        for username in config.TWITTER_USERNAMES:
-            st.subheader(username)
-            user = api.get_user(screen_name=username)
-            tweets = api.user_timeline(screen_name=username)
-            st.image(user.profile_image_url)
-            for tweet in tweets:
-                if('$' in tweet.text):
-                    words = tweet.text.split(' ')
-                    for word in words:
-                        if word.startswith('$') and word[1:].isalpha():
-                            symbol = word[1:]
-                            st.write(symbol)
-                            st.write(tweet.text)
+        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','Insider Trading', 'Country Exposure', 'Twitter'), 0)
+        if option_one_pager == 'Volume':        
+            st.subheader(f'Volume')
+        if option_one_pager == 'Insider Trading':        
+            st.subheader(f'Insider Trading')
 
-                            st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
+        if option_one_pager == 'Country Exposure':
+            st.subheader(f'Country Exposure')
+
+        if option_one_pager == 'Twitter':        
+            st.subheader(f'Twitter')
+
+            for username in config.TWITTER_USERNAMES:
+                st.subheader(username)
+                user = api.get_user(screen_name=username)
+                tweets = api.user_timeline(screen_name=username)
+                st.image(user.profile_image_url)
+                for tweet in tweets:
+                    if('$' in tweet.text):
+                        words = tweet.text.split(' ')
+                        for word in words:
+                            if word.startswith('$') and word[1:].isalpha():
+                                symbol = word[1:]
+                                st.write(symbol)
+                                st.write(tweet.text)
+
+                                st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
