@@ -244,6 +244,7 @@ def get_yf_key_stats(df_tickers, logger):
       conflict_cols = "cid"
 
       success = sql_write_df_to_db(df_company_data, "CompanyMovingAverage", rename_cols, add_col_values, conflict_cols)
+      logger.info(f'Successfully Saved YF Key Stats for {ticker}')     
 
   return success
 
@@ -368,7 +369,7 @@ def get_finwiz_stock_data(df_tickers, logger):
 
           success = sql_write_df_to_db(df_company_data, "CompanyRatio", rename_cols, add_col_values, conflict_cols)
 
-        logger.info(f'Successfully retrieved finwiz stock data for {ticker}')
+          logger.info(f'Successfully Saved finwiz stock data for {ticker}')
 
       except Exception as e:
         logger.exception(f'Did not return finwiz stock data for {ticker}: {e}')    
@@ -390,53 +391,55 @@ def get_stockrow_stock_data(df_tickers, logger):
 
     soup = BeautifulSoup(page, 'html.parser')
 
-    try:
-      table = soup.find_all('table')[0]
-      
-      table_rows = table.find_all('tr', recursive=True)
-      table_rows_header = table.find_all('tr')[0].find_all('th')
+    #Only execute if the stockrow page has a table containing data about the ticker
+    if(soup.find_all('table')):
+      try:
+        table = soup.find_all('table')[0]
+        
+        table_rows = table.find_all('tr', recursive=True)
+        table_rows_header = table.find_all('tr')[0].find_all('th')
 
-      index = 0
+        index = 0
 
-      for header in table_rows_header:
-        df.insert(index,header.text,[],True)
-        index+=1
-      #print("did we get any rows?")
-      #print(table_rows)
-      #Get rows of data.
-      for tr in table_rows:
+        for header in table_rows_header:
+          df.insert(index,header.text,[],True)
+          index+=1
+        #print("did we get any rows?")
+        #print(table_rows)
+        #Get rows of data.
+        for tr in table_rows:
 
-        if(tr.find_all('td')):
-          #print(tr.find_all('td')[len(tr.find_all('td'))-1].text.strip())
-          row_heading = tr.find_all('td')[len(tr.find_all('td'))-1].text.strip().replace("Created with Highcharts 8.2.2foo","")   
-          if(row_heading in ['Revenue','EBT','Net Income','PE Ratio','Earnings/Sh','Total Debt','Cash Flow/Sh','Book Value/Sh']):
-            tds = tr.find_all('td', recursive=True)
-            if(tds):
-              temp_row = []
-              for td in tds:
-                temp_row.append(td.text.strip().replace("Created with Highcharts 8.2.2foo",""))        
+          if(tr.find_all('td')):
+            #print(tr.find_all('td')[len(tr.find_all('td'))-1].text.strip())
+            row_heading = tr.find_all('td')[len(tr.find_all('td'))-1].text.strip().replace("Created with Highcharts 8.2.2foo","")   
+            if(row_heading in ['Revenue','EBT','Net Income','PE Ratio','Earnings/Sh','Total Debt','Cash Flow/Sh','Book Value/Sh']):
+              tds = tr.find_all('td', recursive=True)
+              if(tds):
+                temp_row = []
+                for td in tds:
+                  temp_row.append(td.text.strip().replace("Created with Highcharts 8.2.2foo",""))        
 
-              df.loc[len(df.index)] = temp_row
-    except IndexError as e:
-      logger.exception(f'Did not load table for {ticker} from stockrow')
+                df.loc[len(df.index)] = temp_row
+      except IndexError as e:
+        logger.exception(f'Did not load table for {ticker} from stockrow')
 
-    try:
-      df.rename(columns={ df.columns[13]: "YEAR" }, inplace = True)
+    #Only execute the following if we have a dataframe that contains data
+    if(len(df) > 0):
+      try:
+        df.rename(columns={ df.columns[13]: "YEAR" }, inplace = True)
 
-      # get a list of columns
-      cols = list(df)
+        # get a list of columns
+        cols = list(df)
 
-      # move the column to head of list using index, pop and insert
-      cols.insert(0, cols.pop(cols.index('YEAR')))
+        # move the column to head of list using index, pop and insert
+        cols.insert(0, cols.pop(cols.index('YEAR')))
 
-      # reorder
-      df = df.loc[:, cols]
-    except IndexError as e:
-      logger.exception(f'No YEAR column for {ticker} from stockrow')
+        # reorder
+        df = df.loc[:, cols]
+      except IndexError as e:
+        logger.exception(f'No YEAR column for {ticker} from stockrow')
 
-    #print("df before df2 is populated. Does it contain data?")
-    #print(df)
-
+    #Get WSJ Data
     page = get_page_selenium("https://www.wsj.com/market-data/quotes/%s/financials/annual/income-statement" % (ticker))
 
     soup = BeautifulSoup(page, 'html.parser')
@@ -576,21 +579,7 @@ def get_stockrow_stock_data(df_tickers, logger):
       #df_transposed = df_transposed.loc[list_dates]
 
       #st.write(f'Data for ({count}) {ticker}')
-      #st.write(df_transposed)
-
-      #print(f'Data for {ticker}')
-      #print(df_transposed)
-      #TODO: Write the details to DB
-      #YEAR
-      #SALES                   float64
-      #EBIT                    float64
-      #NET_INCOME              float64
-      #PE_RATIO                float64
-      #EARNINGS_PER_SHARE      float64
-      #CASH_FLOW_PER_SHARE     float64
-      #BOOK_VALUE_PER_SHARE    float64
-      #TOTAL_DEBT              float64
-      #EBITDA                  float64    
+      #st.write(df_transposed)    
 
       # get ticker cid
       cid = sql_get_cid(ticker)
@@ -600,6 +589,7 @@ def get_stockrow_stock_data(df_tickers, logger):
         add_col_values = {"cid": cid}
         conflict_cols = "cid, forecast_year"
         success = sql_write_df_to_db(df_transposed, "CompanyForecast", rename_cols, add_col_values, conflict_cols)
+        logger.info(f'Successfully Saved stockrow data for {ticker}')
 
   return success
 
@@ -694,7 +684,7 @@ def get_zacks_balance_sheet_shares(df_tickers, logger):
         add_col_values_quarterly = {"REPORTING_PERIOD": "quarterly", "cid": cid}
         success = sql_write_df_to_db(df_balance_sheet_quarterly, "BalanceSheet", rename_cols, add_col_values_quarterly, conflict_cols)
 
-      logger.info(f'Successfully retrieved zacks balance sheet data for {ticker}')
+        logger.info(f'Successfully Saved zacks balance sheet data for {ticker}')
       
     except IndexError as e:
       logger.error(f'No balance sheet for {ticker}')
@@ -737,7 +727,7 @@ def get_zacks_peer_comparison(df_tickers, logger):
         add_col_values = {"cid": cid}
         conflict_cols = "cid, peer_ticker"
         success = sql_write_df_to_db(df_peer_comparison, "CompanyPeerComparison", rename_cols, add_col_values, conflict_cols)
-        logger.info(f'Successfully retrieved Zacks Peer Comparison for {ticker}')
+        logger.info(f'Successfully Saved Zacks Peer Comparison for {ticker}')
     except IndexError as e:
       logger.exception(f'Did not return Zacks Peer Comparison for {ticker}')      
     except AttributeError as e:
@@ -816,7 +806,7 @@ def get_zacks_earnings_surprises(df_tickers, logger):
 
         success = sql_write_df_to_db(new_df_earnings, "EarningsSurprise", rename_cols, add_col_values, conflict_cols)
 
-      logger.info(f'Successfully retrieved Zacks Searnings Surprises for {ticker}')
+        logger.info(f'Successfully Saved Zacks Earnings Surprises for {ticker}')
 
     except json.decoder.JSONDecodeError as e:
       logger.exception(f'JSON Loading error in Zacks Earnings Surprises for {ticker}')
@@ -916,7 +906,7 @@ def get_zacks_product_line_geography(df_tickers, logger):
 
           success = sql_write_df_to_db(df_geography, "CompanyGeography", rename_cols, add_col_values, conflict_cols)
 
-        logger.info(f'Successfully retrieved Zacks Geography for {ticker}')
+          logger.info(f'Successfully Saved Zacks Geography for {ticker}')
 
       except KeyError as e:
         logger.exception(f'Failed to retrieve Zacks Geography for {ticker}')
@@ -1132,8 +1122,6 @@ def handle_exceptions_print_result(future, executor_num, process_num, logger):
 def sql_get_cid(ticker):
 
   connection, cursor = sql_open_db()
-  #connection = psycopg2.connect(host=config.DB_HOST, database=config.DB_NAME, user=config.DB_USER, password=config.DB_PASS)
-  #cursor = connection.cursor(cursor_factory=psycopg2.extras.DictCursor)
 
   sqlCmd = """SELECT cid FROM company WHERE symbol='{}'""".format(sql_escape_str(ticker))
   cursor.execute(sqlCmd)
@@ -1180,8 +1168,6 @@ def sql_write_df_to_db(df, db_table, rename_cols, additional_col_values, conflic
     connection.commit()
 
   success = sql_close_db(connection, cursor)
-  #cursor.close()
-  #connection.close()
 
   return success
 
@@ -1218,8 +1204,8 @@ def sql_close_db(connection, cursor):
 def get_logger():
 
   logs_dir = 'logs/'
-  error_logfile = dt.now().strftime('log_error_%Y%m%d%H%M%S.log')
-  debug_logfile = dt.now().strftime('log_debug_%Y%m%d%H%M%S.log')
+  error_logfile = dt.now().strftime('log_error_%Y%m%d_%H%M%S.log')
+  debug_logfile = dt.now().strftime('log_debug_%Y%m%d_%H%M%S.log')
 
   logger = logging.getLogger(__name__)
   logger.setLevel(logging.DEBUG)
