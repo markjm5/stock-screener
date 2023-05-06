@@ -181,7 +181,10 @@ if option == 'One Pager':
     if(clicked):
         #get the value from the text input and get data
         st.subheader(f'One Pager For: {symbol}')
+        
+        #Get all the data for this stock from the database
         df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data = get_one_pager(symbol)
+
         st.markdown("Balance Sheet")
         df_zacks_balance_sheet_shares
 
