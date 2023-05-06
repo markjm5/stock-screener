@@ -44,17 +44,35 @@ list_of_files = glob.glob('data/*.csv',) # * means all if need specific format t
 latest_zacks_file = max(list_of_files, key=os.path.getctime)
 latest_zacks_file = latest_zacks_file.replace("data\\", "")
 
-option = st.sidebar.selectbox("Which Option?", ('Download Data', 'One Pager'), 1)
+st.markdown(f'''
+    <style>
+        section[data-testid="stSidebar"] .css-ng1t4o {{width: 14rem;}}
+        section[data-testid="stSidebar"] .css-1d391kg {{width: 14rem;}}
+    </style>
+''',unsafe_allow_html=True)
+
+option = st.sidebar.selectbox("Which Option?", ('Download Data','Macroeconomic Data', 'Single Stock One Pager', 'Bottom Up Ideas'), 2)
+
+
 
 st.header(option)
 
 if option == 'Download Data':
 
     #num_days = st.sidebar.slider('Number of days', 1, 30, 3)
-    clicked = st.markdown("Takes approximately 9 hours")
+    clicked1 = st.markdown("Download Macroeconomic Data Only (takes 1 hour)")
+    clicked1 = st.button(label="Click to Download Macro Data",key="macro_data")
 
-    clicked = st.button("Click to Download")
-    if(clicked):
+    clicked2 = st.markdown("Download Stock Data Only (takes 6 hours)")
+    clicked2 = st.button(label="Click to Download Stock Data", key="stock_data")
+
+    clicked3 = st.markdown("Download ALL Data (takes 9 hours)")
+    clicked3 = st.button(label="Click to Download ALL Data", key="all_data")
+
+    if(clicked1):
+        st.write(f'You clicked button 1!')
+
+    if(clicked2):
         logger = get_logger()
         now_start = dt.now()
         start_time = now_start.strftime("%H:%M:%S")    
@@ -173,13 +191,16 @@ if option == 'Download Data':
 
         st.write(f'Status of Finwiz Stock Data: {finwiz_stock_data_status}')
 
-if option == 'One Pager':
+    if(clicked3):
+        st.write(f'You clicked button 3!')
+        
+if option == 'Single Stock One Pager':
     clicked = st.markdown("Get quantitative data for ticker")
 
     symbol = st.sidebar.text_input("Symbol", value='MSFT', max_chars=None, key=None, type='default')
     clicked = st.sidebar.button("Get One Pager")
     if(clicked):
-        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Quantitative Data', 'Stock Twits','Tweets', 'Chart', 'Insider Trading'), 0)
+        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Quantitative Data', 'Chart'), 0)
         #get the value from the text input and get data
         st.subheader(f'One Pager For: {symbol}')
 
@@ -207,19 +228,21 @@ if option == 'One Pager':
         st.markdown("Finwiz Ratios")
         st.dataframe(df_finwiz_stock_data)
 
-        st.subheader(f'STOCK TWITS FOR: {symbol}')
+        #st.subheader(f'STOCK TWITS FOR: {symbol}')
 
-        r = requests.get(f"https://api.stocktwits.com/api/2/streams/symbol/{symbol}.json")
+        #r = requests.get(f"https://api.stocktwits.com/api/2/streams/symbol/{symbol}.json")
 
-        data = r.json()
+        #data = r.json()
 
-        for message in data['messages']:
-            st.image(message['user']['avatar_url'])
-            st.write(message['user']['username'])
-            st.write(message['created_at'])
-            st.write(message['body'])
+        #for message in data['messages']:
+        #    st.image(message['user']['avatar_url'])
+        #    st.write(message['user']['username'])
+        #    st.write(message['created_at'])
+        #    st.write(message['body'])
 
-        st.subheader(f'TWEETS FOR: {symbol}')
+if option == 'Bottom Up Ideas':
+        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Twitter', 'Insider Trading', 'Volume', 'Country Exposure'), 0)
+        
         for username in config.TWITTER_USERNAMES:
             st.subheader(username)
             user = api.get_user(screen_name=username)
@@ -233,4 +256,5 @@ if option == 'One Pager':
                             symbol = word[1:]
                             st.write(symbol)
                             st.write(tweet.text)
+
                             st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
