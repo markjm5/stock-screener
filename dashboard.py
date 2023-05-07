@@ -20,7 +20,7 @@ from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_p
 from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager
 from common import set_earningswhispers_earnings_calendar
 from common import set_marketscreener_economic_calendar
-from common import set_whitehouse_news, get_data
+from common import set_whitehouse_news, set_geopolitical_calendar, get_data
 debug = False
 
 #Dates
@@ -80,6 +80,7 @@ if option == 'Download Data':
             e1p1 = executor.submit(set_earningswhispers_earnings_calendar, df_tickers_all, logger)
             e1p2 = executor.submit(set_marketscreener_economic_calendar, logger)
             e1p3 = executor.submit(set_whitehouse_news, logger)
+            e1p4 = executor.submit(set_geopolitical_calendar, logger)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
@@ -93,6 +94,7 @@ if option == 'Download Data':
         handle_exceptions_print_result(e1p1, 1, 1, logger)
         handle_exceptions_print_result(e1p2, 1, 2, logger)
         handle_exceptions_print_result(e1p3, 1, 3, logger)
+        handle_exceptions_print_result(e1p4, 1, 4, logger)
 
     if(clicked2):
         logger = get_logger()
