@@ -1569,9 +1569,11 @@ def sql_get_records_as_df(table, cid):
 
 def sql_delete_all_rows(table):
   connection, cursor = sql_open_db()
-  sqlCmd = """DELETE FROM {};""".format(table)
+  sqlCmd = """TRUNCATE {} RESTART IDENTITY;""".format(table)
   cursor.execute(sqlCmd)
-  return True   
+  connection.commit()  
+  success = sql_close_db(connection, cursor)
+  return success   
 
 def sql_open_db():
   connection = psycopg2.connect(host=config.DB_HOST, database=config.DB_NAME, user=config.DB_USER, password=config.DB_PASS)

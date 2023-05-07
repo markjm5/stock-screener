@@ -23,18 +23,20 @@ class TestCommon(unittest.TestCase):
     """
     def test_set_earningswhispers_earnings_calendar(self):
         self.assertEqual(set_earningswhispers_earnings_calendar(df_tickers, logger),True)
+    """
         
     def test_scrape_table_marketscreener_economic_calendar(self):
         self.assertEqual(set_marketscreener_economic_calendar(logger),True)
-        
+
+    """        
     def test_set_whitehouse_news(self):
         self.assertEqual(set_whitehouse_news(logger),True)
-    """
     
+
     def test_set_geopolitical_calendar(self):
         self.assertEqual(set_geopolitical_calendar(logger),True)
 
-    """        
+            
     #Executor 1
     def test_set_zacks_balance_sheet_shares(self):
         self.assertEqual(set_zacks_balance_sheet_shares(df_tickers1, logger),True)

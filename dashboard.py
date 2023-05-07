@@ -60,10 +60,10 @@ st.header(option)
 if option == 'Download Data':
 
     #num_days = st.sidebar.slider('Number of days', 1, 30, 3)
-    clicked1 = st.markdown("Download Macroeconomic Data Only (takes 1 hour)")
+    clicked1 = st.markdown("Download Macroeconomic Data (takes 1 hour)")
     clicked1 = st.button(label="Click to Download Macro Data",key="macro_data")
 
-    clicked2 = st.markdown("Download Stock Data Only (takes 6 hours)")
+    clicked2 = st.markdown("Download Stock Data (takes 6 hours)")
     clicked2 = st.button(label="Click to Download Stock Data", key="stock_data")
 
     clicked3 = st.markdown("Download ALL Data (takes 9 hours)")
@@ -74,7 +74,7 @@ if option == 'Download Data':
         now_start = dt.now()
         start_time = now_start.strftime("%H:%M:%S")    
 
-        st.write(f'Downloading Macro Econimic Data...')
+        st.write(f'Downloading Macro Economic Data...')
         df_tickers_all = get_zacks_us_companies()        
         with concurrent.futures.ProcessPoolExecutor() as executor:
             e1p1 = executor.submit(set_earningswhispers_earnings_calendar, df_tickers_all, logger)
