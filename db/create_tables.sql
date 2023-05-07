@@ -115,3 +115,12 @@ CREATE TABLE IF NOT EXISTS CompanyPeerComparison (
     PRIMARY KEY (cid, peer_ticker),
     CONSTRAINT fk_companyforecast FOREIGN KEY (cid) REFERENCES Company (cid)
 );
+
+CREATE TABLE IF NOT EXISTS Macro_EarningsCalendar (
+    id SERIAL,
+    dt TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    dt_time TEXT NOT NULL,
+    ticker TEXT NOT NULL,
+    company_name TEXT NOT NULL,
+    market_cap_mil NUMERIC NOT NULL
+);

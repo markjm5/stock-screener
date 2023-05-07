@@ -179,6 +179,7 @@ def set_yf_key_stats(df_tickers, logger):
     ticker = row['Ticker']  
 
     logger.info(f'Getting YF Key Stats for {ticker}')
+    statsDict = {}
 
     df_company_data = pd.DataFrame()
     url = "https://finance.yahoo.com/quote/%s/key-statistics?p=%s" % (ticker, ticker)
@@ -188,7 +189,6 @@ def set_yf_key_stats(df_tickers, logger):
       soup = BeautifulSoup(page.content, 'html.parser')
 
       tables = soup.find_all('table')
-      statsDict = {}
       #try:
       for table in tables:
         table_rows = table.find_all('tr', recursive=True)
@@ -723,7 +723,7 @@ def set_zacks_peer_comparison(df_tickers, logger):
       cid = sql_get_cid(ticker)
       if(cid):
         # write records to database
-        rename_cols = {}
+        rename_cols = None
         add_col_values = {"cid": cid}
         conflict_cols = "cid, peer_ticker"
         success = sql_write_df_to_db(df_peer_comparison, "CompanyPeerComparison", rename_cols, add_col_values, conflict_cols)
@@ -917,9 +917,6 @@ def set_zacks_product_line_geography(df_tickers, logger):
 ############
 #  GETTERS #
 ############
-
-
-
 
 def get_api_json_data(url, filename):
 
@@ -1223,9 +1220,9 @@ def sql_get_cid(ticker):
 def sql_write_df_to_db(df, db_table, rename_cols, additional_col_values, conflict_cols):
 
   connection, cursor = sql_open_db()
-
-  # rename cols based on rename_cols
-  df = df.rename(columns=rename_cols)
+  if(rename_cols):
+    # rename cols based on rename_cols
+    df = df.rename(columns=rename_cols)
 
   for index, row in df.iterrows():
     str1, str2, str3 = "", "", ""
@@ -1236,7 +1233,7 @@ def sql_write_df_to_db(df, db_table, rename_cols, additional_col_values, conflic
       str3 += f'{name}=excluded.{name},'
 
     #add additional col values based on additional_col_values variable
-    if(len(additional_col_values) > 0):
+    if(additional_col_values):
       for key in additional_col_values:
         str1 += f'{key},'
         str2 += sql_format_str(additional_col_values[key])
@@ -1245,9 +1242,13 @@ def sql_write_df_to_db(df, db_table, rename_cols, additional_col_values, conflic
     str1 = str1.rstrip(',')
     str2 = str2.rstrip(',')
     str3 = str3.rstrip(',')
-    sqlCmd = """INSERT INTO {} ({}) VALUES ({}) ON CONFLICT ({}) DO UPDATE SET {};
-    """.format(db_table, str1, str2, conflict_cols, str3)
-
+    if(conflict_cols):
+      sqlCmd = """INSERT INTO {} ({}) VALUES ({}) ON CONFLICT ({}) DO UPDATE SET {};
+      """.format(db_table, str1, str2, conflict_cols, str3)
+    else:
+      sqlCmd = """INSERT INTO {} ({}) VALUES ({});
+      """.format(db_table, str1, str2, str3)
+       
     cursor.execute(sqlCmd)
     connection.commit()
 
@@ -1280,12 +1281,20 @@ def sql_get_records_as_df(table, cid):
   connection, cursor = sql_open_db()
   sqlCmd = """SELECT * FROM {} WHERE cid={}""".format(table, cid)
   cursor.execute(sqlCmd)
+
+  #TODO: Need to modify so that we read records directly into a df
   colnames = [desc[0] for desc in cursor.description]
   df = pd.DataFrame(cursor.fetchall())
   if(len(df) > 0):
     df.columns = colnames
   success = sql_close_db(connection, cursor)
   return df
+
+def sql_delete_all_rows(table):
+  connection, cursor = sql_open_db()
+  sqlCmd = """DELETE FROM {};""".format(table)
+  cursor.execute(sqlCmd)
+  return True   
 
 def sql_open_db():
   connection = psycopg2.connect(host=config.DB_HOST, database=config.DB_NAME, user=config.DB_USER, password=config.DB_PASS)
@@ -1333,7 +1342,7 @@ def get_logger():
 
 ##### FROM OTHER FILE ########
 
-def scrape_table_earningswhispers_earnings_calendar(df_us_companies, logger):
+def get_table_earningswhispers_earnings_calendar(df_us_companies, logger):
   logger.info("Getting data from Earnings Whispers")
 
   df = pd.DataFrame()
@@ -1349,12 +1358,21 @@ def scrape_table_earningswhispers_earnings_calendar(df_us_companies, logger):
   df = df.sort_values(by=['Market Cap (Mil)'], ascending=False)
   df = df[:10].reset_index(drop=True)
 
-  #TODO: Format dataframe columns
-  #TODO: Clean out existing rows in database and write to database
+  df['Date'] = pd.to_datetime(df['Date'],format='%A, %B %d, %Y')
+
+  #Clear out old data
+  sql_delete_all_rows('Macro_EarningsCalendar')
+
+  #Write new data into table
+  rename_cols = {'Date':'dt','Time':'dt_time','Ticker':'ticker','Company Name':'company_name','Market Cap (Mil)':'market_cap_mil'}
+  add_col_values = None
+  conflict_cols = None
+
+  success = sql_write_df_to_db(df, "Macro_EarningsCalendar", rename_cols, add_col_values, conflict_cols)
 
   logger.info("Successfully scraped data from Earnings Whispers")
 
-  return True
+  return success
 
 def scrape_earningswhispers_day(day, df_us_companies):
   url = "https://www.earningswhispers.com/calendar?sb=c&d=%s&t=all" % (day,)
@@ -1417,7 +1435,7 @@ def scrape_earningswhispers_day(day, df_us_companies):
 
   return df
 
-def scrape_table_marketscreener_economic_calendar(logger):
+def get_table_marketscreener_economic_calendar(logger):
 
   logger.info("Getting Economic Calendar from Market Screener")
 
@@ -1524,6 +1542,8 @@ def scrape_table_marketscreener_economic_calendar(logger):
   #TODO: Format dataframe columns
   #TODO: Clean out existing rows in database and write to database
 
+  import pdb; pdb.set_trace()
+
   logger.info("Successfully Scraped Economic Calendar from Market Screener")
 
   return True
@@ -1543,7 +1563,7 @@ def clean_dates(date_name):
 
     return formatted_date_string
 
-
+#TODO: Need to work out what this function is doing
 def get_ticker_data(df_tickers):
   #TODO: Need to replace the following with data from YF
   for index, row in df_tickers.iterrows():

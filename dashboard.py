@@ -14,7 +14,7 @@ import concurrent.futures
 from psycopg2 import sql
 from datetime import date
 from datetime import datetime as dt
-from common import set_finwiz_stock_data, set_stockrow_stock_data, get_zacks_balance_sheet_shares
+from common import set_finwiz_stock_data, set_stockrow_stock_data, set_zacks_balance_sheet_shares
 from common import set_zacks_peer_comparison, set_zacks_earnings_surprises, set_zacks_product_line_geography
 from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
 from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager
@@ -92,7 +92,7 @@ if option == 'Download Data':
             #DEBUG CODE
             #df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL','AIMC'])]
             # Write the output of all these functions into the database
-            #e1p1 = get_zacks_balance_sheet_shares(df_tickers1, logger)
+            #e1p1 = set_zacks_balance_sheet_shares(df_tickers1, logger)
             #e2p1 = set_zacks_earnings_surprises(df_tickers1, logger)
             #e3p1 = set_zacks_product_line_geography(df_tickers1, logger)
             e4p1 = set_finwiz_stock_data(df_tickers, logger)
@@ -102,12 +102,12 @@ if option == 'Download Data':
             import pdb; pdb.set_trace()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
-            #Executor 1: get_zacks_balance_sheet_shares
-            e1p1 = executor.submit(get_zacks_balance_sheet_shares, df_tickers1, logger)
-            e1p2 = executor.submit(get_zacks_balance_sheet_shares, df_tickers2, logger)
-            e1p3 = executor.submit(get_zacks_balance_sheet_shares, df_tickers3, logger)
-            e1p4 = executor.submit(get_zacks_balance_sheet_shares, df_tickers4, logger)
-            e1p5 = executor.submit(get_zacks_balance_sheet_shares, df_tickers5, logger)
+            #Executor 1: set_zacks_balance_sheet_shares
+            e1p1 = executor.submit(set_zacks_balance_sheet_shares, df_tickers1, logger)
+            e1p2 = executor.submit(set_zacks_balance_sheet_shares, df_tickers2, logger)
+            e1p3 = executor.submit(set_zacks_balance_sheet_shares, df_tickers3, logger)
+            e1p4 = executor.submit(set_zacks_balance_sheet_shares, df_tickers4, logger)
+            e1p5 = executor.submit(set_zacks_balance_sheet_shares, df_tickers5, logger)
 
             #Executor 2: set_zacks_earnings_surprises
             e2p1 = executor.submit(set_zacks_earnings_surprises, df_tickers1, logger)
