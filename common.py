@@ -1142,6 +1142,13 @@ def get_earningswhispers_earnings_calendar():
   df = sql_get_records_as_df(table, cid)
   return df
 
+def get_marketscreener_economic_calendar():
+  table = "macro_economiccalendar"
+  cid=None
+  df = sql_get_records_as_df(table, cid)
+  return df
+
+
 ####################
 # Output Functions #
 ####################
@@ -1450,10 +1457,6 @@ def set_marketscreener_economic_calendar(logger):
 
   logger.info("Getting Economic Calendar from Market Screener")
 
-  #TODO: Get data from the following as well:
-  # https://www.whitehouse.gov/briefing-room/statements-releases/
-  # https://www.controlrisks.com/our-thinking/geopolitical-calendar
-
   url = "https://www.marketscreener.com/stock-exchange/calendar/economic/"
 
   page = get_page(url)
@@ -1548,28 +1551,23 @@ def set_marketscreener_economic_calendar(logger):
   # Updated the date columns
   df['Date'] = df['Date'].apply(clean_dates)
   
-  #TODO: Clean out existing rows in database and write to database
-
-  import pdb; pdb.set_trace()
-
   #Clear out old data
-#  sql_delete_all_rows('Macro_EarningsCalendar')
+  sql_delete_all_rows('Macro_EconomicCalendar')
 
   #Write new data into table
-#  rename_cols = {'Date':'dt','Time':'dt_time','Ticker':'ticker','Company Name':'company_name','Market Cap (Mil)':'market_cap_mil'}
-##  add_col_values = None
-#  conflict_cols = None
+  rename_cols = {'Date':'dt','Time':'dt_time','Country':'country','Events':'economic_event','Previous period':'previous'}
+  add_col_values = None
+  conflict_cols = None
 
-#  success = sql_write_df_to_db(df, "Macro_EarningsCalendar", rename_cols, add_col_values, conflict_cols)
+  success = sql_write_df_to_db(df, "Macro_EconomicCalendar", rename_cols, add_col_values, conflict_cols)
 
   logger.info("Successfully Scraped Economic Calendar from Market Screener")
 
-  return True
+  return success
 
+#TODO: Need to fix
 def set_whitehouse_news(logger):
-
   url = "https://www.whitehouse.gov/briefing-room/statements-releases/"
-
   page = get_page(url)
   soup = BeautifulSoup(page.content, 'html.parser')
   df = pd.DataFrame()
@@ -1579,6 +1577,17 @@ def set_whitehouse_news(logger):
   for article in articles:
      #TODO: Extract Date, Title and Link and put them into a df, then save to database
      import pdb; pdb.set_trace()        
+
+  import pdb; pdb.set_trace()
+
+#TODO: Need to fix
+def set_whitehouse_news(logger):
+  url = "https://www.controlrisks.com/our-thinking/geopolitical-calendar"
+  page = get_page(url)
+  soup = BeautifulSoup(page.content, 'html.parser')
+  df = pd.DataFrame()
+
+  articles = soup.find_all('article', recursive=True)
 
   import pdb; pdb.set_trace()
 

@@ -124,3 +124,13 @@ CREATE TABLE IF NOT EXISTS Macro_EarningsCalendar (
     company_name TEXT NOT NULL,
     market_cap_mil NUMERIC NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS Macro_EconomicCalendar (
+    id SERIAL,
+    dt TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    dt_time TEXT NOT NULL,
+    country TEXT NOT NULL,
+    economic_event TEXT NOT NULL,
+    previous TEXT NOT NULL
+);
+

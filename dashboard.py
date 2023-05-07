@@ -19,6 +19,7 @@ from common import set_zacks_peer_comparison, set_zacks_earnings_surprises, set_
 from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
 from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager
 from common import get_earningswhispers_earnings_calendar,set_earningswhispers_earnings_calendar #, scrape_table_marketscreener_economic_calendar
+from common import get_marketscreener_economic_calendar, set_marketscreener_economic_calendar
 
 debug = False
 
@@ -77,7 +78,7 @@ if option == 'Download Data':
         df_tickers_all = get_zacks_us_companies()        
         with concurrent.futures.ProcessPoolExecutor() as executor:
             e1p1 = executor.submit(set_earningswhispers_earnings_calendar, df_tickers_all, logger)
-            #f2 = executor.submit(scrape_table_marketscreener_economic_calendar)
+            e1p2 = executor.submit(set_marketscreener_economic_calendar, logger)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
@@ -89,7 +90,7 @@ if option == 'Download Data':
         st.write(divmod(difference.days * seconds_in_day + difference.seconds, 60))
 
         handle_exceptions_print_result(e1p1, 1, 1, logger)
-
+        handle_exceptions_print_result(e1p2, 1, 2, logger)
 
     if(clicked2):
         logger = get_logger()
@@ -214,10 +215,14 @@ if option == 'Download Data':
         st.write(f'You clicked button 3!')
 
 if option == 'Calendar':
-    st.subheader(f'Calendar')
-    df = get_earningswhispers_earnings_calendar()
+    #st.subheader(f'Calendar')
+    df1 = get_earningswhispers_earnings_calendar()
     st.markdown("Earnings Calendar")
-    st.dataframe(df)
+    st.dataframe(df1)
+
+    df2 = get_marketscreener_economic_calendar()
+    st.markdown("Economic Calendar")
+    st.dataframe(df2)
 
 if option == 'Macro Economic Data':
     st.subheader(f'Macro Economic Data')

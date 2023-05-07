@@ -23,10 +23,9 @@ class TestCommon(unittest.TestCase):
     """
     def test_set_earningswhispers_earnings_calendar(self):
         self.assertEqual(set_earningswhispers_earnings_calendar(df_tickers, logger),True)
-    
+    """    
     def test_scrape_table_marketscreener_economic_calendar(self):
         self.assertEqual(set_marketscreener_economic_calendar(logger),True)
-    """
     
     def test_set_whitehouse_news(self):
         self.assertEqual(set_whitehouse_news(logger),True)
