@@ -134,3 +134,16 @@ CREATE TABLE IF NOT EXISTS Macro_EconomicCalendar (
     previous TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS Macro_WhitehouseAnnouncement (
+    id SERIAL,
+    dt TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    post_title TEXT NOT NULL,
+    post_url TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS Macro_GeopoliticalCalendar (
+    id SERIAL,
+    event_date TEXT NOT NULL,
+    event_name TEXT NOT NULL,
+    event_location TEXT NOT NULL
+);

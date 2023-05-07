@@ -18,9 +18,9 @@ from common import set_finwiz_stock_data, set_stockrow_stock_data, set_zacks_bal
 from common import set_zacks_peer_comparison, set_zacks_earnings_surprises, set_zacks_product_line_geography
 from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
 from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager
-from common import get_earningswhispers_earnings_calendar,set_earningswhispers_earnings_calendar #, scrape_table_marketscreener_economic_calendar
-from common import get_marketscreener_economic_calendar, set_marketscreener_economic_calendar
-
+from common import set_earningswhispers_earnings_calendar
+from common import set_marketscreener_economic_calendar
+from common import set_whitehouse_news, get_data
 debug = False
 
 #Dates
@@ -79,6 +79,7 @@ if option == 'Download Data':
         with concurrent.futures.ProcessPoolExecutor() as executor:
             e1p1 = executor.submit(set_earningswhispers_earnings_calendar, df_tickers_all, logger)
             e1p2 = executor.submit(set_marketscreener_economic_calendar, logger)
+            e1p3 = executor.submit(set_whitehouse_news, logger)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
@@ -91,13 +92,14 @@ if option == 'Download Data':
 
         handle_exceptions_print_result(e1p1, 1, 1, logger)
         handle_exceptions_print_result(e1p2, 1, 2, logger)
+        handle_exceptions_print_result(e1p3, 1, 3, logger)
 
     if(clicked2):
         logger = get_logger()
         now_start = dt.now()
         start_time = now_start.strftime("%H:%M:%S")    
 
-        print("Clicked!")
+        st.write(f'Downloading Stock Data...')
         #Download data from zacks and other sources and store it in the database.
         #Use mutithreading to make the download process faster
 
@@ -216,13 +218,21 @@ if option == 'Download Data':
 
 if option == 'Calendar':
     #st.subheader(f'Calendar')
-    df1 = get_earningswhispers_earnings_calendar()
+    df1 = get_data(table="macro_earningscalendar")
     st.markdown("Earnings Calendar")
     st.dataframe(df1)
 
-    df2 = get_marketscreener_economic_calendar()
+    df2 = get_data(table="macro_economiccalendar")
     st.markdown("Economic Calendar")
     st.dataframe(df2)
+
+    df3 = get_data(table="macro_whitehouseannouncement")
+    st.markdown("Whitehouse News")
+    st.dataframe(df3)
+
+    df4 = get_data(table="macro_geopoliticalcalendar")
+    st.markdown("Geopolitical Calendar")
+    st.dataframe(df4)
 
 if option == 'Macro Economic Data':
     st.subheader(f'Macro Economic Data')

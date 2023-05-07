@@ -1007,6 +1007,217 @@ def scrape_earningswhispers_day(day, df_us_companies):
 
   return df
 
+def set_marketscreener_economic_calendar(logger):
+
+  logger.info("Getting Economic Calendar from Market Screener")
+
+  url = "https://www.marketscreener.com/stock-exchange/calendar/economic/"
+
+  page = get_page(url)
+  soup = BeautifulSoup(page.content, 'html.parser')
+  df = pd.DataFrame()
+
+  tables = soup.find_all('table', recursive=True)
+
+  table = tables[0]
+
+  table_rows = table.find_all('tr')
+
+  table_header = table_rows[0]
+  td = table_header.find_all('th')
+  index = 0
+
+  for obs in td:        
+      text = str(obs.text).strip()
+
+      if(len(text)==0):
+          text = "Date"
+      df.insert(index,text,[],True)
+      index+=1
+
+  index = 0
+  skip_first = True
+  session = ""
+
+  for tr in table_rows:        
+      temp_row = []
+      #import pdb; pdb.set_trace()
+      td = tr.find_all('td')
+      #class="card--shadowed"
+      if not skip_first:
+          td = tr.find_all('td')
+          th = tr.find('th') #The time is stored as a th
+          if(th):
+              temp_row.append(th.text)        
+
+          if(len(td) == 4):
+              session = str(td[0].text).strip()
+
+          for obs in td:  
+
+              text = str(obs.text).strip()
+              text = text.replace('\n','').replace('  ','')
+
+              if(text == ''):
+                  flag_class = obs.i.attrs['class'][2]
+                  #Maybe this is the country field, which means that the country is represented by a flag image
+                  if(flag_class == 'flag__us'):
+                      text = "US"
+                  elif(flag_class == 'flag__uk'): 
+                      text = "UK"
+
+                  elif(flag_class == 'flag__eu'): 
+                      text = "European Union"
+
+                  elif(flag_class == 'flag__de'): 
+                      text = "Germany"
+
+                  elif(flag_class == 'flag__jp'): 
+                      text = "Japan"
+
+                  elif(flag_class == 'flag__cn'): 
+                      text = "China"
+                  else:
+                      text = "OTHER"
+  
+              temp_row.append(text)        
+
+
+          pos1, pos2  = 1, 2
+
+          if(len(temp_row) == len(df.columns)):
+              temp_row = swapPositions(temp_row, pos1-1, pos2-1)
+          else:
+              temp_row.insert(0,session)
+              #print(temp_row)
+              #import pdb; pdb.set_trace()
+
+          df.loc[len(df.index)] = temp_row
+      else:
+          skip_first = False
+
+  #Remove Duplicates (Country, Events)
+  df = df.drop_duplicates(subset=['Country', 'Events'])
+
+  #Remove OTHER Countries
+  df = df[df.Country != 'OTHER'].reset_index(drop=True)
+
+  # Updated the date columns
+  df['Date'] = df['Date'].apply(clean_dates)
+  
+  #Clear out old data
+  sql_delete_all_rows('Macro_EconomicCalendar')
+
+  #Write new data into table
+  rename_cols = {'Date':'dt','Time':'dt_time','Country':'country','Events':'economic_event','Previous period':'previous'}
+  add_col_values = None
+  conflict_cols = None
+
+  success = sql_write_df_to_db(df, "Macro_EconomicCalendar", rename_cols, add_col_values, conflict_cols)
+
+  logger.info("Successfully Scraped Economic Calendar from Market Screener")
+
+  return success
+
+def set_whitehouse_news(logger):
+  logger.info("Getting Whitehouse news")
+
+  url = "https://www.whitehouse.gov/briefing-room/statements-releases/"
+  page = get_page(url)
+  soup = BeautifulSoup(page.content, 'html.parser')
+
+  data = {'dt': [], 'post_title':[], 'post_url':[]}
+
+  df = pd.DataFrame(data)
+
+  articles = soup.find_all('article', recursive=True)
+
+  for article in articles:
+    temp_row = []
+
+    # Extract Date, Title and Link and put them into a df
+    article_title = article.find('a', attrs={'class':'news-item__title'})
+    article_date = article.find('time', attrs={'class':'posted-on'})
+
+    post_title = str(article_title.text).strip().replace('\xa0', ' ')
+    post_date = article_date.text
+    dt_date = pd.to_datetime(post_date,format='%B %d, %Y')
+    post_url = article_title.attrs['href']
+
+    temp_row.append(dt_date)
+    temp_row.append(post_title)
+    temp_row.append(post_url)
+
+    if(len(temp_row) == len(df.columns)):
+      df.loc[len(df.index)] = temp_row
+
+  #Clear out old data
+  sql_delete_all_rows('Macro_WhitehouseAnnouncement')
+
+  #Write new data into table
+  rename_cols = {'Date':'dt','Time':'dt_time','Country':'country','Events':'economic_event','Previous period':'previous'}
+  add_col_values = None
+  conflict_cols = None
+
+  success = sql_write_df_to_db(df, "Macro_WhitehouseAnnouncement", rename_cols, add_col_values, conflict_cols)
+
+  logger.info("Successfully Scraped Whitehouse news")
+
+  return success
+
+def set_geopolitical_calendar(logger):
+  logger.info("Getting Geopolitical Calendar")
+
+  url = "https://www.controlrisks.com/our-thinking/geopolitical-calendar"
+  page = get_page(url)
+  soup = BeautifulSoup(page.content, 'html.parser')
+  df = pd.DataFrame()
+
+  table = soup.find('table', recursive=True)
+
+  table_rows = table.find_all('tr', recursive=True)
+
+  table_rows_header = table.find_all('tr')[0].find_all('th')
+  df = pd.DataFrame()
+
+  index = 0
+
+  for header in table_rows_header:
+    df.insert(index,str(header.text).strip(),[],True)
+    index+=1
+
+  #Insert New Row. Format the data to show percentage as float
+  for tr in table_rows:
+    temp_row = []
+
+    td = tr.find_all('td')
+    for obs in td:
+      text = str(obs.text).strip()
+      temp_row.append(text)        
+
+    if(len(temp_row) == len(df.columns)):
+      df.loc[len(df.index)] = temp_row
+
+  #Drop the last column because it is empty
+  df = df.iloc[: , :-1]
+
+  #Rename columns so that they match the database table
+  df.rename(columns={ df.columns[0]: "event_date",df.columns[1]: "event_name",df.columns[2]: "event_location" }, inplace = True)
+
+  #Clear out old data
+  sql_delete_all_rows('Macro_GeopoliticalCalendar')
+
+  #Write new data into table
+  rename_cols = None
+  add_col_values = None
+  conflict_cols = None
+
+  success = sql_write_df_to_db(df, "Macro_GeopoliticalCalendar", rename_cols, add_col_values, conflict_cols)
+
+  logger.info("Successfully Scraped Geopolitical Calendar")
+
+  return success
+
 ############
 #  GETTERS #
 ############
@@ -1090,64 +1301,19 @@ def get_one_pager(ticker):
 
   if(cid):
     #TODO: Query database tables and retrieve all data for the ticker
-    df_zacks_balance_sheet_shares = get_zacks_balance_sheet_shares(cid)
-    df_zacks_earnings_surprises = get_zacks_earnings_surprises(cid)
-    df_zacks_product_line_geography = get_zacks_product_line_geography(cid)
-    df_stockrow_stock_data = get_stockrow_stock_data(cid)
-    df_yf_key_stats = get_yf_key_stats(cid)
-    df_zacks_peer_comparison = get_zacks_peer_comparison(cid)
-    df_finwiz_stock_data = get_finwiz_stock_data(cid)
+    df_zacks_balance_sheet_shares = get_data(table="balancesheet",cid=cid)
+    df_zacks_earnings_surprises = get_data(table="earningssurprise",cid=cid)
+    df_zacks_product_line_geography = get_data(table="companygeography",cid=cid)
+    df_stockrow_stock_data = get_data(table="companyforecast",cid=cid)
+    df_yf_key_stats = get_data(table="companymovingaverage",cid=cid)
+    df_zacks_peer_comparison = get_data(table="companypeercomparison",cid=cid)
+    df_finwiz_stock_data = get_data(table="companyratio",cid=cid)
 
   return df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data
 
-def get_zacks_balance_sheet_shares(cid):
-  table = "balancesheet"
-  df_zacks_balance_sheet_shares = sql_get_records_as_df(table, cid)
-  return df_zacks_balance_sheet_shares
-
-def get_zacks_earnings_surprises(cid):
-  table = "earningssurprise"
-  df_zacks_earnings_surprises = sql_get_records_as_df(table, cid)
-  return df_zacks_earnings_surprises
-
-def get_zacks_product_line_geography(cid):
-  table = "companygeography"
-  df_zacks_product_line_geography = sql_get_records_as_df(table, cid)
-  return df_zacks_product_line_geography
-
-def get_stockrow_stock_data(cid):
-  table = "companyforecast"
-  df_stockrow_stock_data = sql_get_records_as_df(table, cid)
-  return df_stockrow_stock_data
-
-def get_yf_key_stats(cid):
-  table = "companymovingaverage"
-  df_yf_key_stats = sql_get_records_as_df(table, cid)
-  return df_yf_key_stats
-
-
-def get_zacks_peer_comparison(cid):
-  table = "companypeercomparison"
-  df_zacks_peer_comparison = sql_get_records_as_df(table, cid)
-  return df_zacks_peer_comparison
-
-def get_finwiz_stock_data(cid):
-  table = "companyratio"
-  df_yf_key_stats = sql_get_records_as_df(table, cid)
-  return df_yf_key_stats
-
-def get_earningswhispers_earnings_calendar():
-  table = "macro_earningscalendar"
-  cid=None
+def get_data(table=None, cid=None):
   df = sql_get_records_as_df(table, cid)
   return df
-
-def get_marketscreener_economic_calendar():
-  table = "macro_economiccalendar"
-  cid=None
-  df = sql_get_records_as_df(table, cid)
-  return df
-
 
 ####################
 # Output Functions #
@@ -1452,144 +1618,6 @@ def get_logger():
 
 
 ##### FROM OTHER FILE ########
-
-def set_marketscreener_economic_calendar(logger):
-
-  logger.info("Getting Economic Calendar from Market Screener")
-
-  url = "https://www.marketscreener.com/stock-exchange/calendar/economic/"
-
-  page = get_page(url)
-  soup = BeautifulSoup(page.content, 'html.parser')
-  df = pd.DataFrame()
-
-  tables = soup.find_all('table', recursive=True)
-
-  table = tables[0]
-
-  table_rows = table.find_all('tr')
-
-  table_header = table_rows[0]
-  td = table_header.find_all('th')
-  index = 0
-
-  for obs in td:        
-      text = str(obs.text).strip()
-
-      if(len(text)==0):
-          text = "Date"
-      df.insert(index,text,[],True)
-      index+=1
-
-  index = 0
-  skip_first = True
-  session = ""
-
-  for tr in table_rows:        
-      temp_row = []
-      #import pdb; pdb.set_trace()
-      td = tr.find_all('td')
-      #class="card--shadowed"
-      if not skip_first:
-          td = tr.find_all('td')
-          th = tr.find('th') #The time is stored as a th
-          if(th):
-              temp_row.append(th.text)        
-
-          if(len(td) == 4):
-              session = str(td[0].text).strip()
-
-          for obs in td:  
-
-              text = str(obs.text).strip()
-              text = text.replace('\n','').replace('  ','')
-
-              if(text == ''):
-                  flag_class = obs.i.attrs['class'][2]
-                  #Maybe this is the country field, which means that the country is represented by a flag image
-                  if(flag_class == 'flag__us'):
-                      text = "US"
-                  elif(flag_class == 'flag__uk'): 
-                      text = "UK"
-
-                  elif(flag_class == 'flag__eu'): 
-                      text = "European Union"
-
-                  elif(flag_class == 'flag__de'): 
-                      text = "Germany"
-
-                  elif(flag_class == 'flag__jp'): 
-                      text = "Japan"
-
-                  elif(flag_class == 'flag__cn'): 
-                      text = "China"
-                  else:
-                      text = "OTHER"
-  
-              temp_row.append(text)        
-
-
-          pos1, pos2  = 1, 2
-
-          if(len(temp_row) == len(df.columns)):
-              temp_row = swapPositions(temp_row, pos1-1, pos2-1)
-          else:
-              temp_row.insert(0,session)
-              #print(temp_row)
-              #import pdb; pdb.set_trace()
-
-          df.loc[len(df.index)] = temp_row
-      else:
-          skip_first = False
-
-  #Remove Duplicates (Country, Events)
-  df = df.drop_duplicates(subset=['Country', 'Events'])
-
-  #Remove OTHER Countries
-  df = df[df.Country != 'OTHER'].reset_index(drop=True)
-
-  # Updated the date columns
-  df['Date'] = df['Date'].apply(clean_dates)
-  
-  #Clear out old data
-  sql_delete_all_rows('Macro_EconomicCalendar')
-
-  #Write new data into table
-  rename_cols = {'Date':'dt','Time':'dt_time','Country':'country','Events':'economic_event','Previous period':'previous'}
-  add_col_values = None
-  conflict_cols = None
-
-  success = sql_write_df_to_db(df, "Macro_EconomicCalendar", rename_cols, add_col_values, conflict_cols)
-
-  logger.info("Successfully Scraped Economic Calendar from Market Screener")
-
-  return success
-
-#TODO: Need to fix
-def set_whitehouse_news(logger):
-  url = "https://www.whitehouse.gov/briefing-room/statements-releases/"
-  page = get_page(url)
-  soup = BeautifulSoup(page.content, 'html.parser')
-  df = pd.DataFrame()
-
-  articles = soup.find_all('article', recursive=True)
-
-  for article in articles:
-     #TODO: Extract Date, Title and Link and put them into a df, then save to database
-     import pdb; pdb.set_trace()        
-
-  import pdb; pdb.set_trace()
-
-#TODO: Need to fix
-def set_whitehouse_news(logger):
-  url = "https://www.controlrisks.com/our-thinking/geopolitical-calendar"
-  page = get_page(url)
-  soup = BeautifulSoup(page.content, 'html.parser')
-  df = pd.DataFrame()
-
-  articles = soup.find_all('article', recursive=True)
-
-  import pdb; pdb.set_trace()
 
 # Function to clean the names
 def clean_dates(date_name):

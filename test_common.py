@@ -4,7 +4,7 @@ from common import set_zacks_balance_sheet_shares, set_zacks_earnings_surprises,
 from common import set_finwiz_stock_data, set_stockrow_stock_data, set_yf_key_stats, set_zacks_peer_comparison
 from common import dataframe_convert_to_numeric, get_logger
 from common import set_earningswhispers_earnings_calendar, set_marketscreener_economic_calendar
-from common import set_whitehouse_news
+from common import set_whitehouse_news, set_geopolitical_calendar
 
 logger = get_logger()
 
@@ -23,15 +23,16 @@ class TestCommon(unittest.TestCase):
     """
     def test_set_earningswhispers_earnings_calendar(self):
         self.assertEqual(set_earningswhispers_earnings_calendar(df_tickers, logger),True)
-    """    
+        
     def test_scrape_table_marketscreener_economic_calendar(self):
         self.assertEqual(set_marketscreener_economic_calendar(logger),True)
-    
+        
     def test_set_whitehouse_news(self):
         self.assertEqual(set_whitehouse_news(logger),True)
+    """
     
-
-
+    def test_set_geopolitical_calendar(self):
+        self.assertEqual(set_geopolitical_calendar(logger),True)
 
     """        
     #Executor 1
