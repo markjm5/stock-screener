@@ -946,6 +946,67 @@ def set_earningswhispers_earnings_calendar(df_us_companies, logger):
 
   return success
 
+def scrape_earningswhispers_day(day, df_us_companies):
+  url = "https://www.earningswhispers.com/calendar?sb=c&d=%s&t=all" % (day,)
+
+  page = get_page_selenium(url)
+
+  #soup = BeautifulSoup(page.content, 'html.parser')
+  soup = BeautifulSoup(page, 'html.parser')
+
+  date_str = soup.find('div', attrs={"id":"calbox"})
+  date_str = date_str.text.strip().replace('for ','')
+
+  eps_cal_table = soup.find('ul', attrs={"id":"epscalendar"})
+
+  table_rows = eps_cal_table.find_all('li')
+
+  df = pd.DataFrame()
+  
+  # Add Date, Time, CompanyName, Ticker headers to dataframe
+  df.insert(0,"Date",[],True)
+  df.insert(1,"Time",[],True)
+  df.insert(2,"Ticker",[],True)
+  df.insert(3,"Company Name",[],True)
+  df.insert(4,"Market Cap (Mil)",[],True)
+
+  skip_first = True
+
+  for tr in table_rows:        
+      temp_row = []
+
+      td = tr.find_all('div')
+
+      # Just Extract Date, Time, CompanyName, Ticker, EPS, Revenue, Expected Revenue
+      for obs in td:  
+          text = str(obs.text).strip()
+          temp_row.append(text)    
+
+      #import pdb; pdb.set_trace()
+      time_str = temp_row[4]
+      company_name_str = temp_row[2]
+      ticker_str = temp_row[3]
+
+      if(time_str.find(' ET') != -1):
+          # Only if company exists on US stocks list, we add to df
+          df_retrieved_company_data = df_us_companies.loc[df_us_companies['Ticker'] == ticker_str].reset_index(drop=True)
+          if(df_retrieved_company_data.shape[0] > 0):
+              temp_row1 = []
+              temp_row1.append(date_str)
+              temp_row1.append(time_str)
+              temp_row1.append(ticker_str)
+              temp_row1.append(company_name_str)
+
+              # Get market cap from US Stocks list
+              temp_row1.append(df_retrieved_company_data['Market Cap (mil)'].iloc[0])
+
+              if not skip_first:   
+                  df.loc[len(df.index)] = temp_row1
+
+      skip_first = False
+
+  return df
+
 ############
 #  GETTERS #
 ############
@@ -1385,69 +1446,7 @@ def get_logger():
 
 ##### FROM OTHER FILE ########
 
-
-def scrape_earningswhispers_day(day, df_us_companies):
-  url = "https://www.earningswhispers.com/calendar?sb=c&d=%s&t=all" % (day,)
-
-  page = get_page_selenium(url)
-
-  #soup = BeautifulSoup(page.content, 'html.parser')
-  soup = BeautifulSoup(page, 'html.parser')
-
-  date_str = soup.find('div', attrs={"id":"calbox"})
-  date_str = date_str.text.strip().replace('for ','')
-
-  eps_cal_table = soup.find('ul', attrs={"id":"epscalendar"})
-
-  table_rows = eps_cal_table.find_all('li')
-
-  df = pd.DataFrame()
-  
-  # Add Date, Time, CompanyName, Ticker headers to dataframe
-  df.insert(0,"Date",[],True)
-  df.insert(1,"Time",[],True)
-  df.insert(2,"Ticker",[],True)
-  df.insert(3,"Company Name",[],True)
-  df.insert(4,"Market Cap (Mil)",[],True)
-
-  skip_first = True
-
-  for tr in table_rows:        
-      temp_row = []
-
-      td = tr.find_all('div')
-
-      # Just Extract Date, Time, CompanyName, Ticker, EPS, Revenue, Expected Revenue
-      for obs in td:  
-          text = str(obs.text).strip()
-          temp_row.append(text)    
-
-      #import pdb; pdb.set_trace()
-      time_str = temp_row[4]
-      company_name_str = temp_row[2]
-      ticker_str = temp_row[3]
-
-      if(time_str.find(' ET') != -1):
-          # Only if company exists on US stocks list, we add to df
-          df_retrieved_company_data = df_us_companies.loc[df_us_companies['Ticker'] == ticker_str].reset_index(drop=True)
-          if(df_retrieved_company_data.shape[0] > 0):
-              temp_row1 = []
-              temp_row1.append(date_str)
-              temp_row1.append(time_str)
-              temp_row1.append(ticker_str)
-              temp_row1.append(company_name_str)
-
-              # Get market cap from US Stocks list
-              temp_row1.append(df_retrieved_company_data['Market Cap (mil)'].iloc[0])
-
-              if not skip_first:   
-                  df.loc[len(df.index)] = temp_row1
-
-      skip_first = False
-
-  return df
-
-def get_table_marketscreener_economic_calendar(logger):
+def set_marketscreener_economic_calendar(logger):
 
   logger.info("Getting Economic Calendar from Market Screener")
 
@@ -1546,19 +1545,42 @@ def get_table_marketscreener_economic_calendar(logger):
   #Remove OTHER Countries
   df = df[df.Country != 'OTHER'].reset_index(drop=True)
 
-  #Format Date into Date field '%A%d%B'
-  #df['Date'] = pd.to_datetime(df['Date'], format='%A%d%B')
   # Updated the date columns
   df['Date'] = df['Date'].apply(clean_dates)
   
-  #TODO: Format dataframe columns
   #TODO: Clean out existing rows in database and write to database
 
   import pdb; pdb.set_trace()
 
+  #Clear out old data
+#  sql_delete_all_rows('Macro_EarningsCalendar')
+
+  #Write new data into table
+#  rename_cols = {'Date':'dt','Time':'dt_time','Ticker':'ticker','Company Name':'company_name','Market Cap (Mil)':'market_cap_mil'}
+##  add_col_values = None
+#  conflict_cols = None
+
+#  success = sql_write_df_to_db(df, "Macro_EarningsCalendar", rename_cols, add_col_values, conflict_cols)
+
   logger.info("Successfully Scraped Economic Calendar from Market Screener")
 
   return True
+
+def set_whitehouse_news(logger):
+
+  url = "https://www.whitehouse.gov/briefing-room/statements-releases/"
+
+  page = get_page(url)
+  soup = BeautifulSoup(page.content, 'html.parser')
+  df = pd.DataFrame()
+
+  articles = soup.find_all('article', recursive=True)
+
+  for article in articles:
+     #TODO: Extract Date, Title and Link and put them into a df, then save to database
+     import pdb; pdb.set_trace()        
+
+  import pdb; pdb.set_trace()
 
 # Function to clean the names
 def clean_dates(date_name):
@@ -1573,7 +1595,19 @@ def clean_dates(date_name):
 
     formatted_date_string = "%s %s %s" % (day_of_week, day_of_month, month_of_year)
 
-    return formatted_date_string
+    todays_date = date.today()
+    todays_date_year = todays_date.year
+    formatted_date_string_new = "%s %s" % (formatted_date_string, todays_date_year)
+    dt_date = pd.to_datetime(formatted_date_string_new,format='%A %d %B %Y')
+    
+    # Check if date is in the past. If the date is in the past, change the year to next year
+    if(dt_date.to_pydatetime().date() < todays_date):
+      todays_date_year += 1
+      formatted_date_string_new = "%s %s" % (formatted_date_string, todays_date_year)
+      dt_date = pd.to_datetime(formatted_date_string_new,format='%A %d %B %Y')
+
+    #return formatted_date_string
+    return dt_date
 
 #TODO: Need to work out what this function is doing
 def get_ticker_data(df_tickers):
