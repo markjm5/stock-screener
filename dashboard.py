@@ -18,7 +18,7 @@ from common import set_finwiz_stock_data, set_stockrow_stock_data, set_zacks_bal
 from common import set_zacks_peer_comparison, set_zacks_earnings_surprises, set_zacks_product_line_geography
 from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
 from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager
-from common import scrape_table_earningswhispers_earnings_calendar, scrape_table_marketscreener_economic_calendar
+from common import get_earningswhispers_earnings_calendar,set_earningswhispers_earnings_calendar #, scrape_table_marketscreener_economic_calendar
 
 debug = False
 
@@ -69,11 +69,27 @@ if option == 'Download Data':
     clicked3 = st.button(label="Click to Download ALL Data", key="all_data")
 
     if(clicked1):
+        logger = get_logger()
+        now_start = dt.now()
+        start_time = now_start.strftime("%H:%M:%S")    
+
         st.write(f'Downloading Macro Econimic Data...')
         df_tickers_all = get_zacks_us_companies()        
         with concurrent.futures.ProcessPoolExecutor() as executor:
-            f1 = executor.submit(scrape_table_earningswhispers_earnings_calendar, df_tickers_all)
-            f2 = executor.submit(scrape_table_marketscreener_economic_calendar)
+            e1p1 = executor.submit(set_earningswhispers_earnings_calendar, df_tickers_all, logger)
+            #f2 = executor.submit(scrape_table_marketscreener_economic_calendar)
+
+        now_finish = dt.now()
+        finish_time = now_finish.strftime("%H:%M:%S")
+        difference = now_finish - now_start
+        seconds_in_day = 24 * 60 * 60
+
+        st.write(start_time)
+        st.write(finish_time)
+        st.write(divmod(difference.days * seconds_in_day + difference.seconds, 60))
+
+        handle_exceptions_print_result(e1p1, 1, 1, logger)
+
 
     if(clicked2):
         logger = get_logger()
@@ -199,6 +215,9 @@ if option == 'Download Data':
 
 if option == 'Calendar':
     st.subheader(f'Calendar')
+    df = get_earningswhispers_earnings_calendar()
+    st.markdown("Earnings Calendar")
+    st.dataframe(df)
 
 if option == 'Macro Economic Data':
     st.subheader(f'Macro Economic Data')

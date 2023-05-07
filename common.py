@@ -914,6 +914,38 @@ def set_zacks_product_line_geography(df_tickers, logger):
   
   return success
 
+def set_earningswhispers_earnings_calendar(df_us_companies, logger):
+  logger.info("Getting data from Earnings Whispers")
+
+  df = pd.DataFrame()
+
+  # Get earnings calendar for the next fortnight
+  for x in range(1, 16):
+      print("Day %s" % x)
+      earnings_whispers_day_df = scrape_earningswhispers_day(x, df_us_companies)
+      df = df.append(earnings_whispers_day_df, ignore_index=True)
+
+  df = df.drop_duplicates(subset='Ticker', keep="first")
+  df['Market Cap (Mil)'] = pd.to_numeric(df['Market Cap (Mil)'])
+  df = df.sort_values(by=['Market Cap (Mil)'], ascending=False)
+  df = df[:10].reset_index(drop=True)
+
+  df['Date'] = pd.to_datetime(df['Date'],format='%A, %B %d, %Y')
+
+  #Clear out old data
+  sql_delete_all_rows('Macro_EarningsCalendar')
+
+  #Write new data into table
+  rename_cols = {'Date':'dt','Time':'dt_time','Ticker':'ticker','Company Name':'company_name','Market Cap (Mil)':'market_cap_mil'}
+  add_col_values = None
+  conflict_cols = None
+
+  success = sql_write_df_to_db(df, "Macro_EarningsCalendar", rename_cols, add_col_values, conflict_cols)
+
+  logger.info("Successfully scraped data from Earnings Whispers")
+
+  return success
+
 ############
 #  GETTERS #
 ############
@@ -1042,6 +1074,12 @@ def get_finwiz_stock_data(cid):
   table = "companyratio"
   df_yf_key_stats = sql_get_records_as_df(table, cid)
   return df_yf_key_stats
+
+def get_earningswhispers_earnings_calendar():
+  table = "macro_earningscalendar"
+  cid=None
+  df = sql_get_records_as_df(table, cid)
+  return df
 
 ####################
 # Output Functions #
@@ -1279,10 +1317,15 @@ def sql_format_str(value):
 def sql_get_records_as_df(table, cid):
   #df = pd.DataFrame()
   connection, cursor = sql_open_db()
-  sqlCmd = """SELECT * FROM {} WHERE cid={}""".format(table, cid)
+  if(cid):
+    sqlCmd = """SELECT * FROM {} WHERE cid={}""".format(table, cid)
+  else:
+    sqlCmd = """SELECT * FROM {}""".format(table)
+     
   cursor.execute(sqlCmd)
 
-  #TODO: Need to modify so that we read records directly into a df
+  #df = pd.read_sql(sqlCmd,connection)
+
   colnames = [desc[0] for desc in cursor.description]
   df = pd.DataFrame(cursor.fetchall())
   if(len(df) > 0):
@@ -1342,37 +1385,6 @@ def get_logger():
 
 ##### FROM OTHER FILE ########
 
-def get_table_earningswhispers_earnings_calendar(df_us_companies, logger):
-  logger.info("Getting data from Earnings Whispers")
-
-  df = pd.DataFrame()
-
-  # Get earnings calendar for the next fortnight
-  for x in range(1, 16):
-      print("Day %s" % x)
-      earnings_whispers_day_df = scrape_earningswhispers_day(x, df_us_companies)
-      df = df.append(earnings_whispers_day_df, ignore_index=True)
-
-  df = df.drop_duplicates(subset='Ticker', keep="first")
-  df['Market Cap (Mil)'] = pd.to_numeric(df['Market Cap (Mil)'])
-  df = df.sort_values(by=['Market Cap (Mil)'], ascending=False)
-  df = df[:10].reset_index(drop=True)
-
-  df['Date'] = pd.to_datetime(df['Date'],format='%A, %B %d, %Y')
-
-  #Clear out old data
-  sql_delete_all_rows('Macro_EarningsCalendar')
-
-  #Write new data into table
-  rename_cols = {'Date':'dt','Time':'dt_time','Ticker':'ticker','Company Name':'company_name','Market Cap (Mil)':'market_cap_mil'}
-  add_col_values = None
-  conflict_cols = None
-
-  success = sql_write_df_to_db(df, "Macro_EarningsCalendar", rename_cols, add_col_values, conflict_cols)
-
-  logger.info("Successfully scraped data from Earnings Whispers")
-
-  return success
 
 def scrape_earningswhispers_day(day, df_us_companies):
   url = "https://www.earningswhispers.com/calendar?sb=c&d=%s&t=all" % (day,)

@@ -3,7 +3,7 @@ from common import get_zacks_us_companies
 from common import set_zacks_balance_sheet_shares, set_zacks_earnings_surprises, set_zacks_product_line_geography
 from common import set_finwiz_stock_data, set_stockrow_stock_data, set_yf_key_stats, set_zacks_peer_comparison
 from common import dataframe_convert_to_numeric, get_logger
-from common import get_table_earningswhispers_earnings_calendar, get_table_marketscreener_economic_calendar
+from common import set_earningswhispers_earnings_calendar, get_table_marketscreener_economic_calendar
 
 logger = get_logger()
 
@@ -21,7 +21,7 @@ df_tickers7 = df_tickers.loc[df_tickers['Ticker'].isin(['ADM'])]
 class TestCommon(unittest.TestCase):
     """
     def test_scrape_table_earningswhispers_earnings_calendar(self):
-        self.assertEqual(get_table_earningswhispers_earnings_calendar(df_tickers, logger),True)
+        self.assertEqual(set_earningswhispers_earnings_calendar(df_tickers, logger),True)
 
     
     def test_scrape_table_marketscreener_economic_calendar(self):
