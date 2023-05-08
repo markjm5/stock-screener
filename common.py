@@ -1301,6 +1301,7 @@ def get_one_pager(ticker):
 
   if(cid):
     #TODO: Query database tables and retrieve all data for the ticker
+    df_company_details = get_data(table="company", cid=cid)
     df_zacks_balance_sheet_shares = get_data(table="balancesheet",cid=cid)
     df_zacks_earnings_surprises = get_data(table="earningssurprise",cid=cid)
     df_zacks_product_line_geography = get_data(table="companygeography",cid=cid)
@@ -1309,7 +1310,7 @@ def get_one_pager(ticker):
     df_zacks_peer_comparison = get_data(table="companypeercomparison",cid=cid)
     df_finwiz_stock_data = get_data(table="companyratio",cid=cid)
 
-  return df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data
+  return df_company_details, df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data
 
 def get_data(table=None, cid=None):
   df = sql_get_records_as_df(table, cid)

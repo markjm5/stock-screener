@@ -250,7 +250,7 @@ if option == 'Macro Economic Data':
     st.subheader(f'Macro Economic Data')
 
 if option == 'Single Stock One Pager':
-
+    st.write("Get 1 page quantitative data for a Company")
     symbol = st.sidebar.text_input("Symbol", value='MSFT', max_chars=None, key=None, type='default')
     clicked = st.sidebar.button("Get One Pager")
 
@@ -264,11 +264,20 @@ if option == 'Single Stock One Pager':
         option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Quantitative Data', 'Chart', 'Stock Twits'), 0)
 
         if option_one_pager == 'Quantitative Data':
-            #get the value from the text input and get data
-            st.subheader(f'One Pager For: {symbol}')
-            st.write(option_one_pager)
             #Get all the data for this stock from the database
-            df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data = get_one_pager(symbol)
+            df_company_details, df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data = get_one_pager(symbol)
+
+            # Get High Level Company Details
+            company_name = df_company_details['company_name'][0]
+            sector = df_company_details['sector'][0]
+            industry = df_company_details['industry'][0]
+            exchange = df_company_details['exchange'][0]
+            market_cap = df_company_details['market_cap'][0]
+            shares_outstanding = df_company_details['shares_outstanding'][0]
+
+            #get the value from the text input and get data
+            st.subheader(f'{company_name} ({symbol})')
+            st.write(option_one_pager)
 
             st.markdown("Balance Sheet")
             st.dataframe(df_zacks_balance_sheet_shares)
