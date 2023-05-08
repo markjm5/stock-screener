@@ -265,40 +265,43 @@ if option == 'Single Stock One Pager':
 
         if option_one_pager == 'Quantitative Data':
             #Get all the data for this stock from the database
-            df_company_details, df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data = get_one_pager(symbol)
+            try:
+                df_company_details, df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data = get_one_pager(symbol)
+            except UnboundLocalError as e:
+                st.markdown("Company Not Found")
+            else:
+                # Get High Level Company Details
+                company_name = df_company_details['company_name'][0]
+                sector = df_company_details['sector'][0]
+                industry = df_company_details['industry'][0]
+                exchange = df_company_details['exchange'][0]
+                market_cap = df_company_details['market_cap'][0]
+                shares_outstanding = df_company_details['shares_outstanding'][0]
 
-            # Get High Level Company Details
-            company_name = df_company_details['company_name'][0]
-            sector = df_company_details['sector'][0]
-            industry = df_company_details['industry'][0]
-            exchange = df_company_details['exchange'][0]
-            market_cap = df_company_details['market_cap'][0]
-            shares_outstanding = df_company_details['shares_outstanding'][0]
+                #get the value from the text input and get data
+                st.subheader(f'{company_name} ({symbol})')
+                #st.write(option_one_pager)
 
-            #get the value from the text input and get data
-            st.subheader(f'{company_name} ({symbol})')
-            st.write(option_one_pager)
+                st.markdown("Balance Sheet")
+                st.dataframe(df_zacks_balance_sheet_shares)
 
-            st.markdown("Balance Sheet")
-            st.dataframe(df_zacks_balance_sheet_shares)
+                st.markdown("Earnings Surprises")
+                st.dataframe(df_zacks_earnings_surprises)
 
-            st.markdown("Earnings Surprises")
-            st.dataframe(df_zacks_earnings_surprises)
+                st.markdown("Geography")
+                st.dataframe(df_zacks_product_line_geography)
 
-            st.markdown("Geography")
-            st.dataframe(df_zacks_product_line_geography)
+                st.markdown("Stockrow Data")
+                st.dataframe(df_stockrow_stock_data)
 
-            st.markdown("Stockrow Data")
-            st.dataframe(df_stockrow_stock_data)
+                st.markdown("YF Key Stats")
+                st.dataframe(df_yf_key_stats)
 
-            st.markdown("YF Key Stats")
-            st.dataframe(df_yf_key_stats)
+                st.markdown("Peer Comparison")
+                st.dataframe(df_zacks_peer_comparison)
 
-            st.markdown("Peer Comparison")
-            st.dataframe(df_zacks_peer_comparison)
-
-            st.markdown("Finwiz Ratios")
-            st.dataframe(df_finwiz_stock_data)
+                st.markdown("Finwiz Ratios")
+                st.dataframe(df_finwiz_stock_data)
 
         if option_one_pager == 'Chart':
             st.subheader(f'Chart For: {symbol}')
