@@ -86,10 +86,15 @@ if option == 'Download Data':
         finish_time = now_finish.strftime("%H:%M:%S")
         difference = now_finish - now_start
         seconds_in_day = 24 * 60 * 60
+        total_time = divmod(difference.days * seconds_in_day + difference.seconds, 60)
 
         st.write(start_time)
         st.write(finish_time)
-        st.write(divmod(difference.days * seconds_in_day + difference.seconds, 60))
+        st.write(total_time)
+
+        logger.info(f"Start Time: {start_time}")
+        logger.info(f"Start Time: {finish_time}")
+        logger.info(f"Total Time: {total_time}")
 
         handle_exceptions_print_result(e1p1, 1, 1, logger)
         handle_exceptions_print_result(e1p2, 1, 2, logger)
@@ -167,15 +172,20 @@ if option == 'Download Data':
 
         #Finwiz does not handle concurrent connections so need to run it without multithreading
         finwiz_stock_data_status = set_finwiz_stock_data(df_tickers, logger)
-
+        
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
         difference = now_finish - now_start
         seconds_in_day = 24 * 60 * 60
+        total_time = divmod(difference.days * seconds_in_day + difference.seconds, 60)
 
         st.write(start_time)
         st.write(finish_time)
-        st.write(divmod(difference.days * seconds_in_day + difference.seconds, 60))
+        st.write(total_time)
+
+        logger.info(f"Start Time: {start_time}")
+        logger.info(f"Start Time: {finish_time}")
+        logger.info(f"Total Time: {total_time}")
 
         handle_exceptions_print_result(e1p1, 1, 1, logger)
         handle_exceptions_print_result(e1p2, 1, 2, logger)
