@@ -125,6 +125,20 @@ CREATE TABLE IF NOT EXISTS Macro_EarningsCalendar (
     market_cap_mil NUMERIC NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS CompanyPriceAction (
+    id SERIAL,
+    cid INTEGER NOT NULL,
+    last_volume NUMERIC,
+    vs_avg_vol_10d NUMERIC,
+    vs_avg_vol_3m NUMERIC,
+    outlook TEXT NULL,
+    percentage_sold NUMERIC,
+    last_close NUMERIC,
+    PRIMARY KEY (cid),
+    CONSTRAINT fk_companypriceaction FOREIGN KEY (cid) REFERENCES Company (cid)
+);
+
+
 CREATE TABLE IF NOT EXISTS Macro_EconomicCalendar (
     id SERIAL,
     dt TIMESTAMP WITHOUT TIME ZONE NOT NULL,

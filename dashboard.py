@@ -21,6 +21,8 @@ from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager
 from common import set_earningswhispers_earnings_calendar
 from common import set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data
+from common import set_yf_price_action
+
 debug = False
 
 #Dates
@@ -70,9 +72,11 @@ if option == 'Download Data':
     clicked3 = st.button(label="Click to Download ALL Data", key="all_data")
 
     if(clicked1):
+        #Download Macro Data
         logger = get_logger()
         now_start = dt.now()
         start_time = now_start.strftime("%H:%M:%S")    
+       # data = yf.download(symbol, start=date_str_start, end=date_str_today)
 
         st.write(f'Downloading Macro Economic Data...')
         df_tickers_all = get_zacks_us_companies()        
@@ -81,6 +85,7 @@ if option == 'Download Data':
             e1p2 = executor.submit(set_marketscreener_economic_calendar, logger)
             e1p3 = executor.submit(set_whitehouse_news, logger)
             e1p4 = executor.submit(set_geopolitical_calendar, logger)
+            e1p5 = executor.submit(set_yf_price_action, df_tickers_all, logger)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
@@ -100,6 +105,7 @@ if option == 'Download Data':
         handle_exceptions_print_result(e1p2, 1, 2, logger)
         handle_exceptions_print_result(e1p3, 1, 3, logger)
         handle_exceptions_print_result(e1p4, 1, 4, logger)
+        handle_exceptions_print_result(e1p5, 1, 5, logger)
 
     if(clicked2):
         logger = get_logger()

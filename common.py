@@ -22,6 +22,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 from datetime import date
 from datetime import datetime as dt
 from bs4 import BeautifulSoup
+from dateutil.relativedelta import relativedelta
 
 isWindows = False
 
@@ -1218,6 +1219,99 @@ def set_geopolitical_calendar(logger):
 
   return success
 
+def set_yf_price_action(df_tickers, logger):
+  downloaded_data = download_yf_data_as_csv(df_tickers)
+  data = {'cid': [], 'last_volume':[], 'vs_avg_vol_10d':[], 'vs_avg_vol_3m':[], 'outlook':[], 'percentage_sold':[], 'last_close':[]}
+  df_yf_price_action = pd.DataFrame(data)
+
+  logger.info(f"Downloading price action from Yahoo Finance")
+
+  for index, row in df_tickers.iterrows():
+    ticker = row['Ticker'] 
+    shares_outstanding = row['Shares Outstanding (mil)'] 
+    df = get_ticker_price_summary(ticker, shares_outstanding, logger)
+    data = [df_yf_price_action, df]
+    df_yf_price_action = pd.concat(data, ignore_index=True)
+    logger.info(f"Successfully created csv file containing price action for: {ticker}")
+
+  #Clear out old data
+  sql_delete_all_rows('CompanyPriceAction')
+
+  #Write new data into table
+  rename_cols = None
+  add_col_values = None
+  conflict_cols = None
+
+  success = sql_write_df_to_db(df_yf_price_action, "CompanyPriceAction", rename_cols, add_col_values, conflict_cols)
+
+  logger.info(f"Successfully Scraped Price Action")
+
+  return success
+
+def get_ticker_price_summary(ticker, shares_outstanding, logger):
+  df = pd.DataFrame()
+  data = {'cid': [], 'last_volume':[], 'vs_avg_vol_10d':[], 'vs_avg_vol_3m':[], 'outlook':[], 'percentage_sold':[], 'last_close':[]}
+  df_price_action_summary = pd.DataFrame(data)
+  
+  temp_row = []
+
+  filename = "{}.csv".format(ticker)
+  try:
+    logger.info(f"Getting data from {ticker} file")
+    df = pd.read_csv('data/daily_prices/{}'.format(filename))
+    df['Date'] = pd.to_datetime(df['Date'],format='%Y-%m-%d')
+
+    df_10d = df.tail(10)
+    df_3m = df.tail(30)
+
+    avg_vol_10d = df_10d['Volume'].mean()
+    avg_vol_3m = df_3m['Volume'].mean()
+    last_volume = df.tail(1)['Volume'].values[0]
+
+    prev_close = df[-2:-1]['Adj Close'].values[0]
+    last_close = df[-1:]['Adj Close'].values[0]
+
+    #Create calculated metrics
+    if(last_volume > 0 and shares_outstanding > 0):
+        percentage = last_volume/shares_outstanding
+    else:
+        percentage = 0
+
+    if(last_volume > 0 and avg_vol_10d > 0):
+        vs_avg_vol_10d = last_volume/avg_vol_10d
+    else:
+        vs_avg_vol_10d = 0
+
+    if(last_volume > 0 and avg_vol_3m > 0):
+        vs_avg_vol_3m = last_volume/avg_vol_3m
+    else:
+        vs_avg_vol_3m = 0
+
+    if(last_close > prev_close):
+        outlook = 'bullish'
+    else:
+        outlook = 'bearish'
+
+    #Write the following into the database
+
+    cid = sql_get_cid(ticker)
+    if(cid):
+      logger.info(f"Retrieved {cid} for {ticker}")
+      temp_row.append(str(cid))
+      temp_row.append(last_volume)
+      temp_row.append(vs_avg_vol_10d)
+      temp_row.append(vs_avg_vol_3m)
+      temp_row.append(outlook)
+      temp_row.append(percentage)
+      temp_row.append(last_close)
+
+      df_price_action_summary.loc[len(df_price_action_summary.index)] = temp_row
+
+  except Exception as e:
+      logger.error(f'failed on filename: {filename}')
+
+  return df_price_action_summary
+
 ############
 #  GETTERS #
 ############
@@ -1339,6 +1433,19 @@ def convert_csv_to_dataframe(excel_file_path):
 # Helper Functions #
 ####################
 
+def download_yf_data_as_csv(df_tickers):
+  todays_date = date.today()
+  start_date = todays_date - relativedelta(years=2)
+  date_str_today = "%s-%s-%s" % (todays_date.year, todays_date.month, todays_date.day)
+  date_str_start = "%s-%s-%s" % (start_date.year, start_date.month, start_date.day)
+
+  for index, row in df_tickers.iterrows():
+    ticker = row['Ticker'] 
+    data = yf.download(ticker, start=date_str_start, end=date_str_today)
+    data.to_csv('data/daily_prices/{}.csv'.format(ticker))
+
+  return True
+
 
 def combine_df(df_original, df_new):
 
@@ -1454,6 +1561,34 @@ def handle_exceptions_print_result(future, executor_num, process_num, logger):
   else:
     logger.info(f'Status of Executor {executor_num} Process {process_num}: {future.result()}')
     st.write(f'Status of Executor {executor_num} Process {process_num}: {future.result()}')
+
+# Function to clean the names
+def clean_dates(date_name):
+    pattern_regex = re.compile(r'^(?:MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)')
+    day_of_week = re.search(pattern_regex,date_name).group(0)
+
+    pattern_regex = re.compile(r'[0-9][0-9]')
+    day_of_month = re.search(pattern_regex,date_name).group(0)
+
+    pattern_regex = re.compile(r'(?:JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)')
+    month_of_year = re.search(pattern_regex,date_name).group(0)
+
+    formatted_date_string = "%s %s %s" % (day_of_week, day_of_month, month_of_year)
+
+    todays_date = date.today()
+    todays_date_year = todays_date.year
+    formatted_date_string_new = "%s %s" % (formatted_date_string, todays_date_year)
+    dt_date = pd.to_datetime(formatted_date_string_new,format='%A %d %B %Y')
+    
+    # Check if date is in the past. If the date is in the past, change the year to next year
+    if(dt_date.to_pydatetime().date() < todays_date):
+      todays_date_year += 1
+      formatted_date_string_new = "%s %s" % (formatted_date_string, todays_date_year)
+      dt_date = pd.to_datetime(formatted_date_string_new,format='%A %d %B %Y')
+
+    #return formatted_date_string
+    return dt_date
+
 
 ######################
 # Database Functions #
@@ -1622,88 +1757,7 @@ def get_logger():
 
 ##### FROM OTHER FILE ########
 
-# Function to clean the names
-def clean_dates(date_name):
-    pattern_regex = re.compile(r'^(?:MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|SATURDAY|SUNDAY)')
-    day_of_week = re.search(pattern_regex,date_name).group(0)
 
-    pattern_regex = re.compile(r'[0-9][0-9]')
-    day_of_month = re.search(pattern_regex,date_name).group(0)
-
-    pattern_regex = re.compile(r'(?:JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)')
-    month_of_year = re.search(pattern_regex,date_name).group(0)
-
-    formatted_date_string = "%s %s %s" % (day_of_week, day_of_month, month_of_year)
-
-    todays_date = date.today()
-    todays_date_year = todays_date.year
-    formatted_date_string_new = "%s %s" % (formatted_date_string, todays_date_year)
-    dt_date = pd.to_datetime(formatted_date_string_new,format='%A %d %B %Y')
-    
-    # Check if date is in the past. If the date is in the past, change the year to next year
-    if(dt_date.to_pydatetime().date() < todays_date):
-      todays_date_year += 1
-      formatted_date_string_new = "%s %s" % (formatted_date_string, todays_date_year)
-      dt_date = pd.to_datetime(formatted_date_string_new,format='%A %d %B %Y')
-
-    #return formatted_date_string
-    return dt_date
-
-#TODO: Need to work out what this function is doing
-def get_ticker_data(df_tickers):
-  #TODO: Need to replace the following with data from YF
-  for index, row in df_tickers.iterrows():
-      #TODO: Need to replace the following
-      filename = "{}.csv".format(row['ticker'])
-      try:
-          df = pd.read_csv('datasets/daily/{}'.format(filename))
-          df['Date'] = pd.to_datetime(df['Date'],format='%Y-%m-%d')
-
-          symbol = row['ticker']
-          shares_outstanding = row['shares_outstanding']
-
-          df_10d = df.tail(10)
-          df_3m = df.tail(30)
-
-          avg_vol_10d = df_10d['Volume'].mean()
-          avg_vol_3m = df_3m['Volume'].mean()
-          last_volume = df.tail(1)['Volume'].values[0]
-
-          prev_close = df[-2:-1]['Adj Close'].values[0]
-          last_close = df[-1:]['Adj Close'].values[0]
-
-          #Create calculated metrics
-          if(last_volume > 0 and shares_outstanding > 0):
-              percentage = last_volume/shares_outstanding
-          else:
-              percentage = 0
-
-          if(last_volume > 0 and avg_vol_10d > 0):
-              vs_avg_vol_10d = last_volume/avg_vol_10d
-          else:
-              vs_avg_vol_10d = 0
-
-          if(last_volume > 0 and avg_vol_3m > 0):
-              vs_avg_vol_3m = last_volume/avg_vol_3m
-          else:
-              vs_avg_vol_3m = 0
-
-          if(last_close > prev_close):
-              outlook = 'bullish'
-          else:
-              outlook = 'bearish'
-
-          df_tickers.loc[df_tickers["ticker"] == symbol, "last_volume"] = last_volume
-          df_tickers.loc[df_tickers["ticker"] == symbol, "vs_avg_vol_10d"] = vs_avg_vol_10d
-          df_tickers.loc[df_tickers["ticker"] == symbol, "vs_avg_vol_3m"] = vs_avg_vol_3m
-          df_tickers.loc[df_tickers["ticker"] == symbol, "outlook"] = outlook
-          df_tickers.loc[df_tickers["ticker"] == symbol, "percentage"] = percentage
-          df_tickers.loc[df_tickers["ticker"] == symbol, "last"] = last_close
-
-      except Exception as e:
-          print('failed on filename: ', filename)
-
-  return df_tickers
 
 def get_breakout_data(df_tickers):
     data =  {'symbol': [],'company': [], 'sector': [], 'industry': [] , 'last': []}
