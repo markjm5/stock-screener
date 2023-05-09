@@ -76,7 +76,6 @@ if option == 'Download Data':
         logger = get_logger()
         now_start = dt.now()
         start_time = now_start.strftime("%H:%M:%S")    
-       # data = yf.download(symbol, start=date_str_start, end=date_str_today)
 
         st.write(f'Downloading Macro Economic Data...')
         df_tickers_all = get_zacks_us_companies()        

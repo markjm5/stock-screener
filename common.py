@@ -1661,6 +1661,11 @@ def clean_dates(date_name):
     #return formatted_date_string
     return dt_date
 
+# Swap function
+def swapPositions(list, pos1, pos2):
+     
+    list[pos1], list[pos2] = list[pos2], list[pos1]
+    return list
 
 ######################
 # Database Functions #
@@ -1825,12 +1830,3 @@ def get_logger():
   logger.addHandler(stream_handler)
 
   return logger
-
-
-##### FROM OTHER FILE ########
-
-# Swap function
-def swapPositions(list, pos1, pos2):
-     
-    list[pos1], list[pos2] = list[pos2], list[pos1]
-    return list
