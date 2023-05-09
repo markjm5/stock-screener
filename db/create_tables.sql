@@ -161,3 +161,9 @@ CREATE TABLE IF NOT EXISTS Macro_GeopoliticalCalendar (
     event_name TEXT NOT NULL,
     event_location TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS TA_Patterns (
+    id SERIAL,
+    ticker TEXT NOT NULL,
+    pattern TEXT NOT NULL
+);

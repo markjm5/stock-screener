@@ -294,7 +294,7 @@ def write_zacks_ticker_data_to_db(df_tickers, logger):
 
           logger.info(f'Successfully Written Zacks data into database {symbol}')
       except AttributeError as e:
-          logger.error(f'Most likely an ETF and therefore not written to database, removed from df_tickers: {symbol}')
+          logger.exception(f'Most likely an ETF and therefore not written to database, removed from df_tickers: {symbol}')
 
   success = sql_close_db(connection, cursor)
 
@@ -688,7 +688,7 @@ def set_zacks_balance_sheet_shares(df_tickers, logger):
         logger.info(f'Successfully Saved zacks balance sheet data for {ticker}')
       
     except IndexError as e:
-      logger.error(f'No balance sheet for {ticker}')
+      logger.exception(f'No balance sheet for {ticker}')
       pass
 
   return success
@@ -1219,8 +1219,19 @@ def set_geopolitical_calendar(logger):
 
   return success
 
-def set_yf_price_action(df_tickers, logger):
+def set_price_action_ta(df_tickers, logger):
+  is_success = False
+
   downloaded_data = download_yf_data_as_csv(df_tickers)
+  success_yf_price_action = set_yf_price_action(df_tickers, logger)
+  success_ta_patterns = set_ta_pattern_stocks(df_tickers, logger)
+
+  if(downloaded_data & success_yf_price_action & success_ta_patterns):  
+    is_success = True
+
+  return is_success
+
+def set_yf_price_action(df_tickers, logger):
   data = {'cid': [], 'last_volume':[], 'vs_avg_vol_10d':[], 'vs_avg_vol_3m':[], 'outlook':[], 'percentage_sold':[], 'last_close':[]}
   df_yf_price_action = pd.DataFrame(data)
 
@@ -1256,8 +1267,9 @@ def get_ticker_price_summary(ticker, shares_outstanding, logger):
   temp_row = []
 
   filename = "{}.csv".format(ticker)
+  
+  logger.info(f"Getting data from {ticker} file")
   try:
-    logger.info(f"Getting data from {ticker} file")
     df = pd.read_csv('data/daily_prices/{}'.format(filename))
     df['Date'] = pd.to_datetime(df['Date'],format='%Y-%m-%d')
 
@@ -1306,11 +1318,71 @@ def get_ticker_price_summary(ticker, shares_outstanding, logger):
       temp_row.append(last_close)
 
       df_price_action_summary.loc[len(df_price_action_summary.index)] = temp_row
-
-  except Exception as e:
-      logger.error(f'failed on filename: {filename}')
+  except IndexError as e:
+     logger.exception(f"Indexerror for {ticker}")
 
   return df_price_action_summary
+
+def set_ta_pattern_stocks(df_tickers, logger):
+  #data =  {'symbol': [],'company': [], 'sector': [], 'industry': [] , 'last': []}
+  data = {'ticker': [], 'pattern': []}
+  df_consolidating = pd.DataFrame(data)
+  df_breakout = pd.DataFrame(data)
+
+  for index, row in df_tickers.iterrows():
+      filename = "{}.csv".format(row['Ticker'])
+
+      try:
+          df = pd.read_csv('data/daily_prices/{}'.format(filename))
+          symbol = row['Ticker']
+
+          if is_consolidating(df, percentage=2.5):
+              df_consolidating.loc[len(df_consolidating.index)] = [symbol, 'consolidating']
+
+          if is_breaking_out(df):
+              df_breakout.loc[len(df_breakout.index)] = [symbol, 'breakout']
+
+      except Exception as e:
+          logger.exception(f'failed on filename: {filename}')
+
+  data = [df_consolidating, df_breakout]
+  df_patterns = pd.concat(data, ignore_index=True)
+
+  #Clear out old data
+  sql_delete_all_rows("TA_Patterns")
+
+  #Write new data into table
+  rename_cols = None
+  add_col_values = None
+  conflict_cols = None
+
+  success = sql_write_df_to_db(df_patterns, "TA_Patterns", rename_cols, add_col_values, conflict_cols)
+
+  logger.info("Successfully Scraped TA Patterns")
+
+  return success
+
+def is_consolidating(df, percentage=2):
+  recent_candlesticks = df[-15:]
+
+  max_close = recent_candlesticks['Close'].max()
+  min_close = recent_candlesticks['Close'].min()
+
+  threshold = 1 - (percentage / 100)
+  if min_close > (max_close * threshold):
+      return True        
+  return False
+
+def is_breaking_out(df, percentage=2.5):
+  last_close = df[-1:]['Close'].values[0]
+
+  if is_consolidating(df[:-1], percentage=percentage):
+      recent_closes = df[-16:-1]
+
+      if last_close > recent_closes['Close'].max():
+          return True
+
+  return False
 
 ############
 #  GETTERS #
@@ -1756,59 +1828,6 @@ def get_logger():
 
 
 ##### FROM OTHER FILE ########
-
-
-
-def get_breakout_data(df_tickers):
-    data =  {'symbol': [],'company': [], 'sector': [], 'industry': [] , 'last': []}
-    
-    df_consolidating = pd.DataFrame(data)
-    df_breakout = pd.DataFrame(data)
-
-    for index, row in df_tickers.iterrows():
-        filename = "{}.csv".format(row['ticker'])
-
-        try:
-            df = pd.read_csv('datasets/daily/{}'.format(filename))
-
-            symbol = row['ticker']
-            company = row['company']
-            sector = row['sector']
-            industry = row['industry']
-            last = row['last']
-        
-            if is_consolidating(df, percentage=2.5):
-                df_consolidating.loc[len(df_consolidating.index)] = [symbol, company, sector, industry, last]
-
-            if is_breaking_out(df):
-                df_breakout.loc[len(df_breakout.index)] = [symbol, company, sector, industry, last]
-
-        except Exception as e:
-            print('failed on filename: ', filename)
-
-    return df_consolidating, df_breakout
-
-def is_consolidating(df, percentage=2):
-  recent_candlesticks = df[-15:]
-
-  max_close = recent_candlesticks['Close'].max()
-  min_close = recent_candlesticks['Close'].min()
-
-  threshold = 1 - (percentage / 100)
-  if min_close > (max_close * threshold):
-      return True        
-  return False
-
-def is_breaking_out(df, percentage=2.5):
-  last_close = df[-1:]['Close'].values[0]
-
-  if is_consolidating(df[:-1], percentage=percentage):
-      recent_closes = df[-16:-1]
-
-      if last_close > recent_closes['Close'].max():
-          return True
-
-  return False
 
 # Swap function
 def swapPositions(list, pos1, pos2):

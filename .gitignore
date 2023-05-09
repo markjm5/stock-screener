@@ -131,3 +131,4 @@ dmypy.json
 #log files
 *.log
 logs/
+data/daily_prices/

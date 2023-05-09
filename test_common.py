@@ -4,7 +4,7 @@ from common import set_zacks_balance_sheet_shares, set_zacks_earnings_surprises,
 from common import set_finwiz_stock_data, set_stockrow_stock_data, set_yf_key_stats, set_zacks_peer_comparison
 from common import dataframe_convert_to_numeric, get_logger
 from common import set_earningswhispers_earnings_calendar, set_marketscreener_economic_calendar
-from common import set_whitehouse_news, set_geopolitical_calendar, set_yf_price_action
+from common import set_whitehouse_news, set_geopolitical_calendar, set_yf_price_action, set_price_action_ta
 
 logger = get_logger()
 
@@ -20,8 +20,11 @@ df_tickers6 = df_tickers.loc[df_tickers['Ticker'].isin(['ADRNY'])]
 df_tickers7 = df_tickers.loc[df_tickers['Ticker'].isin(['ADM'])]
 
 class TestCommon(unittest.TestCase):
-    
+    """
     def test_set_yf_price_action(self):
+        self.assertEqual(set_yf_price_action(df_tickers, logger),True)
+    """
+    def test_set_ta_pattern_stocks(self):
         self.assertEqual(set_yf_price_action(df_tickers, logger),True)
 
     """    
