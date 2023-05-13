@@ -1332,18 +1332,14 @@ def set_ta_pattern_stocks(df_tickers, logger):
   for index, row in df_tickers.iterrows():
       filename = "{}.csv".format(row['Ticker'])
 
-      try:
-          df = pd.read_csv('data/daily_prices/{}'.format(filename))
-          symbol = row['Ticker']
+      df = pd.read_csv('data/daily_prices/{}'.format(filename))
+      symbol = row['Ticker']
 
-          if is_consolidating(df, percentage=2.5):
-              df_consolidating.loc[len(df_consolidating.index)] = [symbol, 'consolidating']
+      if is_consolidating(df, percentage=2.5):
+          df_consolidating.loc[len(df_consolidating.index)] = [symbol, 'consolidating']
 
-          if is_breaking_out(df):
-              df_breakout.loc[len(df_breakout.index)] = [symbol, 'breakout']
-
-      except Exception as e:
-          logger.exception(f'failed on filename: {filename}')
+      if is_breaking_out(df):
+          df_breakout.loc[len(df_breakout.index)] = [symbol, 'breakout']
 
   data = [df_consolidating, df_breakout]
   df_patterns = pd.concat(data, ignore_index=True)
@@ -1363,24 +1359,31 @@ def set_ta_pattern_stocks(df_tickers, logger):
   return success
 
 def is_consolidating(df, percentage=2):
-  recent_candlesticks = df[-15:]
+  try:
+    recent_candlesticks = df[-15:]
 
-  max_close = recent_candlesticks['Close'].max()
-  min_close = recent_candlesticks['Close'].min()
+    max_close = recent_candlesticks['Close'].max()
+    min_close = recent_candlesticks['Close'].min()
 
-  threshold = 1 - (percentage / 100)
-  if min_close > (max_close * threshold):
-      return True        
+    threshold = 1 - (percentage / 100)
+    if min_close > (max_close * threshold):
+        return True        
+  except IndexError as e:
+     pass
+
   return False
 
 def is_breaking_out(df, percentage=2.5):
-  last_close = df[-1:]['Close'].values[0]
+  try:
+    last_close = df[-1:]['Close'].values[0]
 
-  if is_consolidating(df[:-1], percentage=percentage):
-      recent_closes = df[-16:-1]
+    if is_consolidating(df[:-1], percentage=percentage):
+        recent_closes = df[-16:-1]
 
-      if last_close > recent_closes['Close'].max():
-          return True
+        if last_close > recent_closes['Close'].max():
+            return True
+  except IndexError as e:
+     pass
 
   return False
 
@@ -1589,12 +1592,18 @@ def _util_check_diff_list(li1, li2):
   return list(set(li1) - set(li2))
 
 def dataframe_convert_to_numeric(df, column, logger):
+
   #TODO: Deal with percentages and negative values in brackets
   try:
     contains_mill = False
+    contains_percentage = False
     if(df[column].str.contains('m',regex=False).sum() > 0):
       contains_mill = True
       df[column] = df[column].str.replace('m','')
+
+    if(df[column].str.contains('%',regex=False).sum() > 0):
+      contains_percentage = True
+      df[column] = df[column].str.replace('%','')
 
     #contains a billion. Because we are reporting in billions, simply remove the "b"
     if(df[column].str.contains('b',regex=False).sum() > 0):
@@ -1606,6 +1615,8 @@ def dataframe_convert_to_numeric(df, column, logger):
     df[column] = df[column].str.replace(',','').replace('–','0.00').replace("-",'0.00')
     df[column] = df[column].str.replace('(','-', regex=True)
     df[column] = df[column].str.replace(')','', regex=True)
+    df[column] = df[column].str.replace('+','', regex=True)
+    df[column] = df[column].str.replace('>','', regex=True)
 
   except KeyError as e:
     logger.exception(df)
@@ -1614,6 +1625,9 @@ def dataframe_convert_to_numeric(df, column, logger):
   df[column] = pd.to_numeric(df[column])
   if(contains_mill):
     df[column] = df[column]/1000000
+
+  if(contains_percentage):
+    df[column] = df[column]/100
 
   return df
 
@@ -1830,3 +1844,99 @@ def get_logger():
   logger.addHandler(stream_handler)
 
   return logger
+
+
+#### TODO #######
+"""
+def set_insider_trades_company(df_tickers, logger):
+
+  for index, row in df_tickers.iterrows():
+    symbol = row['Ticker']
+
+    url = "http://openinsider.com/search?q=%s" % (symbol,)
+
+    print("Getting Insider Trading Data: %s" % symbol)
+    page = get_page_selenium(url)
+
+    soup = BeautifulSoup(page, 'html.parser')
+    table = soup.find_all('table')[11]
+    df = process_insider_trading_table(table, logger)
+
+    #TODO: Write to database
+    import pdb; pdb.set_trace()
+    #TODO: make an aggregate line item relating to qty and value, compared to total shares
+    #TODO: add to df of consolidate metrics for all symbols                
+
+  return True
+"""
+
+def set_todays_insider_trades(logger):
+
+  url = "http://openinsider.com/insider-purchases"
+  page = get_page_selenium(url)
+  soup = BeautifulSoup(page, 'html.parser')
+  table = soup.find_all('table')[11]
+
+  df = convert_html_table_insider_trading_to_df(table, True)
+
+  df.loc[df["percentage_owned"] == "New", "percentage_owned"] = "0"
+
+  df = dataframe_convert_to_numeric(df,'percentage_owned', logger)
+
+  df = df.sort_values(by=['percentage_owned'], ascending=False)
+
+  df['filing_date'] = pd.to_datetime(df['filing_date'],format='%Y-%m-%d')
+
+  #Clear out old data
+  sql_delete_all_rows("Macro_InsiderTrading")
+
+  #Write new data into table
+  rename_cols = None
+  add_col_values = None
+  conflict_cols = None
+
+  success = sql_write_df_to_db(df, "Macro_InsiderTrading", rename_cols, add_col_values, conflict_cols)
+
+  logger.info("Successfully Scraped Todays Insider Trades")
+
+  return success
+
+
+def convert_html_table_insider_trading_to_df(table, contains_th):
+  data =  {'filing_date':[],'company_ticker':[],'company_name':[],'insider_name':[],'insider_title':[],'trade_type':[],'trade_price':[],'percentage_owned':[]}
+
+  df = pd.DataFrame(data)
+  
+  try:
+    table_rows = table.find_all('tr')
+  except AttributeError as e:
+    return df
+
+  first_row = True
+
+  for tr in table_rows:
+    temp_row = []
+
+    if(first_row):
+      first_row = False
+    else:
+      td = tr.find_all('td')
+      for obs in td:
+        text = str(obs.text).strip()
+        temp_row.append(text)        
+
+      filing_date = temp_row[1]
+      company_ticker = temp_row[3]
+      company_name = temp_row[4] # Name
+      insider_name = temp_row[5] 
+      insider_title = temp_row[6] 
+      trade_type = temp_row[7] 
+      trade_price = temp_row[8]
+      percentage_owned = temp_row[11]
+
+      df.loc[len(df.index)] = [filing_date,company_ticker,company_name,insider_name,insider_title,trade_type,trade_price,percentage_owned]
+
+  return df
+
+  
+

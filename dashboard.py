@@ -21,7 +21,7 @@ from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager
 from common import set_earningswhispers_earnings_calendar
 from common import set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data
-from common import set_price_action_ta
+from common import set_price_action_ta, set_todays_insider_trades
 
 debug = False
 
@@ -85,6 +85,7 @@ if option == 'Download Data':
             e1p3 = executor.submit(set_whitehouse_news, logger)
             e1p4 = executor.submit(set_geopolitical_calendar, logger)
             e1p5 = executor.submit(set_price_action_ta, df_tickers_all, logger)
+            e1p6 = executor.submit(set_todays_insider_trades,logger)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
@@ -105,6 +106,8 @@ if option == 'Download Data':
         handle_exceptions_print_result(e1p3, 1, 3, logger)
         handle_exceptions_print_result(e1p4, 1, 4, logger)
         handle_exceptions_print_result(e1p5, 1, 5, logger)
+        handle_exceptions_print_result(e1p6, 1, 6, logger)
+
 
     if(clicked2):
         logger = get_logger()
@@ -139,7 +142,7 @@ if option == 'Download Data':
             e1p3 = executor.submit(set_zacks_balance_sheet_shares, df_tickers3, logger)
             e1p4 = executor.submit(set_zacks_balance_sheet_shares, df_tickers4, logger)
             e1p5 = executor.submit(set_zacks_balance_sheet_shares, df_tickers5, logger)
-
+                                   
             #Executor 2: set_zacks_earnings_surprises
             e2p1 = executor.submit(set_zacks_earnings_surprises, df_tickers1, logger)
             e2p2 = executor.submit(set_zacks_earnings_surprises, df_tickers2, logger)
@@ -174,6 +177,13 @@ if option == 'Download Data':
             e7p3 = executor.submit(set_zacks_peer_comparison, df_tickers3, logger)
             e7p4 = executor.submit(set_zacks_peer_comparison, df_tickers4, logger)
             e7p5 = executor.submit(set_zacks_peer_comparison, df_tickers5, logger)
+
+            #Executor 8: set_insider_trades_company
+            #e8p1 = executor.submit(set_insider_trades_company, df_tickers1, logger)
+            #e8p2 = executor.submit(set_insider_trades_company, df_tickers2, logger)
+            #e8p3 = executor.submit(set_insider_trades_company, df_tickers3, logger)
+            #e8p4 = executor.submit(set_insider_trades_company, df_tickers4, logger)
+            #e8p5 = executor.submit(set_insider_trades_company, df_tickers5, logger)
 
         #Finwiz does not handle concurrent connections so need to run it without multithreading
         finwiz_stock_data_status = set_finwiz_stock_data(df_tickers, logger)
@@ -227,6 +237,12 @@ if option == 'Download Data':
         handle_exceptions_print_result(e7p3, 7, 3, logger)
         handle_exceptions_print_result(e7p4, 7, 4, logger)
         handle_exceptions_print_result(e7p5, 7, 5, logger)
+
+        #handle_exceptions_print_result(e8p1, 8, 1, logger)
+        #handle_exceptions_print_result(e8p2, 8, 2, logger)
+        #handle_exceptions_print_result(e8p3, 8, 3, logger)
+        #handle_exceptions_print_result(e8p4, 8, 4, logger)
+        #handle_exceptions_print_result(e8p5, 8, 5, logger)
 
         st.write(f'Status of Finwiz Stock Data: {finwiz_stock_data_status}')
 
@@ -327,11 +343,23 @@ if option == 'Single Stock One Pager':
                 st.write(message['body'])
 
 if option == 'Bottom Up Ideas':
-        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','Insider Trading', 'Country Exposure', 'Twitter'), 0)
+        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','TA Patterns','Insider Trading', 'Country Exposure', 'Twitter'), 0)
         if option_one_pager == 'Volume':        
             st.subheader(f'Volume')
+            df = get_data(table="companypriceaction")
+            st.markdown("Price Action Volume")
+            st.dataframe(df)
+
+        if option_one_pager == 'TA Patterns':        
+            st.subheader(f'TA Patterns')
+            df = get_data(table="ta_patterns")
+            st.markdown("Patterns")
+            st.dataframe(df)
+
         if option_one_pager == 'Insider Trading':        
             st.subheader(f'Insider Trading')
+            df = get_data(table="macro_insidertrading")
+            st.dataframe(df)
 
         if option_one_pager == 'Country Exposure':
             st.subheader(f'Country Exposure')

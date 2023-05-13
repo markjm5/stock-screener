@@ -167,3 +167,15 @@ CREATE TABLE IF NOT EXISTS TA_Patterns (
     ticker TEXT NOT NULL,
     pattern TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS Macro_InsiderTrading (
+    id SERIAL,
+    filing_date TIMESTAMP WITHOUT TIME ZONE NOT NULL,
+    company_ticker TEXT NOT NULL,
+    company_name TEXT NOT NULL,
+    insider_name TEXT NOT NULL,
+    insider_title TEXT NOT NULL,
+    trade_type TEXT NOT NULL,
+    trade_price TEXT NOT NULL,
+    percentage_owned NUMERIC    
+);

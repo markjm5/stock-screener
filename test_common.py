@@ -5,6 +5,7 @@ from common import set_finwiz_stock_data, set_stockrow_stock_data, set_yf_key_st
 from common import dataframe_convert_to_numeric, get_logger
 from common import set_earningswhispers_earnings_calendar, set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, set_yf_price_action, set_price_action_ta
+from common import set_todays_insider_trades
 
 logger = get_logger()
 
@@ -23,14 +24,20 @@ class TestCommon(unittest.TestCase):
     """
     def test_set_yf_price_action(self):
         self.assertEqual(set_yf_price_action(df_tickers, logger),True)
+    """    
+
+    def test_scrape_insider_trades(self):
+        self.assertEqual(set_todays_insider_trades(logger),True)
+    
+    #def test_set_insider_trades_company(self):
+    #    self.assertEqual(set_insider_trades_company(df_tickers1,logger),True)
+
     """
     def test_set_ta_pattern_stocks(self):
         self.assertEqual(set_yf_price_action(df_tickers, logger),True)
 
-    """    
     def test_scrape_table_marketscreener_economic_calendar(self):
         self.assertEqual(set_marketscreener_economic_calendar(logger),True)
-
             
     def test_set_whitehouse_news(self):
         self.assertEqual(set_whitehouse_news(logger),True)
