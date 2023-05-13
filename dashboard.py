@@ -22,6 +22,8 @@ from common import set_earningswhispers_earnings_calendar
 from common import set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data
 from common import set_price_action_ta, set_todays_insider_trades
+from common import style_df_for_display
+import seaborn as sns
 
 debug = False
 
@@ -301,15 +303,21 @@ if option == 'Single Stock One Pager':
 
                 #get the value from the text input and get data
                 st.subheader(f'{company_name} ({symbol})')
-                #st.write(option_one_pager)
-
                 st.markdown("Balance Sheet")
-                st.dataframe(df_zacks_balance_sheet_shares)
+
+                cols_gradient = ['common_stock_par', 'retained_earnings']
+                cols_rename = {"dt": "Date"}
+                cols_format = {'retained_earnings': '${0:,.2f}','other_equity': '${0:,.2f}','book_value_per_share': '${0:,.2f}', 'Date': "{:%B %Y}"}
+                cols_drop = ['cid']
+
+                df = style_df_for_display(df_zacks_balance_sheet_shares, cols_gradient, cols_rename, cols_format, cols_drop)
+                #import pdb; pdb.set_trace()
+                st.dataframe(df, use_container_width=True)
 
                 st.markdown("Earnings Surprises")
                 st.dataframe(df_zacks_earnings_surprises)
 
-                st.markdown("Geography")
+                st.markdown("Geography") 
                 st.dataframe(df_zacks_product_line_geography)
 
                 st.markdown("Stockrow Data")

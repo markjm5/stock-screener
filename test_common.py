@@ -24,7 +24,7 @@ class TestCommon(unittest.TestCase):
     """
     def test_set_yf_price_action(self):
         self.assertEqual(set_yf_price_action(df_tickers, logger),True)
-    """    
+        
 
     def test_scrape_insider_trades(self):
         self.assertEqual(set_todays_insider_trades(logger),True)
@@ -32,7 +32,7 @@ class TestCommon(unittest.TestCase):
     #def test_set_insider_trades_company(self):
     #    self.assertEqual(set_insider_trades_company(df_tickers1,logger),True)
 
-    """
+    
     def test_set_ta_pattern_stocks(self):
         self.assertEqual(set_yf_price_action(df_tickers, logger),True)
 
@@ -46,12 +46,13 @@ class TestCommon(unittest.TestCase):
     def test_set_geopolitical_calendar(self):
         self.assertEqual(set_geopolitical_calendar(logger),True)
 
-            
+    """
     #Executor 1
     def test_set_zacks_balance_sheet_shares(self):
         self.assertEqual(set_zacks_balance_sheet_shares(df_tickers1, logger),True)
         self.assertEqual(set_zacks_balance_sheet_shares(df_tickers2, logger),False)
 
+    """
     #Executor 2
     def test_set_zacks_earnings_surprises(self):
         self.assertEqual(set_zacks_earnings_surprises(df_tickers1, logger),True)

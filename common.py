@@ -628,6 +628,8 @@ def set_zacks_balance_sheet_shares(df_tickers, logger):
       df_balance_sheet_annual = df_balance_sheet_annual.rename(columns={"Total Common Equity":"TOTAL_COMMON_EQUITY"})                         
       df_balance_sheet_annual = df_balance_sheet_annual.rename(columns={"Shares Outstanding":"SHARES_OUTSTANDING"})                          
       df_balance_sheet_annual = df_balance_sheet_annual.rename(columns={"Book Value Per Share":"BOOK_VALUE_PER_SHARE"})  
+      #import pdb; pdb.set_trace()
+
       df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'PREFERRED_STOCK', logger)
       df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'COMMON_STOCK_PAR', logger)
       df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'CAPITAL_SURPLUS', logger)
@@ -639,6 +641,8 @@ def set_zacks_balance_sheet_shares(df_tickers, logger):
       df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'TOTAL_COMMON_EQUITY', logger)
       df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'SHARES_OUTSTANDING', logger)
       df_balance_sheet_annual = dataframe_convert_to_numeric(df_balance_sheet_annual,'BOOK_VALUE_PER_SHARE', logger)
+      #import pdb; pdb.set_trace()
+
       df_balance_sheet_annual.reset_index(inplace=True)
       df_balance_sheet_annual = df_balance_sheet_annual.rename(columns = {'index':'DATE'})
       df_balance_sheet_annual['DATE'] = pd.to_datetime(df_balance_sheet_annual['DATE'],format='%m/%d/%Y')
@@ -1502,6 +1506,24 @@ def convert_csv_to_dataframe(excel_file_path):
   df = pd.read_csv(excel_file_path)
 
   return df
+
+
+def style_df_for_display(df, cols_gradient, cols_rename, cols_format, cols_drop):
+
+  df = df.drop(cols_drop, axis=1)
+  df = df.set_index(df.columns[0])
+  df = df.rename(columns=cols_rename)
+  
+  #table_styles = [{'selector': 'tr:hover',
+  #    'props': 'background-color: yellow; font-size: 1em;'}]
+
+  df = df.style.background_gradient(cmap='Blues',subset=cols_gradient).format(cols_format)
+  #df = df.hide("preferred_stock", axis=1).hide(axis=0).to_html()
+  #df = df.set_table_styles(table_styles)
+  #df.hide_columns_ = True 
+  return df
+
+
 
 
 ####################
