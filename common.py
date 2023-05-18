@@ -1893,33 +1893,36 @@ def set_insider_trades_company(df_tickers, logger):
 """
 
 def set_todays_insider_trades(logger):
+  try:
+    logger.info("Getting Insider Trades")
+    url = "http://openinsider.com/insider-purchases"
+    page = get_page_selenium(url)
+    soup = BeautifulSoup(page, 'html.parser')
+    table = soup.find_all('table')[11]
 
-  url = "http://openinsider.com/insider-purchases"
-  page = get_page_selenium(url)
-  soup = BeautifulSoup(page, 'html.parser')
-  table = soup.find_all('table')[11]
+    df = convert_html_table_insider_trading_to_df(table, True)
 
-  df = convert_html_table_insider_trading_to_df(table, True)
+    df.loc[df["percentage_owned"] == "New", "percentage_owned"] = "0"
 
-  df.loc[df["percentage_owned"] == "New", "percentage_owned"] = "0"
+    df = dataframe_convert_to_numeric(df,'percentage_owned', logger)
 
-  df = dataframe_convert_to_numeric(df,'percentage_owned', logger)
+    df = df.sort_values(by=['percentage_owned'], ascending=False)
 
-  df = df.sort_values(by=['percentage_owned'], ascending=False)
+    df['filing_date'] = pd.to_datetime(df['filing_date'],format='%Y-%m-%d')
 
-  df['filing_date'] = pd.to_datetime(df['filing_date'],format='%Y-%m-%d')
+    #Clear out old data
+    sql_delete_all_rows("Macro_InsiderTrading")
 
-  #Clear out old data
-  sql_delete_all_rows("Macro_InsiderTrading")
+    #Write new data into table
+    rename_cols = None
+    add_col_values = None
+    conflict_cols = None
 
-  #Write new data into table
-  rename_cols = None
-  add_col_values = None
-  conflict_cols = None
+    success = sql_write_df_to_db(df, "Macro_InsiderTrading", rename_cols, add_col_values, conflict_cols)
 
-  success = sql_write_df_to_db(df, "Macro_InsiderTrading", rename_cols, add_col_values, conflict_cols)
-
-  logger.info("Successfully Scraped Todays Insider Trades")
+    logger.info("Successfully Scraped Todays Insider Trades")
+  except Exception as e:
+    logger.exception(f"Error: {e}")
 
   return success
 

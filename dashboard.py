@@ -26,6 +26,19 @@ from common import style_df_for_display
 import seaborn as sns
 
 debug = False
+st.set_page_config(
+    page_title="Stock Screener App",
+    page_icon=":shark:",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+    menu_items={
+        'Get Help': 'https://www.extremelycoolapp.com/help',
+        'Report a bug': "https://www.extremelycoolapp.com/bug",
+        'About': "# This is a header. This is an *extremely* cool app!"
+    }
+)
+
+#TODO: Set Page Layout: https://www.youtube.com/watch?v=0AhG53TCezg
 
 #Dates
 todays_date = date.today()
@@ -301,8 +314,64 @@ if option == 'Single Stock One Pager':
                 market_cap = df_company_details['market_cap'][0]
                 shares_outstanding = df_company_details['shares_outstanding'][0]
 
-                #get the value from the text input and get data
+                range_52w = df_finwiz_stock_data['range_52w'][0]
+                # EV 
+                ev = df_yf_key_stats['ev'][0]
+                # Trailing P/E 
+                trailing_pe = df_finwiz_stock_data['pe'][0]
+                # Forward P/E 
+                forward_pe = df_finwiz_stock_data['pe_forward'][0]
+                # PEG 
+                peg_ratio = df_finwiz_stock_data['peg'][0]
+                # ROE 
+                roe = df_finwiz_stock_data['roe'][0]
+
+                shares_outstanding_formatted = '{:,.2f}'.format(shares_outstanding).split('.00')[0]
+                market_cap_formatted = '{:,.2f}'.format(market_cap)
+
+                data = {'Sector':[],'Industry':[],'Market Cap':[],'Shares Outstanding': [], '52 Week Range':[],'EV':[],'Trailing PE':[],'Forward PE': [], 'PEG Ratio':[], 'ROE': []}
+                df_table1 = pd.DataFrame(data)
+                temp_row1 = []
+
+                temp_row1.append(sector)
+                temp_row1.append(industry)
+                temp_row1.append(market_cap_formatted)
+                temp_row1.append(shares_outstanding_formatted)
+
+                temp_row1.append(range_52w)
+                temp_row1.append(ev)
+                temp_row1.append(trailing_pe)
+                temp_row1.append(forward_pe)
+                temp_row1.append(peg_ratio)
+                temp_row1.append(roe)
+
+                df_table1.loc[len(df_table1)] = temp_row1
+
+                df_table1 = df_table1.T
+                df_table1 = df_table1.reset_index()
+
+                # Avg Vol 3 Months 
+                avg_vol_3m = df_yf_key_stats['avg_vol_3m'][0]
+                # Avg Vol 10 Days 
+                avg_vol_10d = df_yf_key_stats['avg_vol_10d'][0]
+
+                #TODO: We need to get this data from somewhere
+                # YTD Change % - [CALCULATE FROM DATA]
+                # Days to Cover - 
+                # Target Price - 
+                # Dividend This Year - 
+                # Div Yield 
+                # Beta 
+                # Currency 
+                # Website 
+                # Volume
+
                 st.subheader(f'{company_name} ({symbol})')
+
+                style = df_table1.style.hide_index()
+                style.hide_columns()
+                st.write(style.to_html(), unsafe_allow_html=True)
+
                 st.markdown("Balance Sheet")
 
                 cols_gradient = ['common_stock_par', 'retained_earnings']
