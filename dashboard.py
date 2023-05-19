@@ -52,6 +52,7 @@ list_dates = []
 list_dates.append(one_year_ago)
 list_dates.append(two_year_ago)
 list_dates.append(three_year_ago)
+df_tickers_all = get_zacks_us_companies()
 
 #https://www.youtube.com/watch?v=0ESc1bh3eIg&list=WL&index=16&t=731s
 
@@ -59,9 +60,9 @@ auth = tweepy.OAuthHandler(config.TWITTER_CONSUMER_KEY, config.TWITTER_CONSUMER_
 auth.set_access_token(config.TWITTER_ACCESS_TOKEN, config.TWITTER_ACCESS_TOKEN_SECRET)
 api = tweepy.API(auth)
 
-list_of_files = glob.glob('data/*.csv',) # * means all if need specific format then *.csv
-latest_zacks_file = max(list_of_files, key=os.path.getctime)
-latest_zacks_file = latest_zacks_file.replace("data\\", "")
+#list_of_files = glob.glob('data/*.csv',) # * means all if need specific format then *.csv
+#latest_zacks_file = max(list_of_files, key=os.path.getctime)
+#latest_zacks_file = latest_zacks_file.replace("data\\", "")
 
 st.markdown(f'''
     <style>
@@ -133,7 +134,6 @@ if option == 'Download Data':
         #Download data from zacks and other sources and store it in the database.
         #Use mutithreading to make the download process faster
 
-        df_tickers_all = get_zacks_us_companies()
         df_tickers, success = write_zacks_ticker_data_to_db(df_tickers_all, logger)
         df_tickers1, df_tickers2, df_tickers3, df_tickers4, df_tickers5 = np.array_split(df_tickers, 5)
 
@@ -306,82 +306,74 @@ if option == 'Single Stock One Pager':
             except UnboundLocalError as e:
                 st.markdown("Company Not Found")
             else:
-                # Get High Level Company Details
-                company_name = df_company_details['company_name'][0]
-                sector = df_company_details['sector'][0]
-                industry = df_company_details['industry'][0]
-                exchange = df_company_details['exchange'][0]
-                market_cap = df_company_details['market_cap'][0]
-                shares_outstanding = df_company_details['shares_outstanding'][0]
-
-                range_52w = df_finwiz_stock_data['range_52w'][0]
-                # EV 
-                ev = df_yf_key_stats['ev'][0]
-                # Trailing P/E 
-                trailing_pe = df_finwiz_stock_data['pe'][0]
-                # Forward P/E 
-                forward_pe = df_finwiz_stock_data['pe_forward'][0]
-                # PEG 
-                peg_ratio = df_finwiz_stock_data['peg'][0]
-                # ROE 
-                roe = df_finwiz_stock_data['roe'][0]
-
-                shares_outstanding_formatted = '{:,.2f}'.format(shares_outstanding).split('.00')[0]
-                market_cap_formatted = '{:,.2f}'.format(market_cap)
-
-                column_names = ['Sector','Industry','Market Cap','Shares Outstanding','52 Week Range']
-                column_data = [sector, industry, market_cap_formatted, shares_outstanding_formatted, range_52w]
-                style_t1 = format_df_for_dashboard(column_names, column_data)
-
-                column_names = ['EV','Trailing PE','Forward PE', 'PEG Ratio', 'ROE']
-                column_data = [ev, trailing_pe, forward_pe, peg_ratio, roe]
-                style_t2 = format_df_for_dashboard(column_names, column_data)
-
-                avg_vol_3m = df_yf_key_stats['avg_vol_3m'][0]
-                avg_vol_10d = df_yf_key_stats['avg_vol_10d'][0]
-
-                column_names = ['Average Volume 3m','Average Volume 10d']
-                column_data = [avg_vol_3m, avg_vol_10d]
-                style_t3 = format_df_for_dashboard(column_names, column_data)
-
                 json_price_action = get_yf_price_action(symbol)
+
                 dataSummaryDetail = json_price_action['quoteSummary']['result'][0]['summaryDetail']
                 dataDefaultKeyStatistics = json_price_action['quoteSummary']['result'][0]['defaultKeyStatistics']
                 dataSummaryProfile = json_price_action['quoteSummary']['result'][0]['summaryProfile']
                 dataFinancialData = json_price_action['quoteSummary']['result'][0]['financialData']
                 dataPrice = json_price_action['quoteSummary']['result'][0]['price']
 
-                #TODO: We need to get this data from somewhere
-                # Last Stock Price
+
+                # Get High Level Company Details
+                company_name = df_company_details['company_name'][0]
+                sector = df_company_details['sector'][0]
+                industry = df_company_details['industry'][0]
+                exchange = df_company_details['exchange'][0]
+                market_cap = dataPrice['marketCap']['fmt']
+                #market_cap_formatted ='{:,.2f}'.format(market_cap)
+                shares_outstanding = df_company_details['shares_outstanding'][0]
+                range_52w = df_finwiz_stock_data['range_52w'][0]
+                ev = df_yf_key_stats['ev'][0]
+                trailing_pe = df_finwiz_stock_data['pe'][0]
+                forward_pe = df_finwiz_stock_data['pe_forward'][0]
+                peg_ratio = df_finwiz_stock_data['peg'][0]        
+                roe = df_finwiz_stock_data['roe'][0]
+                shares_outstanding_formatted = '{:,.2f}'.format(shares_outstanding).split('.00')[0]
+                avg_vol_3m = df_yf_key_stats['avg_vol_3m'][0]
+                avg_vol_10d = df_yf_key_stats['avg_vol_10d'][0]
                 last = dataSummaryDetail['previousClose']['fmt']
                 annual_high = dataSummaryDetail['fiftyTwoWeekHigh']['fmt']
                 annual_low = dataSummaryDetail['fiftyTwoWeekLow']['fmt']
-                # YTD Change % - [CALCULATE FROM DATA]
+                percent_change_ytd = df_tickers_all.loc[df_tickers_all['Ticker']==symbol,'% Price Change (YTD)']
+                percent_change_ytd =  percent_change_ytd.values[0]
+                percent_change_ytd_formatted = '{:,.2f}%'.format(percent_change_ytd)
+                div_yield = 0
+                try:
+                    div_yield = dataSummaryDetail['dividendYield']['fmt'] 
+                    #div_yield_formatted = '{:,.2f}'.format(div_yield)
+                except KeyError as e:
+                    print(f"Could not load YF data: Dividend Yield")
+                    pass
 
-                # Div Yield 
-                div_yield = dataSummaryDetail['dividendYield']['fmt'] 
-                # Beta 
                 beta = dataSummaryDetail['beta']['fmt']
-                # Currency 
                 currency = dataSummaryDetail['currency']
-                # Website 
                 website = dataSummaryProfile['website']
-
-                # Volume
                 volume = dataSummaryDetail['volume']['longFmt'] 
-
-                # Target Price
                 target_price = dataFinancialData['targetHighPrice']['fmt']
-
-
                 next_fiscal_year_end = dataDefaultKeyStatistics['nextFiscalYearEnd']['fmt']
-                market_cap = dataPrice['marketCap']['raw']
+
+
                 business_summary = dataSummaryProfile['longBusinessSummary']
                 total_debt = dataFinancialData['totalDebt']['raw']
+                ev = dataDefaultKeyStatistics['enterpriseValue']['fmt']
+                #ev_formatted ='{:,.2f}'.format(ev)                
+                days_to_cover_short_ratio = dataDefaultKeyStatistics['shortRatio']['raw']
+                days_to_cover_short_ratio_formatted ='{:,.2f}'.format(days_to_cover_short_ratio)
+                dividend_this_year = dataSummaryDetail['trailingAnnualDividendRate']['raw']
+                dividend_this_year_formatted ='{:,.2f}'.format(dividend_this_year)
 
-                # Days to Cover - 
-                # Dividend This Year - 
+                column_names = ['Last','52 Week High','52 Week Low','YTD Change %','Market Cap', 'EV', 'Days to Cover', 'Target Price']
+                column_data = [last, annual_high, annual_low, percent_change_ytd_formatted, market_cap, ev, days_to_cover_short_ratio_formatted, target_price]
+                style_t1 = format_df_for_dashboard(column_names, column_data)
 
+                column_names = ['Trailing P/E','Forward P/E','PEG','Divedend Y0','Dividend Yield', 'Beta', 'Currency']
+                column_data = [trailing_pe, forward_pe, peg_ratio, dividend_this_year_formatted, div_yield, beta, currency]
+                style_t2 = format_df_for_dashboard(column_names, column_data)
+
+                column_names = ['ROE','Exchange','Sector','Industry','Website', 'Year End','Average Volume 3m','Average Volume 10d']
+                column_data = [roe, exchange, sector, industry, website, next_fiscal_year_end,avg_vol_3m, avg_vol_10d]
+                style_t3 = format_df_for_dashboard(column_names, column_data)
 
                 st.subheader(f'{company_name} ({symbol})')
 
