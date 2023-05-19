@@ -22,7 +22,7 @@ from common import set_earningswhispers_earnings_calendar
 from common import set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data
 from common import set_price_action_ta, set_todays_insider_trades
-from common import style_df_for_display
+from common import style_df_for_display, format_df_for_dashboard
 import seaborn as sns
 
 debug = False
@@ -329,31 +329,20 @@ if option == 'Single Stock One Pager':
                 shares_outstanding_formatted = '{:,.2f}'.format(shares_outstanding).split('.00')[0]
                 market_cap_formatted = '{:,.2f}'.format(market_cap)
 
-                data = {'Sector':[],'Industry':[],'Market Cap':[],'Shares Outstanding': [], '52 Week Range':[],'EV':[],'Trailing PE':[],'Forward PE': [], 'PEG Ratio':[], 'ROE': []}
-                df_table1 = pd.DataFrame(data)
-                temp_row1 = []
+                column_names = ['Sector','Industry','Market Cap','Shares Outstanding','52 Week Range']
+                column_data = [sector, industry, market_cap_formatted, shares_outstanding_formatted, range_52w]
+                style_t1 = format_df_for_dashboard(column_names, column_data)
 
-                temp_row1.append(sector)
-                temp_row1.append(industry)
-                temp_row1.append(market_cap_formatted)
-                temp_row1.append(shares_outstanding_formatted)
+                column_names = ['EV','Trailing PE','Forward PE', 'PEG Ratio', 'ROE']
+                column_data = [ev, trailing_pe, forward_pe, peg_ratio, roe]
+                style_t2 = format_df_for_dashboard(column_names, column_data)
 
-                temp_row1.append(range_52w)
-                temp_row1.append(ev)
-                temp_row1.append(trailing_pe)
-                temp_row1.append(forward_pe)
-                temp_row1.append(peg_ratio)
-                temp_row1.append(roe)
-
-                df_table1.loc[len(df_table1)] = temp_row1
-
-                df_table1 = df_table1.T
-                df_table1 = df_table1.reset_index()
-
-                # Avg Vol 3 Months 
                 avg_vol_3m = df_yf_key_stats['avg_vol_3m'][0]
-                # Avg Vol 10 Days 
                 avg_vol_10d = df_yf_key_stats['avg_vol_10d'][0]
+
+                column_names = ['Average Volume 3m','Average Volume 10d']
+                column_data = [avg_vol_3m, avg_vol_10d]
+                style_t3 = format_df_for_dashboard(column_names, column_data)
 
                 #TODO: We need to get this data from somewhere
                 # YTD Change % - [CALCULATE FROM DATA]
@@ -368,9 +357,15 @@ if option == 'Single Stock One Pager':
 
                 st.subheader(f'{company_name} ({symbol})')
 
-                style = df_table1.style.hide_index()
-                style.hide_columns()
-                st.write(style.to_html(), unsafe_allow_html=True)
+                style_t1.hide_columns()
+                st.write(style_t1.to_html(), unsafe_allow_html=True)
+
+                style_t2.hide_columns()
+                st.write(style_t2.to_html(), unsafe_allow_html=True)
+
+                style_t3.hide_columns()
+                st.write(style_t3.to_html(), unsafe_allow_html=True)
+
 
                 st.markdown("Balance Sheet")
 
@@ -379,9 +374,9 @@ if option == 'Single Stock One Pager':
                 cols_format = {'retained_earnings': '${0:,.2f}','other_equity': '${0:,.2f}','book_value_per_share': '${0:,.2f}', 'Date': "{:%B %Y}"}
                 cols_drop = ['cid']
 
-                df = style_df_for_display(df_zacks_balance_sheet_shares, cols_gradient, cols_rename, cols_format, cols_drop)
-                #import pdb; pdb.set_trace()
-                st.dataframe(df, use_container_width=True)
+                if(len(df_zacks_balance_sheet_shares) > 0):
+                   df = style_df_for_display(df_zacks_balance_sheet_shares, cols_gradient, cols_rename, cols_format, cols_drop)
+                   st.dataframe(df, use_container_width=True)
 
                 st.markdown("Earnings Surprises")
                 st.dataframe(df_zacks_earnings_surprises)

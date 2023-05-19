@@ -1523,8 +1523,20 @@ def style_df_for_display(df, cols_gradient, cols_rename, cols_format, cols_drop)
   #df.hide_columns_ = True 
   return df
 
+def format_df_for_dashboard(col_names, data):
+  index = 0
 
+  dict = {}
+  for x in col_names:
+    dict[x] = [data[index]]
+    index = index + 1
 
+  df_table = pd.DataFrame(dict)
+  df_table = df_table.T
+  df_table = df_table.reset_index()
+  style = df_table.style.hide_index()
+
+  return style
 
 ####################
 # Helper Functions #
