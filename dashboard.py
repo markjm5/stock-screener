@@ -22,7 +22,7 @@ from common import set_earningswhispers_earnings_calendar
 from common import set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data
 from common import set_price_action_ta, set_todays_insider_trades
-from common import style_df_for_display, format_df_for_dashboard
+from common import style_df_for_display, format_df_for_dashboard, get_yf_price_action
 import seaborn as sns
 
 debug = False
@@ -344,28 +344,61 @@ if option == 'Single Stock One Pager':
                 column_data = [avg_vol_3m, avg_vol_10d]
                 style_t3 = format_df_for_dashboard(column_names, column_data)
 
+                json_price_action = get_yf_price_action(symbol)
+                dataSummaryDetail = json_price_action['quoteSummary']['result'][0]['summaryDetail']
+                dataDefaultKeyStatistics = json_price_action['quoteSummary']['result'][0]['defaultKeyStatistics']
+                dataSummaryProfile = json_price_action['quoteSummary']['result'][0]['summaryProfile']
+                dataFinancialData = json_price_action['quoteSummary']['result'][0]['financialData']
+                dataPrice = json_price_action['quoteSummary']['result'][0]['price']
+
                 #TODO: We need to get this data from somewhere
+                # Last Stock Price
+                last = dataSummaryDetail['previousClose']['fmt']
+                annual_high = dataSummaryDetail['fiftyTwoWeekHigh']['fmt']
+                annual_low = dataSummaryDetail['fiftyTwoWeekLow']['fmt']
                 # YTD Change % - [CALCULATE FROM DATA]
-                # Days to Cover - 
-                # Target Price - 
-                # Dividend This Year - 
+
                 # Div Yield 
+                div_yield = dataSummaryDetail['dividendYield']['fmt'] 
                 # Beta 
+                beta = dataSummaryDetail['beta']['fmt']
                 # Currency 
+                currency = dataSummaryDetail['currency']
                 # Website 
+                website = dataSummaryProfile['website']
+
                 # Volume
+                volume = dataSummaryDetail['volume']['longFmt'] 
+
+                # Target Price
+                target_price = dataFinancialData['targetHighPrice']['fmt']
+
+
+                next_fiscal_year_end = dataDefaultKeyStatistics['nextFiscalYearEnd']['fmt']
+                market_cap = dataPrice['marketCap']['raw']
+                business_summary = dataSummaryProfile['longBusinessSummary']
+                total_debt = dataFinancialData['totalDebt']['raw']
+
+                # Days to Cover - 
+                # Dividend This Year - 
+
 
                 st.subheader(f'{company_name} ({symbol})')
 
-                style_t1.hide_columns()
-                st.write(style_t1.to_html(), unsafe_allow_html=True)
+                #TODO: Put these into separate columns on the page so that they are side by side
 
+                col1,col2,col3 = st.columns(3)
+
+                style_t1.hide_columns()
+                col1.write(style_t1.to_html(), unsafe_allow_html=True)
+                
                 style_t2.hide_columns()
-                st.write(style_t2.to_html(), unsafe_allow_html=True)
+                col2.write(style_t2.to_html(), unsafe_allow_html=True)
 
                 style_t3.hide_columns()
-                st.write(style_t3.to_html(), unsafe_allow_html=True)
+                col3.write(style_t3.to_html(), unsafe_allow_html=True)
 
+                st.markdown("""---""")
 
                 st.markdown("Balance Sheet")
 
