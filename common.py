@@ -1538,7 +1538,7 @@ def format_fields_for_dashboard(col_names, data):
 
   return style
 
-def format_df_for_dashboard(df, sort_cols, drop_rows, rename_cols, number_format):
+def format_df_for_dashboard(df, sort_cols, drop_rows, rename_cols, number_format_cols, number_format_rows):
   #Sorting
   df = df.sort_values(by=sort_cols, ascending=True).T
 
@@ -1548,12 +1548,22 @@ def format_df_for_dashboard(df, sort_cols, drop_rows, rename_cols, number_format
   df = df[1:]
 
   #Renaming Indexes
-  df.rename(index=rename_cols, inplace=True)  
+  df.rename(index=rename_cols, inplace=True)
 
-  for x in number_format:
-    # Format Numbers
-    df[x] = df[x].astype(float)
-    df.loc[:, x] = df[x].map('{:,.2f}'.format)
+  #format cols  
+  if(len(number_format_cols) > 0):
+    #import pdb; pdb.set_trace()
+    for x in number_format_cols:
+      # Format Numbers
+      try:
+        df[x] = df[x].astype(float)
+        df.loc[:, x] = df[x].map('{:,.2f}'.format)
+      except KeyError as e:
+        pass
+
+  if(len(number_format_rows) > 0):
+    #TODO: Format Numbers for Rows
+    pass
 
   style = df.style.hide_index()
 

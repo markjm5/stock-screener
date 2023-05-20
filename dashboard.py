@@ -392,14 +392,27 @@ if option == 'Single Stock One Pager':
 
                 st.markdown("""---""")
 
-                st.markdown("Stockrow Data")
-
                 sort_cols = ['forecast_year']
                 drop_rows = ['cid','id']
                 rename_cols = {'sales': 'Sales','ebit': 'EBIT','net_income': 'Net Income','pe_ratio': 'PE Ratio','earnings_per_share': 'EPS','cash_flow_per_share': 'Cash Flow Per Share','book_value_per_share': 'Book Value Per Share','total_debt': 'Total Debt','ebitda': 'EBITDA'}
-                number_format = ['2020', '2021', '2022', '2023', '2024', '2025']
-                style_t4 = format_df_for_dashboard(df_stockrow_stock_data, sort_cols, drop_rows, rename_cols, number_format)
+                number_format_cols = ['2020', '2021', '2022', '2023', '2024', '2025']
+                number_format_rows = []
+                style_t4 = format_df_for_dashboard(df_stockrow_stock_data, sort_cols, drop_rows, rename_cols, number_format_cols, number_format_rows)
                 st.write(style_t4)
+
+                st.markdown("""---""")
+
+
+                st.markdown("Earnings Surprises")
+
+                sort_cols = ['dt']
+                drop_rows = ['cid','id', 'dt']
+                rename_cols = {'reporting_priod': 'Reporting Period','eps_estimate': 'EPS Estimate','eps_reported': 'EPS Reported','sales_estimate': 'Sales Estimate','sales_reported': 'Sales Reported'}
+                number_format_cols = []
+                number_format_rows = ['sales_estimate', 'sales_reported']
+                style_t5 = format_df_for_dashboard(df_zacks_earnings_surprises, sort_cols, drop_rows, rename_cols, number_format_cols, number_format_rows)
+                #st.dataframe(df_zacks_earnings_surprises)
+                st.write(style_t5)
 
                 st.markdown("""---""")
 
@@ -414,8 +427,8 @@ if option == 'Single Stock One Pager':
                    df = style_df_for_display(df_zacks_balance_sheet_shares, cols_gradient, cols_rename, cols_format, cols_drop)
                    st.dataframe(df, use_container_width=True)
 
-                st.markdown("Earnings Surprises")
-                st.dataframe(df_zacks_earnings_surprises)
+                #st.markdown("Earnings Surprises")
+                #st.dataframe(df_zacks_earnings_surprises)
 
                 st.markdown("Geography") 
                 st.dataframe(df_zacks_product_line_geography)
