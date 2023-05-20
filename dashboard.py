@@ -22,7 +22,7 @@ from common import set_earningswhispers_earnings_calendar
 from common import set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data
 from common import set_price_action_ta, set_todays_insider_trades
-from common import style_df_for_display, format_df_for_dashboard, get_yf_price_action
+from common import style_df_for_display, format_df_for_dashboard, format_fields_for_dashboard, get_yf_price_action
 import seaborn as sns
 
 debug = False
@@ -365,19 +365,19 @@ if option == 'Single Stock One Pager':
 
                 column_names = ['Last','52 Week High','52 Week Low','YTD Change %','Market Cap', 'EV', 'Days to Cover', 'Target Price']
                 column_data = [last, annual_high, annual_low, percent_change_ytd_formatted, market_cap, ev, days_to_cover_short_ratio_formatted, target_price]
-                style_t1 = format_df_for_dashboard(column_names, column_data)
+                style_t1 = format_fields_for_dashboard(column_names, column_data)
 
                 column_names = ['Trailing P/E','Forward P/E','PEG','Divedend Y0','Dividend Yield', 'Beta', 'Currency']
                 column_data = [trailing_pe, forward_pe, peg_ratio, dividend_this_year_formatted, div_yield, beta, currency]
-                style_t2 = format_df_for_dashboard(column_names, column_data)
+                style_t2 = format_fields_for_dashboard(column_names, column_data)
 
                 column_names = ['ROE','Exchange','Sector','Industry','Website', 'Year End','Average Volume 3m','Average Volume 10d']
                 column_data = [roe, exchange, sector, industry, website, next_fiscal_year_end,avg_vol_3m, avg_vol_10d]
-                style_t3 = format_df_for_dashboard(column_names, column_data)
+                style_t3 = format_fields_for_dashboard(column_names, column_data)
 
                 st.subheader(f'{company_name} ({symbol})')
 
-                #TODO: Put these into separate columns on the page so that they are side by side
+                #Put these into separate columns on the page so that they are side by side
 
                 col1,col2,col3 = st.columns(3)
 
@@ -389,6 +389,17 @@ if option == 'Single Stock One Pager':
 
                 style_t3.hide_columns()
                 col3.write(style_t3.to_html(), unsafe_allow_html=True)
+
+                st.markdown("""---""")
+
+                st.markdown("Stockrow Data")
+
+                sort_cols = ['forecast_year']
+                drop_rows = ['cid','id']
+                rename_cols = {'sales': 'Sales','ebit': 'EBIT','net_income': 'Net Income','pe_ratio': 'PE Ratio','earnings_per_share': 'EPS','cash_flow_per_share': 'Cash Flow Per Share','book_value_per_share': 'Book Value Per Share','total_debt': 'Total Debt','ebitda': 'EBITDA'}
+                number_format = ['2020', '2021', '2022', '2023', '2024', '2025']
+                style_t4 = format_df_for_dashboard(df_stockrow_stock_data, sort_cols, drop_rows, rename_cols, number_format)
+                st.write(style_t4)
 
                 st.markdown("""---""")
 
@@ -409,8 +420,6 @@ if option == 'Single Stock One Pager':
                 st.markdown("Geography") 
                 st.dataframe(df_zacks_product_line_geography)
 
-                st.markdown("Stockrow Data")
-                st.dataframe(df_stockrow_stock_data)
 
                 st.markdown("YF Key Stats")
                 st.dataframe(df_yf_key_stats)

@@ -1523,7 +1523,7 @@ def style_df_for_display(df, cols_gradient, cols_rename, cols_format, cols_drop)
   #df.hide_columns_ = True 
   return df
 
-def format_df_for_dashboard(col_names, data):
+def format_fields_for_dashboard(col_names, data):
   index = 0
 
   dict = {}
@@ -1535,6 +1535,27 @@ def format_df_for_dashboard(col_names, data):
   df_table = df_table.T
   df_table = df_table.reset_index()
   style = df_table.style.hide_index()
+
+  return style
+
+def format_df_for_dashboard(df, sort_cols, drop_rows, rename_cols, number_format):
+  #Sorting
+  df = df.sort_values(by=sort_cols, ascending=True).T
+
+  #Dropping Rows
+  df = df.drop(index=drop_rows)
+  df.columns = df.iloc[0]
+  df = df[1:]
+
+  #Renaming Indexes
+  df.rename(index=rename_cols, inplace=True)  
+
+  for x in number_format:
+    # Format Numbers
+    df[x] = df[x].astype(float)
+    df.loc[:, x] = df[x].map('{:,.2f}'.format)
+
+  style = df.style.hide_index()
 
   return style
 
