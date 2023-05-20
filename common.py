@@ -1538,7 +1538,10 @@ def format_fields_for_dashboard(col_names, data):
 
   return style
 
-def format_df_for_dashboard(df, sort_cols, drop_rows, rename_cols, number_format_cols, number_format_rows):
+def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_format_cols, number_format_rows):
+
+  #TODO: Need to fix so that it does not throw error
+
   #Sorting
   df = df.sort_values(by=sort_cols, ascending=True).T
 
@@ -1563,8 +1566,52 @@ def format_df_for_dashboard(df, sort_cols, drop_rows, rename_cols, number_format
 
   if(len(number_format_rows) > 0):
     #TODO: Format Numbers for Rows
+    df1 = df.T
+    #import pdb; pdb.set_trace()
+    for x in number_format_rows:
+      # Format Numbers
+      try:
+        df1[x] = df1[x].astype(float)
+        df1.loc[:, x] = df1[x].map('{:,.2f}'.format)
+      except KeyError as e:
+        pass
+    #import pdb; pdb.set_trace()
+    df = df1.T
+
+  style = df.style.hide_index()
+
+  return style
+
+def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format_cols):
+
+  #Sorting
+  try:
+    df = df.sort_values(by=sort_cols, ascending=True)
+  except KeyError as e:
     pass
 
+  #Dropping Columns
+  try:
+    df = df.drop(drop_cols, axis=1)
+  except KeyError as e:
+    pass
+
+  #Formatting Columns
+  for x in number_format_cols:
+    # Format Numbers
+    try:
+      df[x] = df[x].astype(float)
+      df[x] = df[x].map('{:,.2f}'.format)
+    except KeyError as e:
+      pass
+
+  #Renaming Indexes
+  df.rename(columns=rename_cols, inplace=True)
+  try:
+    df = df.set_index(df.columns[0],drop=True)
+  except IndexError as e:
+    pass
+  
   style = df.style.hide_index()
 
   return style

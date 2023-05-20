@@ -22,7 +22,8 @@ from common import set_earningswhispers_earnings_calendar
 from common import set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data
 from common import set_price_action_ta, set_todays_insider_trades
-from common import style_df_for_display, format_df_for_dashboard, format_fields_for_dashboard, get_yf_price_action
+from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
+from common import format_df_for_dashboard_flip, format_df_for_dashboard
 import seaborn as sns
 
 debug = False
@@ -375,9 +376,8 @@ if option == 'Single Stock One Pager':
                 column_data = [roe, exchange, sector, industry, website, next_fiscal_year_end,avg_vol_3m, avg_vol_10d]
                 style_t3 = format_fields_for_dashboard(column_names, column_data)
 
+                # Start of Display of Page
                 st.subheader(f'{company_name} ({symbol})')
-
-                #Put these into separate columns on the page so that they are side by side
 
                 col1,col2,col3 = st.columns(3)
 
@@ -397,11 +397,10 @@ if option == 'Single Stock One Pager':
                 rename_cols = {'sales': 'Sales','ebit': 'EBIT','net_income': 'Net Income','pe_ratio': 'PE Ratio','earnings_per_share': 'EPS','cash_flow_per_share': 'Cash Flow Per Share','book_value_per_share': 'Book Value Per Share','total_debt': 'Total Debt','ebitda': 'EBITDA'}
                 number_format_cols = ['2020', '2021', '2022', '2023', '2024', '2025']
                 number_format_rows = []
-                style_t4 = format_df_for_dashboard(df_stockrow_stock_data, sort_cols, drop_rows, rename_cols, number_format_cols, number_format_rows)
+                style_t4 = format_df_for_dashboard_flip(df_stockrow_stock_data, sort_cols, drop_rows, rename_cols, number_format_cols, number_format_rows)
                 st.write(style_t4)
 
                 st.markdown("""---""")
-
 
                 st.markdown("Earnings Surprises")
 
@@ -409,10 +408,36 @@ if option == 'Single Stock One Pager':
                 drop_rows = ['cid','id', 'dt']
                 rename_cols = {'reporting_priod': 'Reporting Period','eps_estimate': 'EPS Estimate','eps_reported': 'EPS Reported','sales_estimate': 'Sales Estimate','sales_reported': 'Sales Reported'}
                 number_format_cols = []
-                number_format_rows = ['sales_estimate', 'sales_reported']
-                style_t5 = format_df_for_dashboard(df_zacks_earnings_surprises, sort_cols, drop_rows, rename_cols, number_format_cols, number_format_rows)
+                number_format_rows = ['Sales Estimate', 'Sales Reported']
+                style_t5 = format_df_for_dashboard_flip(df_zacks_earnings_surprises, sort_cols, drop_rows, rename_cols, number_format_cols, number_format_rows)
                 #st.dataframe(df_zacks_earnings_surprises)
                 st.write(style_t5)
+
+                st.markdown("""---""")
+
+                col1,col2 = st.columns(2)
+
+                col1.markdown("Geography") 
+                sort_cols = ['revenue']
+                drop_cols = ['cid','id']
+                rename_cols = {'region': 'Region','revenue': 'Revenue'}
+                number_format_cols = ['revenue']
+                #number_format_rows = ['Sales Estimate', 'Sales Reported']
+                #import pdb; pdb.set_trace()
+                if(len(df_zacks_product_line_geography) > 0):
+                    style_t6 = format_df_for_dashboard(df_zacks_product_line_geography, sort_cols, drop_cols, rename_cols, number_format_cols)
+                    col1.write(style_t6)
+                else:
+                    col1.markdown("Geography data does not exist")
+
+                col2.markdown("Peer Comparison")
+                sort_cols = ['peer_ticker']
+                drop_cols = ['cid','id' ]
+                rename_cols = {'peer_company': 'Peer Company','peer_ticker': 'Peer Ticker'}
+                number_format_cols = []
+
+                style_t7 = format_df_for_dashboard(df_zacks_peer_comparison, sort_cols, drop_cols, rename_cols, number_format_cols)
+                col2.write(style_t7)
 
                 st.markdown("""---""")
 
@@ -430,15 +455,9 @@ if option == 'Single Stock One Pager':
                 #st.markdown("Earnings Surprises")
                 #st.dataframe(df_zacks_earnings_surprises)
 
-                st.markdown("Geography") 
-                st.dataframe(df_zacks_product_line_geography)
-
-
                 st.markdown("YF Key Stats")
                 st.dataframe(df_yf_key_stats)
 
-                st.markdown("Peer Comparison")
-                st.dataframe(df_zacks_peer_comparison)
 
                 st.markdown("Finwiz Ratios")
                 st.dataframe(df_finwiz_stock_data)
