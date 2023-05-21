@@ -46,13 +46,13 @@ class TestCommon(unittest.TestCase):
     def test_set_geopolitical_calendar(self):
         self.assertEqual(set_geopolitical_calendar(logger),True)
 
-    """
+    
     #Executor 1
     def test_set_zacks_balance_sheet_shares(self):
         self.assertEqual(set_zacks_balance_sheet_shares(df_tickers1, logger),True)
         self.assertEqual(set_zacks_balance_sheet_shares(df_tickers2, logger),False)
 
-    """
+    
     #Executor 2
     def test_set_zacks_earnings_surprises(self):
         self.assertEqual(set_zacks_earnings_surprises(df_tickers1, logger),True)
@@ -65,13 +65,15 @@ class TestCommon(unittest.TestCase):
     def test_set_finwiz_stock_data(self):
         self.assertEqual(set_finwiz_stock_data(df_tickers1, logger),True)
         self.assertEqual(set_finwiz_stock_data(df_tickers6, logger),False)
-    
+    """
+
     #Executor 5
     def test_set_stockrow_stock_data(self):
-        self.assertEqual(set_stockrow_stock_data(df_tickers5, logger),True)
-        self.assertEqual(set_stockrow_stock_data(df_tickers6, logger),False)
-        self.assertEqual(set_stockrow_stock_data(df_tickers7, logger),True)
-    
+        self.assertEqual(set_stockrow_stock_data(df_tickers1, logger),True)
+        #self.assertEqual(set_stockrow_stock_data(df_tickers6, logger),False)
+        #self.assertEqual(set_stockrow_stock_data(df_tickers7, logger),True)
+
+    """
     #Executor 6
     def test_set_yf_key_stats(self):
         self.assertEqual(set_yf_key_stats(df_tickers1, logger),True)

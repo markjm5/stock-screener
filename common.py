@@ -396,7 +396,6 @@ def set_stockrow_stock_data(df_tickers, logger):
     if(soup.find_all('table')):
       try:
         table = soup.find_all('table')[0]
-        
         table_rows = table.find_all('tr', recursive=True)
         table_rows_header = table.find_all('tr')[0].find_all('th')
 
@@ -409,11 +408,10 @@ def set_stockrow_stock_data(df_tickers, logger):
         #print(table_rows)
         #Get rows of data.
         for tr in table_rows:
-
           if(tr.find_all('td')):
             #print(tr.find_all('td')[len(tr.find_all('td'))-1].text.strip())
             row_heading = tr.find_all('td')[len(tr.find_all('td'))-1].text.strip().replace("Created with Highcharts 8.2.2foo","")   
-            if(row_heading in ['Revenue','EBT','Net Income','PE Ratio','Earnings/Sh','Total Debt','Cash Flow/Sh','Book Value/Sh']):
+            if(row_heading in ['Revenue','EBT','Net Income','PE Ratio','Earnings/Sh','Total Debt','Cash Flow/Sh','Book Value/Sh','FCF']):
               tds = tr.find_all('td', recursive=True)
               if(tds):
                 temp_row = []
@@ -513,7 +511,6 @@ def set_stockrow_stock_data(df_tickers, logger):
       #df_transposed = df_transposed[1:] #take the data less the header row
       #df_transposed.columns = new_header #set the header row as the df header
 
-      #import pdb; pdb.set_trace()
       df_transposed = df_transposed.rename(columns={
         "Revenue":"SALES",          
         "EBT":"EBIT",               
@@ -523,7 +520,8 @@ def set_stockrow_stock_data(df_tickers, logger):
         "Cash Flow/Sh":"CASH_FLOW_PER_SHARE",      
         "Book Value/Sh":"BOOK_VALUE_PER_SHARE",     
         "Total Debt":"TOTAL_DEBT",        
-        "EBITDA": "EBITDA"                   
+        "EBITDA": "EBITDA",        
+        "FCF": "FCF"           
         })  
 
       if('EBITDA' in df_transposed.columns):
@@ -552,6 +550,9 @@ def set_stockrow_stock_data(df_tickers, logger):
 
       if('TOTAL_DEBT' in df_transposed.columns):
         df_transposed = dataframe_convert_to_numeric(df_transposed, 'TOTAL_DEBT', logger)
+
+      if('FCF' in df_transposed.columns):
+        df_transposed = dataframe_convert_to_numeric(df_transposed, 'FCF', logger)
 
       #import pdb; pdb.set_trace()
       todays_date = date.today()

@@ -385,7 +385,6 @@ if option == 'Single Stock One Pager':
                 target_price = dataFinancialData['targetHighPrice']['fmt']
                 next_fiscal_year_end = dataDefaultKeyStatistics['nextFiscalYearEnd']['fmt']
 
-
                 business_summary = dataSummaryProfile['longBusinessSummary']
                 total_debt = dataFinancialData['totalDebt']['raw']
                 ev = dataDefaultKeyStatistics['enterpriseValue']['fmt']
@@ -425,7 +424,7 @@ if option == 'Single Stock One Pager':
 
                 sort_cols = ['forecast_year']
                 drop_rows = ['cid','id']
-                rename_cols = {'sales': 'Sales','ebit': 'EBIT','net_income': 'Net Income','pe_ratio': 'PE Ratio','earnings_per_share': 'EPS','cash_flow_per_share': 'Cash Flow Per Share','book_value_per_share': 'Book Value Per Share','total_debt': 'Total Debt','ebitda': 'EBITDA'}
+                rename_cols = {'sales': 'Sales','ebit': 'EBIT','net_income': 'Net Income','pe_ratio': 'PE Ratio','earnings_per_share': 'EPS','cash_flow_per_share': 'Cash Flow Per Share','book_value_per_share': 'Book Value Per Share','total_debt': 'Total Debt','ebitda': 'EBITDA', 'fcf': "FCF"}
                 number_format_col = 'forecast_year'
                 style_t4 = format_df_for_dashboard_flip(df_stockrow_stock_data, sort_cols, drop_rows, rename_cols, number_format_col)
                 st.write(style_t4)
