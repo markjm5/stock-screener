@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS CompanyForecast (
     book_value_per_share NUMERIC,
     total_debt NUMERIC,
     ebitda NUMERIC,
+    fcf NUMERIC,
     PRIMARY KEY (cid, forecast_year),
     CONSTRAINT fk_companyforecast FOREIGN KEY (cid) REFERENCES Company (cid)
 );
