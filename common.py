@@ -1538,11 +1538,11 @@ def format_fields_for_dashboard(col_names, data):
 
   return style
 
-def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_format_cols):
+def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_format_col):
 
   #cols to format
   try:
-    arr_format_cols = df[number_format_cols].squeeze().tolist()
+    arr_format_cols = df[number_format_col].squeeze().tolist()
   except KeyError as e:
     pass
 
