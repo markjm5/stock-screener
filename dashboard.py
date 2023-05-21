@@ -269,19 +269,52 @@ if option == 'Calendar':
     #st.subheader(f'Calendar')
     df1 = get_data(table="macro_earningscalendar")
     st.markdown("Earnings Calendar")
-    st.dataframe(df1)
+
+    sort_cols = ['dt']
+    drop_cols = ['id' ]
+    rename_cols = {'dt': 'Date','dt_time': 'Time', 'ticker':'Ticker', 'company_name':'Company Name', 'market_cap_mil':'Market Cap (M)'}
+    number_format_cols = ['market_cap_mil']
+
+    style_t1 = format_df_for_dashboard(df1, sort_cols, drop_cols, rename_cols, number_format_cols)
+    st.write(style_t1)
 
     df2 = get_data(table="macro_economiccalendar")
     st.markdown("Economic Calendar")
-    st.dataframe(df2)
+    #st.dataframe(df2)
+
+    sort_cols = ['dt']
+    drop_cols = ['id' ]
+    rename_cols = {'dt': 'Date','dt_time': 'Time', 'country':'Country', 'economic_event':'Economic Event', 'previous':'Previous Data'}
+    number_format_cols = []
+
+    style_t2 = format_df_for_dashboard(df2, sort_cols, drop_cols, rename_cols, number_format_cols)
+    st.write(style_t2)
+
 
     df3 = get_data(table="macro_whitehouseannouncement")
     st.markdown("Whitehouse News")
-    st.dataframe(df3)
+    #st.dataframe(df3)
+
+    sort_cols = ['dt']
+    drop_cols = ['id' ]
+    rename_cols = {'dt': 'Date','post_title': 'Title', 'post_url':'URL'}
+    number_format_cols = []
+
+    style_t3 = format_df_for_dashboard(df3, sort_cols, drop_cols, rename_cols, number_format_cols)
+    st.write(style_t3)
 
     df4 = get_data(table="macro_geopoliticalcalendar")
     st.markdown("Geopolitical Calendar")
-    st.dataframe(df4)
+    #st.dataframe(df4)
+
+    sort_cols = []
+    drop_cols = ['id']
+    rename_cols = {'event_date': 'Date','event_name': 'Event', 'event_location':'Location'}
+    number_format_cols = []
+
+    style_t4 = format_df_for_dashboard(df4, sort_cols, drop_cols, rename_cols, number_format_cols)
+    st.write(style_t4)
+
 
 if option == 'Macro Economic Data':
     st.subheader(f'Macro Economic Data')
@@ -397,7 +430,7 @@ if option == 'Single Stock One Pager':
                 rename_cols = {'sales': 'Sales','ebit': 'EBIT','net_income': 'Net Income','pe_ratio': 'PE Ratio','earnings_per_share': 'EPS','cash_flow_per_share': 'Cash Flow Per Share','book_value_per_share': 'Book Value Per Share','total_debt': 'Total Debt','ebitda': 'EBITDA'}
                 number_format_cols = ['2020', '2021', '2022', '2023', '2024', '2025']
                 number_format_rows = []
-                style_t4 = format_df_for_dashboard_flip(df_stockrow_stock_data, sort_cols, drop_rows, rename_cols, number_format_cols, number_format_rows)
+                style_t4 = format_df_for_dashboard_flip(df_stockrow_stock_data, sort_cols, drop_rows, rename_cols, number_format_cols)
                 st.write(style_t4)
 
                 st.markdown("""---""")
@@ -407,9 +440,8 @@ if option == 'Single Stock One Pager':
                 sort_cols = ['dt']
                 drop_rows = ['cid','id', 'dt']
                 rename_cols = {'reporting_priod': 'Reporting Period','eps_estimate': 'EPS Estimate','eps_reported': 'EPS Reported','sales_estimate': 'Sales Estimate','sales_reported': 'Sales Reported'}
-                number_format_cols = []
-                number_format_rows = ['Sales Estimate', 'Sales Reported']
-                style_t5 = format_df_for_dashboard_flip(df_zacks_earnings_surprises, sort_cols, drop_rows, rename_cols, number_format_cols, number_format_rows)
+                number_format_cols = ['Sales Estimate', 'Sales Reported']
+                style_t5 = format_df_for_dashboard_flip(df_zacks_earnings_surprises, sort_cols, drop_rows, rename_cols, number_format_cols)
                 #st.dataframe(df_zacks_earnings_surprises)
                 st.write(style_t5)
 
