@@ -72,7 +72,7 @@ st.markdown(f'''
     </style>
 ''',unsafe_allow_html=True)
 
-option = st.sidebar.selectbox("Which Option?", ('Download Data','Macro Economic Data','Calendar', 'Single Stock One Pager', 'Bottom Up Ideas'), 2)
+option = st.sidebar.selectbox("Which Option?", ('Download Data','Macroeconomic Data','Calendar', 'Single Stock One Pager','VWAP Calculator', 'Bottom Up Ideas'), 2)
 
 st.header(option)
 
@@ -316,7 +316,7 @@ if option == 'Calendar':
     st.write(style_t4)
 
 
-if option == 'Macro Economic Data':
+if option == 'Macroeconomic Data':
     st.subheader(f'Macro Economic Data')
 
 if option == 'Single Stock One Pager':
@@ -428,8 +428,8 @@ if option == 'Single Stock One Pager':
                 sort_cols = ['forecast_year']
                 drop_rows = ['cid','id']
                 rename_cols = {'sales': 'Sales','ebit': 'EBIT','net_income': 'Net Income','pe_ratio': 'PE Ratio','earnings_per_share': 'EPS','cash_flow_per_share': 'Cash Flow Per Share','book_value_per_share': 'Book Value Per Share','total_debt': 'Total Debt','ebitda': 'EBITDA'}
-                number_format_cols = ['2020', '2021', '2022', '2023', '2024', '2025']
-                number_format_rows = []
+                #number_format_cols = ['2020', '2021', '2022', '2023', '2024', '2025']
+                number_format_cols = ['forecast_year']
                 style_t4 = format_df_for_dashboard_flip(df_stockrow_stock_data, sort_cols, drop_rows, rename_cols, number_format_cols)
                 st.write(style_t4)
 
@@ -440,9 +440,10 @@ if option == 'Single Stock One Pager':
                 sort_cols = ['dt']
                 drop_rows = ['cid','id', 'dt']
                 rename_cols = {'reporting_priod': 'Reporting Period','eps_estimate': 'EPS Estimate','eps_reported': 'EPS Reported','sales_estimate': 'Sales Estimate','sales_reported': 'Sales Reported'}
-                number_format_cols = ['Sales Estimate', 'Sales Reported']
+                number_format_cols = ['reporting_period']                
+                cols = df_zacks_earnings_surprises.columns
+                number_format_cols = ['reporting_period']
                 style_t5 = format_df_for_dashboard_flip(df_zacks_earnings_surprises, sort_cols, drop_rows, rename_cols, number_format_cols)
-                #st.dataframe(df_zacks_earnings_surprises)
                 st.write(style_t5)
 
                 st.markdown("""---""")
@@ -511,6 +512,8 @@ if option == 'Single Stock One Pager':
                 st.write(message['user']['username'])
                 st.write(message['created_at'])
                 st.write(message['body'])
+if option == 'VWAP Calculator':
+    st.markdown("VWAP Calculator")
 
 if option == 'Bottom Up Ideas':
         option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','TA Patterns','Insider Trading', 'Country Exposure', 'Twitter'), 0)

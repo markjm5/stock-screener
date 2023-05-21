@@ -1540,7 +1540,12 @@ def format_fields_for_dashboard(col_names, data):
 
 def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_format_cols):
 
-  #TODO: Need to fix so that it does not throw error
+  #cols to format
+  try:
+    arr_format_cols = df[number_format_cols].squeeze().tolist()
+  except KeyError as e:
+    pass
+
   #Sorting
   df = df.sort_values(by=sort_cols, ascending=True)
 
@@ -1557,7 +1562,7 @@ def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_f
   df = df.T
 
   #Formatting Columns
-  for x in number_format_cols:
+  for x in arr_format_cols:
     # Format Numbers
     try:
       df[x] = df[x].astype(float)
