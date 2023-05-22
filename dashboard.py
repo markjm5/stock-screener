@@ -72,7 +72,7 @@ st.markdown(f'''
     </style>
 ''',unsafe_allow_html=True)
 
-option = st.sidebar.selectbox("Which Option?", ('Download Data','Macroeconomic Data','Calendar', 'Single Stock One Pager','VWAP Calculator', 'Bottom Up Ideas'), 2)
+option = st.sidebar.selectbox("Which Option?", ('Download Data','Macroeconomic Data','Calendar', 'Single Stock One Pager','S&P Benchmarks','VWAP Calculator', 'Bottom Up Ideas'), 2)
 
 st.header(option)
 
@@ -372,6 +372,9 @@ if option == 'Single Stock One Pager':
                 percent_change_ytd = df_tickers_all.loc[df_tickers_all['Ticker']==symbol,'% Price Change (YTD)']
                 percent_change_ytd =  percent_change_ytd.values[0]
                 percent_change_ytd_formatted = '{:,.2f}%'.format(percent_change_ytd)
+                moving_avg_50d = df_yf_key_stats['moving_avg_50d'][0]
+                moving_avg_200d = df_yf_key_stats['moving_avg_200d'][0]
+                #import pdb; pdb.set_trace()
                 div_yield = 0
                 try:
                     div_yield = dataSummaryDetail['dividendYield']['fmt'] 
@@ -398,16 +401,22 @@ if option == 'Single Stock One Pager':
                 column_data = [last, annual_high, annual_low, percent_change_ytd_formatted, market_cap, ev, days_to_cover_short_ratio_formatted, target_price]
                 style_t1 = format_fields_for_dashboard(column_names, column_data)
 
-                column_names = ['Trailing P/E','Forward P/E','PEG','Divedend Y0','Dividend Yield', 'Beta', 'Currency']
-                column_data = [trailing_pe, forward_pe, peg_ratio, dividend_this_year_formatted, div_yield, beta, currency]
+                column_names = ['Trailing P/E','Forward P/E','PEG','Divedend Y0','Dividend Yield', 'Beta', 'Currency','ROE','Exchange','Sector','Industry','Website', 'Year End']
+                column_data = [trailing_pe, forward_pe, peg_ratio, dividend_this_year_formatted, div_yield, beta, currency, roe, exchange, sector, industry, website, next_fiscal_year_end,]
                 style_t2 = format_fields_for_dashboard(column_names, column_data)
 
-                column_names = ['ROE','Exchange','Sector','Industry','Website', 'Year End','Average Volume 3m','Average Volume 10d']
-                column_data = [roe, exchange, sector, industry, website, next_fiscal_year_end,avg_vol_3m, avg_vol_10d]
+                column_names = ['Average Volume 3m','Average Volume 10d', 'Moving Average 50d', 'Moving Average 200d']
+                column_data = [avg_vol_3m, avg_vol_10d, moving_avg_50d, moving_avg_200d]
                 style_t3 = format_fields_for_dashboard(column_names, column_data)
 
-                # Start of Display of Page
+                #############################
+                #  Start of Display of Page #
+                #############################
+
                 st.subheader(f'{company_name} ({symbol})')
+                st.markdown(business_summary)
+
+                st.markdown("""---""")
 
                 col1,col2,col3 = st.columns(3)
 
@@ -449,15 +458,14 @@ if option == 'Single Stock One Pager':
                 drop_cols = ['cid','id']
                 rename_cols = {'region': 'Region','revenue': 'Revenue'}
                 number_format_cols = ['revenue']
-                #number_format_rows = ['Sales Estimate', 'Sales Reported']
-                #import pdb; pdb.set_trace()
+
                 if(len(df_zacks_product_line_geography) > 0):
                     style_t6 = format_df_for_dashboard(df_zacks_product_line_geography, sort_cols, drop_cols, rename_cols, number_format_cols)
                     col1.write(style_t6)
                 else:
                     col1.markdown("Geography data does not exist")
 
-                col2.markdown("Peer Comparison")
+                col2.markdown("Peers")
                 sort_cols = ['peer_ticker']
                 drop_cols = ['cid','id' ]
                 rename_cols = {'peer_company': 'Peer Company','peer_ticker': 'Peer Ticker'}
@@ -468,26 +476,37 @@ if option == 'Single Stock One Pager':
 
                 st.markdown("""---""")
 
-                st.markdown("Balance Sheet")
+                st.markdown("Peer Comparison")
 
-                cols_gradient = ['common_stock_par', 'retained_earnings']
-                cols_rename = {"dt": "Date"}
-                cols_format = {'retained_earnings': '${0:,.2f}','other_equity': '${0:,.2f}','book_value_per_share': '${0:,.2f}', 'Date': "{:%B %Y}"}
-                cols_drop = ['cid']
+                #Market Cap
+                #EV
+                #P/E
+                #EV/EBITDA
+                #EV/EBIT
+                #EV/Revenues
+                #PB
+                #EBITDA margin
+                #EBIT margin
+                #Net margin
+                #Dividend Yield
+                #ROE
+                #P/B
 
-                if(len(df_zacks_balance_sheet_shares) > 0):
-                   df = style_df_for_display(df_zacks_balance_sheet_shares, cols_gradient, cols_rename, cols_format, cols_drop)
-                   st.dataframe(df, use_container_width=True)
+                #cols_gradient = ['common_stock_par', 'retained_earnings']
+                #cols_rename = {"dt": "Date"}
+                #cols_format = {'retained_earnings': '${0:,.2f}','other_equity': '${0:,.2f}','book_value_per_share': '${0:,.2f}', 'Date': "{:%B %Y}"}
+                #cols_drop = ['cid']
 
-                #st.markdown("Earnings Surprises")
-                #st.dataframe(df_zacks_earnings_surprises)
+                #if(len(df_zacks_balance_sheet_shares) > 0):
+                #   df = style_df_for_display(df_zacks_balance_sheet_shares, cols_gradient, cols_rename, cols_format, cols_drop)
+                #   st.dataframe(df, use_container_width=True)
 
-                st.markdown("YF Key Stats")
-                st.dataframe(df_yf_key_stats)
+                #st.markdown("YF Key Stats")
+                #st.dataframe(df_yf_key_stats)
 
 
-                st.markdown("Finwiz Ratios")
-                st.dataframe(df_finwiz_stock_data)
+                #st.markdown("Finwiz Ratios")
+                #st.dataframe(df_finwiz_stock_data)
 
         if option_one_pager == 'Chart':
             st.subheader(f'Chart For: {symbol}')
@@ -506,6 +525,10 @@ if option == 'Single Stock One Pager':
                 st.write(message['user']['username'])
                 st.write(message['created_at'])
                 st.write(message['body'])
+
+if option == 'S&P Benchmarks':
+    st.markdown("S&P Benchmarks")
+
 if option == 'VWAP Calculator':
     st.markdown("VWAP Calculator")
 
