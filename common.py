@@ -1486,8 +1486,8 @@ def get_one_pager(ticker):
 
   return df_company_details, df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data
 
-def get_data(table=None, cid=None):
-  df = sql_get_records_as_df(table, cid)
+def get_data(table=None, cid=None, innerjoin=None):
+  df = sql_get_records_as_df(table, cid, innerjoin)
   return df
 
 ####################
@@ -1548,10 +1548,16 @@ def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_f
     pass
 
   #Sorting
-  df = df.sort_values(by=sort_cols, ascending=True)
+  try:
+    df = df.sort_values(by=sort_cols, ascending=True)
+  except KeyError as e:
+    pass
 
   #Dropping Rows
-  df = df.drop(drop_rows, axis=1)
+  try:
+    df = df.drop(drop_rows, axis=1)
+  except KeyError as e:
+    pass
 
   #Renaming Indexes
   df.rename(columns=rename_cols, inplace=True)
@@ -1563,15 +1569,20 @@ def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_f
   df = df.T
 
   #Formatting Columns
-  for x in arr_format_cols:
-    # Format Numbers
-    try:
-      df[x] = df[x].astype(float)
-      df[x] = df[x].map('{:,.2f}'.format)
-    except KeyError as e:
-      pass
+  #import pdb; pdb.set_trace()
+  if(len(df.columns) > 0):
 
-  style = df.style.hide_index()
+    for x in arr_format_cols:
+      # Format Numbers
+      try:
+        df[x] = df[x].astype(float)
+        df[x] = df[x].map('{:,.2f}'.format)
+      except KeyError as e:
+        pass
+
+    style = df.style.hide_index()
+  else:
+    style = None
 
   return style
 
@@ -1880,7 +1891,19 @@ def sql_format_str(value):
   else:
     return f'\'{sql_escape_str(value)}\','
 
-def sql_get_records_as_df(table, cid):
+def sql_get_volume():
+
+  connection, cursor = sql_open_db()
+
+  sqlCmd = """SELECT companypriceaction.*, company.symbol, company.company_name, company.sector, company.industry FROM companypriceaction INNER JOIN company ON companypriceaction.cid=company.cid"""
+     
+  cursor.execute(sqlCmd)
+
+  df = return_df_from_sql(connection, cursor)
+
+  return df
+
+def sql_get_records_as_df(table, cid, innerjoin):
   #df = pd.DataFrame()
   connection, cursor = sql_open_db()
   if(cid):
@@ -1890,14 +1913,23 @@ def sql_get_records_as_df(table, cid):
      
   cursor.execute(sqlCmd)
 
-  #df = pd.read_sql(sqlCmd,connection)
+  df = return_df_from_sql(connection, cursor)
 
+  #colnames = [desc[0] for desc in cursor.description]
+  #df = pd.DataFrame(cursor.fetchall())
+  #if(len(df) > 0):
+  #  df.columns = colnames
+  #success = sql_close_db(connection, cursor)
+  return df
+
+def return_df_from_sql(connection, cursor):
   colnames = [desc[0] for desc in cursor.description]
   df = pd.DataFrame(cursor.fetchall())
   if(len(df) > 0):
     df.columns = colnames
   success = sql_close_db(connection, cursor)
   return df
+
 
 def sql_delete_all_rows(table):
   connection, cursor = sql_open_db()

@@ -20,7 +20,7 @@ from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_p
 from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager
 from common import set_earningswhispers_earnings_calendar
 from common import set_marketscreener_economic_calendar
-from common import set_whitehouse_news, set_geopolitical_calendar, get_data
+from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql_get_volume
 from common import set_price_action_ta, set_todays_insider_trades
 from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard
@@ -357,12 +357,23 @@ if option == 'Single Stock One Pager':
                 market_cap = dataPrice['marketCap']['fmt']
                 #market_cap_formatted ='{:,.2f}'.format(market_cap)
                 shares_outstanding = df_company_details['shares_outstanding'][0]
-                range_52w = df_finwiz_stock_data['range_52w'][0]
                 ev = df_yf_key_stats['ev'][0]
-                trailing_pe = df_finwiz_stock_data['pe'][0]
-                forward_pe = df_finwiz_stock_data['pe_forward'][0]
-                peg_ratio = df_finwiz_stock_data['peg'][0]        
-                roe = df_finwiz_stock_data['roe'][0]
+ 
+                if(len(df_finwiz_stock_data) > 0):
+                    range_52w = df_finwiz_stock_data['range_52w'][0]
+                    trailing_pe = df_finwiz_stock_data['pe'][0]
+                    forward_pe = df_finwiz_stock_data['pe_forward'][0]
+                    peg_ratio = df_finwiz_stock_data['peg'][0]        
+                    roe = df_finwiz_stock_data['roe'][0]
+
+                else:
+                    range_52w = None
+                    trailing_pe = None
+                    forward_pe = None
+                    peg_ratio = None      
+                    roe = None
+                #import pdb; pdb.set_trace()
+
                 shares_outstanding_formatted = '{:,.2f}'.format(shares_outstanding).split('.00')[0]
                 avg_vol_3m = df_yf_key_stats['avg_vol_3m'][0]
                 avg_vol_10d = df_yf_key_stats['avg_vol_10d'][0]
@@ -375,25 +386,39 @@ if option == 'Single Stock One Pager':
                 moving_avg_50d = df_yf_key_stats['moving_avg_50d'][0]
                 moving_avg_200d = df_yf_key_stats['moving_avg_200d'][0]
                 #import pdb; pdb.set_trace()
-                div_yield = 0
+                
                 try:
                     div_yield = dataSummaryDetail['dividendYield']['fmt'] 
                 except KeyError as e:
-                    pass
-
-                beta = dataSummaryDetail['beta']['fmt']
+                    div_yield = None
+                    #import pdb; pdb.set_trace()
+                try:
+                    beta = dataSummaryDetail['beta']['fmt']
+                except KeyError as e:
+                    beta = 0
                 currency = dataSummaryDetail['currency']
                 website = dataSummaryProfile['website']
                 volume = dataSummaryDetail['volume']['longFmt'] 
-                target_price = dataFinancialData['targetHighPrice']['fmt']
-                next_fiscal_year_end = dataDefaultKeyStatistics['nextFiscalYearEnd']['fmt']
+                try:
+                    target_price = dataFinancialData['targetHighPrice']['fmt']
+                except KeyError as e:
+                    target_price = None
+                try:
+                    next_fiscal_year_end = dataDefaultKeyStatistics['nextFiscalYearEnd']['fmt']
+                except KeyError as e:
+                    next_fiscal_year_end = None
 
                 business_summary = dataSummaryProfile['longBusinessSummary']
                 total_debt = dataFinancialData['totalDebt']['raw']
                 ev = dataDefaultKeyStatistics['enterpriseValue']['fmt']
-                #ev_formatted ='{:,.2f}'.format(ev)                
-                days_to_cover_short_ratio = dataDefaultKeyStatistics['shortRatio']['raw']
-                days_to_cover_short_ratio_formatted ='{:,.2f}'.format(days_to_cover_short_ratio)
+                #ev_formatted ='{:,.2f}'.format(ev)               
+                try: 
+                    days_to_cover_short_ratio = dataDefaultKeyStatistics['shortRatio']['raw']
+                    days_to_cover_short_ratio_formatted ='{:,.2f}'.format(days_to_cover_short_ratio)
+
+                except KeyError as e:
+                    days_to_cover_short_ratio_formatted = None
+
                 dividend_this_year = dataSummaryDetail['trailingAnnualDividendRate']['raw']
                 dividend_this_year_formatted ='{:,.2f}'.format(dividend_this_year)
 
@@ -535,10 +560,32 @@ if option == 'VWAP Calculator':
 if option == 'Bottom Up Ideas':
         option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','TA Patterns','Insider Trading', 'Country Exposure', 'Twitter'), 0)
         if option_one_pager == 'Volume':        
-            st.subheader(f'Volume')
-            df = get_data(table="companypriceaction")
-            st.markdown("Price Action Volume")
-            st.dataframe(df)
+
+            st.subheader(f'Industries')
+            #TODO
+            st.subheader(f'Sectors')
+            #TODO
+            st.subheader(f'Individual Stocks')
+            st.markdown(f'High Volume Vs Last 3 Months')
+
+            df_stock_volume = sql_get_volume()
+            df_stock_volume = df_stock_volume.sort_values(by=['vs_avg_vol_3m'], ascending=False)        
+            df_stock_volume = df_stock_volume[df_stock_volume.vs_avg_vol_3m > 1]
+            
+            sort_cols = []
+            drop_rows = ['cid','id', 'last_volume']
+            rename_cols = {'vs_avg_vol_10d': 'Vs Avg Vol 10d', 'vs_avg_vol_3m': 'Vs Avg Vol 3m', 'outlook': 'Outlook', 'percentage_sold': 'Percentage Traded', 'last_close': 'Last', 'symbol': 'Ticker', 'company_name': 'Company', 'sector': 'Sector', 'industry': 'Industry'}
+            number_format_col = 'last_close'
+
+            #TODO: How do we color code bearish vs bullish?
+            #TODO: How do we format the numbers?
+            style_t7 = format_df_for_dashboard(df_stock_volume, sort_cols, drop_rows, rename_cols, number_format_col)
+            st.write(style_t7)
+
+            #TODO: Another Table With Order by Percentage Sold
+
+            #st.markdown("Price Action Volume")
+            #st.dataframe(df)
 
         if option_one_pager == 'TA Patterns':        
             st.subheader(f'TA Patterns')
