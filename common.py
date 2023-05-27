@@ -1593,8 +1593,8 @@ def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_f
 
   return style
 
-def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format_cols):
-
+def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format_cols, highlight_cols=None):
+  #import pdb; pdb.set_trace()
   #Sorting
   try:
     df = df.sort_values(by=sort_cols, ascending=True)
@@ -1623,7 +1623,10 @@ def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format
   except IndexError as e:
     pass
   
-  style = df.style.hide_index()
+  if(highlight_cols):
+    style = df.style.highlight_max(subset=highlight_cols, color='darkgreen')
+  else:
+    style = df.style.hide_index()
 
   return style
 

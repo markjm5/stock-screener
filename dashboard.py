@@ -565,12 +565,18 @@ if option == 'Bottom Up Ideas':
             st.subheader(f'Volume By Sectors')
 
             df_vol_data_all_sectors = df_stock_volume.drop(['cid','id','industry','vs_avg_vol_10d','vs_avg_vol_3m', 'outlook', 'company_name', 'percentage_sold', 'last_close', 'symbol'], axis=1)
-
             df_vol_data_all_sectors = df_vol_data_all_sectors.groupby(['sector']).sum().sort_values(by=['last_volume'], ascending=False).reset_index()
 
             df_vol_data_all_sectors = df_vol_data_all_sectors.head(5)
             df_vol_data_all_sectors = format_volume_df(df_vol_data_all_sectors)
-            st.write(df_vol_data_all_sectors)
+
+            sort_cols = []
+            drop_cols = []
+            rename_cols = {'sector': 'Sector','last_volume': 'Volume'}
+            number_format_cols = []
+
+            style_sectors = format_df_for_dashboard(df_vol_data_all_sectors, sort_cols, drop_cols, rename_cols, number_format_cols)
+            st.write(style_sectors)
 
             st.subheader(f'Volume By Industries')
 
@@ -579,26 +585,41 @@ if option == 'Bottom Up Ideas':
 
             df_vol_data_all_industries = df_vol_data_all_industries.head(10)
             df_vol_data_all_industries = format_volume_df(df_vol_data_all_industries)
-            st.write(df_vol_data_all_industries)
+
+            sort_cols = []
+            drop_cols = []
+            rename_cols = {'industry': 'Industry','last_volume': 'Volume'}
+            number_format_cols = []
+
+            style_industries = format_df_for_dashboard(df_vol_data_all_industries, sort_cols, drop_cols, rename_cols, number_format_cols)
+            st.write(style_industries)
 
             st.subheader(f'Individual Stocks')
 
             if(len(df_stock_volume) > 0):
+                highlight_cols = ['Outlook']        
+
                 st.markdown(f'High Volume Vs Last 3 Months')
                 df_stock_volume_3m = df_stock_volume.sort_values(by=['vs_avg_vol_3m'], ascending=False)        
                 df_stock_volume_3m = df_stock_volume_3m[df_stock_volume['vs_avg_vol_3m'] > 1].reset_index()
-                df_stock_volume_3m = format_volume_df(df_stock_volume_3m)            
-                st.write(df_stock_volume_3m)
+                df_stock_volume_3m = format_volume_df(df_stock_volume_3m)    
+
+                sort_cols = []
+                drop_cols = ['id', 'cid', 'last_volume', 'percentage_sold', 'sector', 'industry']
+                rename_cols = {'vs_avg_vol_10d': '% Avg Vol 10d', 'vs_avg_vol_3m': '% Avg Vol 3m', 'outlook': 'Outlook', 'symbol': 'Symbol', 'last_close': 'Last', 'company_name': 'Company'}
+                number_format_cols = []
+                style_3m = format_df_for_dashboard(df_stock_volume_3m, sort_cols, drop_cols, rename_cols, number_format_cols, highlight_cols)                
+                st.write(style_3m)
 
                 st.markdown(f'High Volume Last 24h')
                 df_stock_volume_1d = df_stock_volume.sort_values(by=['percentage_sold'], ascending=False)        
                 df_stock_volume_1d = df_stock_volume_1d[df_stock_volume['percentage_sold'] > 0.05].reset_index()
                 df_stock_volume_1d = format_volume_df(df_stock_volume_1d)
+
                 st.write(df_stock_volume_1d)
 
             else:
                 st.markdown("No Stock Volume Data Available")
-            #TODO: Another Table With Order by Percentage Sold
 
             #st.markdown("Price Action Volume")
             #st.dataframe(df)
