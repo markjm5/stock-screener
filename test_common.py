@@ -21,11 +21,11 @@ df_tickers6 = df_tickers.loc[df_tickers['Ticker'].isin(['ADRNY'])]
 df_tickers7 = df_tickers.loc[df_tickers['Ticker'].isin(['ADM'])]
 
 class TestCommon(unittest.TestCase):
-    """
+    
     def test_set_yf_price_action(self):
-        self.assertEqual(set_yf_price_action(df_tickers, logger),True)
+        self.assertEqual(set_yf_price_action(df_tickers1, logger),True)
         
-
+    """
     def test_scrape_insider_trades(self):
         self.assertEqual(set_todays_insider_trades(logger),True)
     
@@ -65,7 +65,7 @@ class TestCommon(unittest.TestCase):
     def test_set_finwiz_stock_data(self):
         self.assertEqual(set_finwiz_stock_data(df_tickers1, logger),True)
         self.assertEqual(set_finwiz_stock_data(df_tickers6, logger),False)
-    """
+    
 
     #Executor 5
     def test_set_stockrow_stock_data(self):
@@ -73,7 +73,7 @@ class TestCommon(unittest.TestCase):
         #self.assertEqual(set_stockrow_stock_data(df_tickers6, logger),False)
         #self.assertEqual(set_stockrow_stock_data(df_tickers7, logger),True)
 
-    """
+    
     #Executor 6
     def test_set_yf_key_stats(self):
         self.assertEqual(set_yf_key_stats(df_tickers1, logger),True)

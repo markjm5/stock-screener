@@ -1246,6 +1246,7 @@ def set_yf_price_action(df_tickers, logger):
     ticker = row['Ticker'] 
     shares_outstanding = row['Shares Outstanding (mil)'] 
     df = get_ticker_price_summary(ticker, shares_outstanding, logger)
+
     data = [df_yf_price_action, df]
     df_yf_price_action = pd.concat(data, ignore_index=True)
     logger.info(f"Successfully created csv file containing price action for: {ticker}")
@@ -1895,8 +1896,8 @@ def sql_get_volume():
 
   connection, cursor = sql_open_db()
 
-  sqlCmd = """SELECT companypriceaction.*, company.symbol, company.company_name, company.sector, company.industry FROM companypriceaction INNER JOIN company ON companypriceaction.cid=company.cid"""
-     
+  sqlCmd = """SELECT companypriceaction.*, company.symbol, company.company_name, company.sector, company.industry FROM companypriceaction INNER JOIN company ON companypriceaction.cid=company.cid WHERE company.exchange IN ('NYSE','NSDQ')"""
+
   cursor.execute(sqlCmd)
 
   df = return_df_from_sql(connection, cursor)

@@ -560,28 +560,50 @@ if option == 'VWAP Calculator':
 if option == 'Bottom Up Ideas':
         option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','TA Patterns','Insider Trading', 'Country Exposure', 'Twitter'), 0)
         if option_one_pager == 'Volume':        
-
-            st.subheader(f'Industries')
-            #TODO
-            st.subheader(f'Sectors')
-            #TODO
-            st.subheader(f'Individual Stocks')
-            st.markdown(f'High Volume Vs Last 3 Months')
-
             df_stock_volume = sql_get_volume()
-            df_stock_volume = df_stock_volume.sort_values(by=['vs_avg_vol_3m'], ascending=False)        
-            df_stock_volume = df_stock_volume[df_stock_volume.vs_avg_vol_3m > 1]
+
+            st.subheader(f'Volume By Sectors')
+
+            df_vol_data_all_sectors = df_stock_volume.drop(['cid','id','industry','vs_avg_vol_10d','vs_avg_vol_3m', 'outlook', 'company_name', 'percentage_sold', 'last_close', 'symbol'], axis=1)
+
+            df_vol_data_all_sectors = df_vol_data_all_sectors.groupby(['sector']).sum().sort_values(by=['last_volume'], ascending=False).reset_index()
+
+            df_vol_data_all_sectors = df_vol_data_all_sectors.head(5)
+            st.write(df_vol_data_all_sectors)
+
+            st.subheader(f'Volume By Industries')
+
+            df_vol_data_all_industries = df_stock_volume.drop(['cid','id','sector','vs_avg_vol_10d','vs_avg_vol_3m', 'outlook', 'company_name', 'percentage_sold', 'last_close', 'symbol'], axis=1)
+            df_vol_data_all_industries = df_vol_data_all_industries.groupby(['industry']).sum().sort_values(by=['last_volume'], ascending=False).reset_index()
+
+            df_vol_data_all_industries = df_vol_data_all_industries.head(10)
+            st.write(df_vol_data_all_industries)
+
+            st.subheader(f'Individual Stocks')
+
+            #import pdb;pdb.set_trace()
+            if(len(df_stock_volume) > 0):
+                st.markdown(f'High Volume Vs Last 3 Months')
+                df_stock_volume_3m = df_stock_volume.sort_values(by=['vs_avg_vol_3m'], ascending=False)        
+                df_stock_volume_3m = df_stock_volume_3m[df_stock_volume.vs_avg_vol_3m > 1]
             
-            sort_cols = []
-            drop_rows = ['cid','id', 'last_volume']
-            rename_cols = {'vs_avg_vol_10d': 'Vs Avg Vol 10d', 'vs_avg_vol_3m': 'Vs Avg Vol 3m', 'outlook': 'Outlook', 'percentage_sold': 'Percentage Traded', 'last_close': 'Last', 'symbol': 'Ticker', 'company_name': 'Company', 'sector': 'Sector', 'industry': 'Industry'}
-            number_format_col = 'last_close'
+                #sort_cols = []
+                #drop_rows = ['cid','id', 'last_volume']
+                #rename_cols = {'vs_avg_vol_10d': '% Shares Traded Last 10d', 'vs_avg_vol_3m': '% Shares Traded Last 3m', 'outlook': 'Outlook', 'percentage_sold': '% Shares Traded Last 24h', 'last_close': 'Last', 'symbol': 'Ticker', 'company_name': 'Company', 'sector': 'Sector', 'industry': 'Industry'}
+                #number_format_col = 'last_close'
 
-            #TODO: How do we color code bearish vs bullish?
-            #TODO: How do we format the numbers?
-            style_t7 = format_df_for_dashboard(df_stock_volume, sort_cols, drop_rows, rename_cols, number_format_col)
-            st.write(style_t7)
+                #TODO: How do we color code bearish vs bullish?
+                #TODO: How do we format the numbers?
+                #style_t7 = format_df_for_dashboard(df_stock_volume_3m, sort_cols, drop_rows, rename_cols, number_format_col)
+                st.write(df_stock_volume_3m)
 
+                st.markdown(f'High Volume Last 24h')
+                df_stock_volume_1d = df_stock_volume.sort_values(by=['percentage_sold'], ascending=False)        
+                df_stock_volume_1d = df_stock_volume_1d[df_stock_volume.percentage_sold > 1]
+                st.write(df_stock_volume_1d)
+
+            else:
+                st.markdown("No Stock Volume Data Available")
             #TODO: Another Table With Order by Percentage Sold
 
             #st.markdown("Price Action Volume")
