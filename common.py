@@ -273,8 +273,8 @@ def write_zacks_ticker_data_to_db(df_tickers, logger):
       # Check that Company is not empty, and only add to the master ticker file if company is not empty
       if(company != '' and exchange in exchanges):
           try:
-              shares_outstanding = float(row["Shares Outstanding (mil)"])
-              shares_outstanding = shares_outstanding *1000000                    
+              shares_outstanding = float(row["shares_outstanding"])
+              #shares_outstanding = shares_outstanding *1000000                    
           except Exception as e:
               shares_outstanding = 0
           logger.info(f'Loading Zacks stock data for {symbol}')
@@ -1244,7 +1244,8 @@ def set_yf_price_action(df_tickers, logger):
 
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker'] 
-    shares_outstanding = row['Shares Outstanding (mil)'] 
+    #TODO: Get shares outstanding from somewhere else and make sure it is the full amount
+    shares_outstanding = row['shares_outstanding'] 
     df = get_ticker_price_summary(ticker, shares_outstanding, logger)
 
     data = [df_yf_price_action, df]
@@ -1288,7 +1289,9 @@ def get_ticker_price_summary(ticker, shares_outstanding, logger):
 
     prev_close = df[-2:-1]['Adj Close'].values[0]
     last_close = df[-1:]['Adj Close'].values[0]
-
+    #import pdb; pdb.set_trace()
+    #if(ticker == 'DLO'):
+    #  import pdb; pdb.set_trace()
     #Create calculated metrics
     if(last_volume > 0 and shares_outstanding > 0):
         percentage = last_volume/shares_outstanding
@@ -1457,6 +1460,9 @@ def get_zacks_us_companies():
 
   #Get company data from various sources
   df_us_companies = convert_csv_to_dataframe(temp_excel_file_path)
+
+  #Need to multiply outstanding_shares by 1mill because it is in 1mill units
+  df_us_companies['shares_outstanding'] = df_us_companies['Shares Outstanding (mil)'] * 1000000
 
   return df_us_companies
 
@@ -2079,5 +2085,37 @@ def convert_html_table_insider_trading_to_df(table, contains_th):
 
   return df
 
-  
+def format_volume_df(df):
+  try:
+    df['percentage_sold'] = df['percentage_sold'] * 100
+  except KeyError as e:
+    pass
+
+  try:
+    df['percentage_sold'] = df['percentage_sold'].map('{:,.2f}%'.format)
+  except KeyError as e:
+    pass
+
+  try:
+    df['last_close'] = df['last_close'].map('{:,.2f}'.format)
+  except KeyError as e:
+    pass
+
+  try:
+    df['vs_avg_vol_10d'] = df['vs_avg_vol_10d'].map('{:,.2f}%'.format)
+  except KeyError as e:
+    pass
+
+  try:
+    df['vs_avg_vol_3m'] = df['vs_avg_vol_3m'].map('{:,.2f}%'.format)
+  except KeyError as e:
+    pass
+
+  try:
+    df['last_volume'] = df['last_volume'].map('{:,.0f}'.format)
+  except KeyError as e:
+    pass
+
+  return df
+
 

@@ -10,7 +10,7 @@ from common import set_todays_insider_trades
 logger = get_logger()
 
 df_tickers = get_zacks_us_companies()
-
+#import pdb; pdb.set_trace()
 #Ticker Sets used for testing
 df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL'])]
 df_tickers2 = df_tickers.loc[df_tickers['Ticker'].isin(['ACWI'])]
@@ -23,7 +23,7 @@ df_tickers7 = df_tickers.loc[df_tickers['Ticker'].isin(['ADM'])]
 class TestCommon(unittest.TestCase):
     
     def test_set_yf_price_action(self):
-        self.assertEqual(set_yf_price_action(df_tickers1, logger),True)
+        self.assertEqual(set_yf_price_action(df_tickers, logger),True)
         
     """
     def test_scrape_insider_trades(self):

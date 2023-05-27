@@ -23,7 +23,7 @@ from common import set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql_get_volume
 from common import set_price_action_ta, set_todays_insider_trades
 from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
-from common import format_df_for_dashboard_flip, format_df_for_dashboard
+from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df
 import seaborn as sns
 
 debug = False
@@ -569,6 +569,7 @@ if option == 'Bottom Up Ideas':
             df_vol_data_all_sectors = df_vol_data_all_sectors.groupby(['sector']).sum().sort_values(by=['last_volume'], ascending=False).reset_index()
 
             df_vol_data_all_sectors = df_vol_data_all_sectors.head(5)
+            df_vol_data_all_sectors = format_volume_df(df_vol_data_all_sectors)
             st.write(df_vol_data_all_sectors)
 
             st.subheader(f'Volume By Industries')
@@ -577,29 +578,22 @@ if option == 'Bottom Up Ideas':
             df_vol_data_all_industries = df_vol_data_all_industries.groupby(['industry']).sum().sort_values(by=['last_volume'], ascending=False).reset_index()
 
             df_vol_data_all_industries = df_vol_data_all_industries.head(10)
+            df_vol_data_all_industries = format_volume_df(df_vol_data_all_industries)
             st.write(df_vol_data_all_industries)
 
             st.subheader(f'Individual Stocks')
 
-            #import pdb;pdb.set_trace()
             if(len(df_stock_volume) > 0):
                 st.markdown(f'High Volume Vs Last 3 Months')
                 df_stock_volume_3m = df_stock_volume.sort_values(by=['vs_avg_vol_3m'], ascending=False)        
-                df_stock_volume_3m = df_stock_volume_3m[df_stock_volume.vs_avg_vol_3m > 1]
-            
-                #sort_cols = []
-                #drop_rows = ['cid','id', 'last_volume']
-                #rename_cols = {'vs_avg_vol_10d': '% Shares Traded Last 10d', 'vs_avg_vol_3m': '% Shares Traded Last 3m', 'outlook': 'Outlook', 'percentage_sold': '% Shares Traded Last 24h', 'last_close': 'Last', 'symbol': 'Ticker', 'company_name': 'Company', 'sector': 'Sector', 'industry': 'Industry'}
-                #number_format_col = 'last_close'
-
-                #TODO: How do we color code bearish vs bullish?
-                #TODO: How do we format the numbers?
-                #style_t7 = format_df_for_dashboard(df_stock_volume_3m, sort_cols, drop_rows, rename_cols, number_format_col)
+                df_stock_volume_3m = df_stock_volume_3m[df_stock_volume['vs_avg_vol_3m'] > 1].reset_index()
+                df_stock_volume_3m = format_volume_df(df_stock_volume_3m)            
                 st.write(df_stock_volume_3m)
 
                 st.markdown(f'High Volume Last 24h')
                 df_stock_volume_1d = df_stock_volume.sort_values(by=['percentage_sold'], ascending=False)        
-                df_stock_volume_1d = df_stock_volume_1d[df_stock_volume.percentage_sold > 1]
+                df_stock_volume_1d = df_stock_volume_1d[df_stock_volume['percentage_sold'] > 0.05].reset_index()
+                df_stock_volume_1d = format_volume_df(df_stock_volume_1d)
                 st.write(df_stock_volume_1d)
 
             else:
