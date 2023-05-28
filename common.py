@@ -1592,7 +1592,7 @@ def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_f
 
   return style
 
-def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format_cols, highlight_cols=None, order_cols=None):
+def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols=None):
   #Sorting
   try:
     df = df.sort_values(by=sort_cols, ascending=True)
@@ -1601,11 +1601,12 @@ def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format
     pass
 
   #Ordering
-  try:
-    df = df.loc[:, order_cols]
-  except KeyError as e:
-    print(f"Error Ordering Columns: {e}")
-    pass
+  if(order_cols):
+    try:
+      df = df.loc[:, order_cols]
+    except KeyError as e:
+      print(f"Error Ordering Columns: {e}")
+      pass
   
   #Dropping Columns
   try:

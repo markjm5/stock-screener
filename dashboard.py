@@ -596,7 +596,8 @@ if option == 'Bottom Up Ideas':
             col2.write(style_industries)
 
             if(len(df_stock_volume) > 0):
-                highlight_cols = ['Outlook']        
+                st.markdown("""---""")
+
                 st.subheader(f'Volume by Individual Stocks')
 
                 st.markdown(f'High Volume Vs Last 3 Months')
@@ -610,10 +611,11 @@ if option == 'Bottom Up Ideas':
                 rename_cols = {'vs_avg_vol_10d': '% Avg Vol 10d', 'vs_avg_vol_3m': '% Avg Vol 3m', 'outlook': 'Outlook', 'symbol': 'Symbol', 'last_close': 'Last', 'company_name': 'Company'}
                 number_format_cols = []
 
-                style_3m = format_df_for_dashboard(df_stock_volume_3m, sort_cols, drop_cols, rename_cols, number_format_cols, highlight_cols, order_cols)                
+                style_3m = format_df_for_dashboard(df_stock_volume_3m, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols)                
                 style_3m = style_3m.style.pipe(format_outlook)
 
                 st.write(style_3m)
+                st.markdown("""---""")
 
                 st.markdown(f'High Volume Last 24h')
                 df_stock_volume_1d = df_stock_volume.sort_values(by=['percentage_sold'], ascending=False)        
@@ -623,14 +625,15 @@ if option == 'Bottom Up Ideas':
                 df = df_stock_volume_1d.reset_index(drop=True)
                 data = {'symbol':[],'company_name':[],'sector':[],'industry':[],'percentage_sold':[],'outlook':[]}
                 for index, row in df.iterrows():
+                    symbol = row['symbol']
                     df_company_row = pd.DataFrame(data)
                     temp_row = [row['symbol'],row['company_name'],row['sector'],row['industry'],row['percentage_sold'],row['outlook']]
     
                     df_company_row.loc[len(df.index)] = temp_row
                     #TODO: Format each DF before printing
-                    #TODO: Display the chart for each company
                     st.write(df_company_row)
-
+                    st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
+                    st.markdown("""---""")
             else:
                 st.markdown("No Stock Volume Data Available")
 
