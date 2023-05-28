@@ -564,7 +564,6 @@ if option == 'Bottom Up Ideas':
 
             col1,col2 = st.columns(2)
 
-
             df_vol_data_all_sectors = df_stock_volume.drop(['cid','id','industry','vs_avg_vol_10d','vs_avg_vol_3m', 'outlook', 'company_name', 'percentage_sold', 'last_close', 'symbol'], axis=1)
             df_vol_data_all_sectors = df_vol_data_all_sectors.groupby(['sector']).sum().sort_values(by=['last_volume'], ascending=False).reset_index()
 
@@ -577,8 +576,6 @@ if option == 'Bottom Up Ideas':
             number_format_cols = []
 
             style_sectors = format_df_for_dashboard(df_vol_data_all_sectors, sort_cols, drop_cols, rename_cols, number_format_cols)
-
-            st.write(style_sectors)
 
             col1.subheader(f'Volume by Sectors')
             col1.write(style_sectors, unsafe_allow_html=True)
@@ -622,8 +619,17 @@ if option == 'Bottom Up Ideas':
                 df_stock_volume_1d = df_stock_volume.sort_values(by=['percentage_sold'], ascending=False)        
                 df_stock_volume_1d = df_stock_volume_1d[df_stock_volume['percentage_sold'] > 0.05].reset_index()
                 df_stock_volume_1d = format_volume_df(df_stock_volume_1d)
-
-                st.write(df_stock_volume_1d)
+                #import pdb; pdb.set_trace()
+                df = df_stock_volume_1d.reset_index(drop=True)
+                data = {'symbol':[],'company_name':[],'sector':[],'industry':[],'percentage_sold':[],'outlook':[]}
+                for index, row in df.iterrows():
+                    df_company_row = pd.DataFrame(data)
+                    temp_row = [row['symbol'],row['company_name'],row['sector'],row['industry'],row['percentage_sold'],row['outlook']]
+    
+                    df_company_row.loc[len(df.index)] = temp_row
+                    #TODO: Format each DF before printing
+                    #TODO: Display the chart for each company
+                    st.write(df_company_row)
 
             else:
                 st.markdown("No Stock Volume Data Available")
