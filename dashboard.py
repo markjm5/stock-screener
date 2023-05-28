@@ -23,7 +23,7 @@ from common import set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql_get_volume
 from common import set_price_action_ta, set_todays_insider_trades
 from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
-from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df
+from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
 import seaborn as sns
 
 debug = False
@@ -562,7 +562,8 @@ if option == 'Bottom Up Ideas':
         if option_one_pager == 'Volume':        
             df_stock_volume = sql_get_volume()
 
-            st.subheader(f'Volume By Sectors')
+            col1,col2 = st.columns(2)
+
 
             df_vol_data_all_sectors = df_stock_volume.drop(['cid','id','industry','vs_avg_vol_10d','vs_avg_vol_3m', 'outlook', 'company_name', 'percentage_sold', 'last_close', 'symbol'], axis=1)
             df_vol_data_all_sectors = df_vol_data_all_sectors.groupby(['sector']).sum().sort_values(by=['last_volume'], ascending=False).reset_index()
@@ -576,9 +577,11 @@ if option == 'Bottom Up Ideas':
             number_format_cols = []
 
             style_sectors = format_df_for_dashboard(df_vol_data_all_sectors, sort_cols, drop_cols, rename_cols, number_format_cols)
+
             st.write(style_sectors)
 
-            st.subheader(f'Volume By Industries')
+            col1.subheader(f'Volume by Sectors')
+            col1.write(style_sectors, unsafe_allow_html=True)
 
             df_vol_data_all_industries = df_stock_volume.drop(['cid','id','sector','vs_avg_vol_10d','vs_avg_vol_3m', 'outlook', 'company_name', 'percentage_sold', 'last_close', 'symbol'], axis=1)
             df_vol_data_all_industries = df_vol_data_all_industries.groupby(['industry']).sum().sort_values(by=['last_volume'], ascending=False).reset_index()
@@ -592,23 +595,27 @@ if option == 'Bottom Up Ideas':
             number_format_cols = []
 
             style_industries = format_df_for_dashboard(df_vol_data_all_industries, sort_cols, drop_cols, rename_cols, number_format_cols)
-            st.write(style_industries)
-
-            st.subheader(f'Individual Stocks')
+            col2.subheader(f'Volume by Industries')
+            col2.write(style_industries)
 
             if(len(df_stock_volume) > 0):
                 highlight_cols = ['Outlook']        
+                st.subheader(f'Volume by Individual Stocks')
 
                 st.markdown(f'High Volume Vs Last 3 Months')
                 df_stock_volume_3m = df_stock_volume.sort_values(by=['vs_avg_vol_3m'], ascending=False)        
                 df_stock_volume_3m = df_stock_volume_3m[df_stock_volume['vs_avg_vol_3m'] > 1].reset_index()
                 df_stock_volume_3m = format_volume_df(df_stock_volume_3m)    
-
+                
                 sort_cols = []
-                drop_cols = ['id', 'cid', 'last_volume', 'percentage_sold', 'sector', 'industry']
+                order_cols = ['symbol','vs_avg_vol_10d','vs_avg_vol_3m', 'last_close', 'company_name', 'outlook', 'index', 'id', 'cid']
+                drop_cols = ['index','id', 'cid']
                 rename_cols = {'vs_avg_vol_10d': '% Avg Vol 10d', 'vs_avg_vol_3m': '% Avg Vol 3m', 'outlook': 'Outlook', 'symbol': 'Symbol', 'last_close': 'Last', 'company_name': 'Company'}
                 number_format_cols = []
-                style_3m = format_df_for_dashboard(df_stock_volume_3m, sort_cols, drop_cols, rename_cols, number_format_cols, highlight_cols)                
+
+                style_3m = format_df_for_dashboard(df_stock_volume_3m, sort_cols, drop_cols, rename_cols, number_format_cols, highlight_cols, order_cols)                
+                style_3m = style_3m.style.pipe(format_outlook)
+
                 st.write(style_3m)
 
                 st.markdown(f'High Volume Last 24h')

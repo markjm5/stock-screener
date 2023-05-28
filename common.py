@@ -1576,7 +1576,6 @@ def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_f
   df = df.T
 
   #Formatting Columns
-  #import pdb; pdb.set_trace()
   if(len(df.columns) > 0):
 
     for x in arr_format_cols:
@@ -1593,18 +1592,26 @@ def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_f
 
   return style
 
-def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format_cols, highlight_cols=None):
-  #import pdb; pdb.set_trace()
+def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format_cols, highlight_cols=None, order_cols=None):
   #Sorting
   try:
     df = df.sort_values(by=sort_cols, ascending=True)
   except KeyError as e:
+    print(f"Error Sorting Columns: {e}")
     pass
 
+  #Ordering
+  try:
+    df = df.loc[:, order_cols]
+  except KeyError as e:
+    print(f"Error Ordering Columns: {e}")
+    pass
+  
   #Dropping Columns
   try:
     df = df.drop(drop_cols, axis=1)
   except KeyError as e:
+    print(f"Error Dropping Columns: {e}")
     pass
 
   #Formatting Columns
@@ -1614,21 +1621,24 @@ def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format
       df[x] = df[x].astype(float)
       df[x] = df[x].map('{:,.2f}'.format)
     except KeyError as e:
+      print(f"Error Formatting Columns: {e}")
       pass
 
   #Renaming Indexes
   df.rename(columns=rename_cols, inplace=True)
+
   try:
     df = df.set_index(df.columns[0],drop=True)
   except IndexError as e:
+    print(f"Error Dropping Index: {e}")
     pass
-  
-  if(highlight_cols):
-    style = df.style.highlight_max(subset=highlight_cols, color='darkgreen')
-  else:
-    style = df.style.hide_index()
 
-  return style
+  return df
+
+def format_outlook(styler):
+    styler.highlight_max(subset=['Outlook'], color='darkgreen')
+    return styler
+
 
 ####################
 # Helper Functions #
