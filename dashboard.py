@@ -631,7 +631,16 @@ if option == 'Bottom Up Ideas':
     
                     df_company_row.loc[len(df.index)] = temp_row
                     #TODO: Format each DF before printing
-                    st.write(df_company_row)
+                    sort_cols = []
+                    order_cols = []
+                    drop_cols = []
+                    rename_cols = {'symbol': 'Symbol', 'company_name': 'Company', 'sector': 'Sector', 'industry': 'Industry', 'percentage_sold': '% Traded Today', 'outlook': 'Outlook'}
+                    number_format_cols = []
+
+                    style_company_row = format_df_for_dashboard(df_company_row, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols)                
+                    if(row['outlook'] == 'bullish'):
+                        style_company_row = style_company_row.style.pipe(format_outlook)
+                    st.write(style_company_row)
                     st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
                     st.markdown("""---""")
             else:
