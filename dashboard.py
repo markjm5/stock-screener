@@ -95,13 +95,14 @@ if option == 'Download Data':
         start_time = now_start.strftime("%H:%M:%S")    
 
         st.write(f'Downloading Macro Economic Data...')
-        df_tickers_all = get_zacks_us_companies()        
+        df_tickers_all = get_zacks_us_companies()       
+        df_tickers = get_data(table="company") 
         with concurrent.futures.ProcessPoolExecutor() as executor:
             e1p1 = executor.submit(set_earningswhispers_earnings_calendar, df_tickers_all, logger)
             e1p2 = executor.submit(set_marketscreener_economic_calendar, logger)
             e1p3 = executor.submit(set_whitehouse_news, logger)
             e1p4 = executor.submit(set_geopolitical_calendar, logger)
-            e1p5 = executor.submit(set_price_action_ta, df_tickers_all, logger)
+            e1p5 = executor.submit(set_price_action_ta, df_tickers, logger)
             e1p6 = executor.submit(set_todays_insider_trades,logger)
 
         now_finish = dt.now()
@@ -651,14 +652,59 @@ if option == 'Bottom Up Ideas':
 
         if option_one_pager == 'TA Patterns':        
             st.subheader(f'TA Patterns')
-            df = get_data(table="ta_patterns")
-            st.markdown("Patterns")
-            st.dataframe(df)
+            df = get_data(table="ta_patterns")            
+            df_consolidating = df.loc[df['pattern'] == 'consolidating']
+            df_breakout = df.loc[df['pattern'] == 'breakout']
+
+            st.markdown("Consolidating")
+            data = {'ticker':[],'pattern':[]}
+            for index, row in df_consolidating.iterrows():
+                symbol = row['ticker']
+                df_temp = pd.DataFrame(data)
+                temp_row = [row['ticker'],row['pattern']]
+                df_temp.loc[len(df.index)] = temp_row
+
+                sort_cols = []
+                order_cols = []
+                drop_cols = []
+                rename_cols = {'ticker': 'Ticker', 'pattern': 'Pattern'}
+                number_format_cols = []
+
+                style_company_row = format_df_for_dashboard(df_temp, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols)                
+                st.write(style_company_row)
+                st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
+
+            st.markdown("Breakout")
+            data = {'ticker':[],'pattern':[]}
+            for index, row in df_breakout.iterrows():
+                symbol = row['ticker']
+                df_temp = pd.DataFrame(data)
+                temp_row = [row['ticker'],row['pattern']]
+                df_temp.loc[len(df.index)] = temp_row
+
+                sort_cols = []
+                order_cols = []
+                drop_cols = []
+                rename_cols = {'ticker': 'Ticker', 'pattern': 'Pattern'}
+                number_format_cols = []
+
+                style_company_row = format_df_for_dashboard(df_temp, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols)                
+                st.write(style_company_row)
+                st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
 
         if option_one_pager == 'Insider Trading':        
             st.subheader(f'Insider Trading')
             df = get_data(table="macro_insidertrading")
-            st.dataframe(df)
+
+            sort_cols = []
+            order_cols = ['filing_date','company_ticker','company_name', 'insider_name', 'insider_title', 'trade_type', 'trade_price', 'percentage_owned']
+            drop_cols = ['id']
+            rename_cols = {'filing_date': 'Filing Date', 'company_ticker': 'Ticker', 'company_name': 'Company', 'insider_name': 'Insider', 'insider_title': 'Title', 'trade_type': 'Trade', 'trade_price': 'Price', 'percentage_owned': '% Owned'}
+            number_format_cols = []
+
+            style_insider_trading = format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols)                
+
+            st.write(style_insider_trading)
 
         if option_one_pager == 'Country Exposure':
             st.subheader(f'Country Exposure')

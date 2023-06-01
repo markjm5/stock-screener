@@ -1243,7 +1243,7 @@ def set_yf_price_action(df_tickers, logger):
   logger.info(f"Downloading price action from Yahoo Finance")
 
   for index, row in df_tickers.iterrows():
-    ticker = row['Ticker'] 
+    ticker = row['symbol'] 
     #TODO: Get shares outstanding from somewhere else and make sure it is the full amount
     shares_outstanding = row['shares_outstanding'] 
     df = get_ticker_price_summary(ticker, shares_outstanding, logger)
@@ -1292,11 +1292,16 @@ def get_ticker_price_summary(ticker, shares_outstanding, logger):
     #import pdb; pdb.set_trace()
     #if(ticker == 'DLO'):
     #  import pdb; pdb.set_trace()
+
     #Create calculated metrics
-    if(last_volume > 0 and shares_outstanding > 0):
-        percentage = last_volume/shares_outstanding
+    if(math.isnan(shares_outstanding) == False):
+      if(last_volume > 0 and shares_outstanding > 0):
+          percentage = last_volume/shares_outstanding
+          percentage = "{:.4f}".format(percentage)
+      else:
+          percentage = 0
     else:
-        percentage = 0
+      percentage = 0
 
     if(last_volume > 0 and avg_vol_10d > 0):
         vs_avg_vol_10d = last_volume/avg_vol_10d
@@ -1339,16 +1344,17 @@ def set_ta_pattern_stocks(df_tickers, logger):
   df_breakout = pd.DataFrame(data)
 
   for index, row in df_tickers.iterrows():
-      filename = "{}.csv".format(row['Ticker'])
+      filename = "{}.csv".format(row['symbol'])
 
       df = pd.read_csv('data/daily_prices/{}'.format(filename))
-      symbol = row['Ticker']
+      symbol = row['symbol']
+      if(row['exchange'] in ['NYSE','NSDQ']):
 
-      if is_consolidating(df, percentage=2.5):
-          df_consolidating.loc[len(df_consolidating.index)] = [symbol, 'consolidating']
+        if is_consolidating(df, percentage=2.5):
+            df_consolidating.loc[len(df_consolidating.index)] = [symbol, 'consolidating']
 
-      if is_breaking_out(df):
-          df_breakout.loc[len(df_breakout.index)] = [symbol, 'breakout']
+        if is_breaking_out(df):
+            df_breakout.loc[len(df_breakout.index)] = [symbol, 'breakout']
 
   data = [df_consolidating, df_breakout]
   df_patterns = pd.concat(data, ignore_index=True)
@@ -1652,7 +1658,7 @@ def download_yf_data_as_csv(df_tickers):
   date_str_start = "%s-%s-%s" % (start_date.year, start_date.month, start_date.day)
 
   for index, row in df_tickers.iterrows():
-    ticker = row['Ticker'] 
+    ticker = row['symbol'] 
     data = yf.download(ticker, start=date_str_start, end=date_str_today)
     data.to_csv('data/daily_prices/{}.csv'.format(ticker))
 
