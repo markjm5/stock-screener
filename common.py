@@ -1503,6 +1503,41 @@ def get_data(table=None, cid=None, innerjoin=None):
   df = sql_get_records_as_df(table, cid, innerjoin)
   return df
 
+def get_peer_details(df):
+
+  for index, row in df.iterrows():
+    cid = row['cid']
+    ticker = row['peer_ticker']
+    json_price_action = get_yf_price_action(ticker)
+    dataSummaryDetail = json_price_action['quoteSummary']['result'][0]['summaryDetail']
+    dataDefaultKeyStatistics = json_price_action['quoteSummary']['result'][0]['defaultKeyStatistics']
+    #dataSummaryProfile = json_price_action['quoteSummary']['result'][0]['summaryProfile']
+    #dataFinancialData = json_price_action['quoteSummary']['result'][0]['financialData']
+    dataPrice = json_price_action['quoteSummary']['result'][0]['price']
+
+    try:
+        div_yield = dataSummaryDetail['dividendYield']['fmt'] 
+    except KeyError as e:
+        div_yield = None
+
+    import pdb; pdb.set_trace()
+    #TODO: Get the following information for ticker: 
+    #Mkt Cap = CompanyMovingAverage
+    #EV = CompanyMovingAverage
+    #P/E = CompanyRatio
+    #EV/EBITDA = CompanyMovingAverage, dataDefaultKeyStatistics['enterpriseToEbitda']['raw'],dataDefaultKeyStatistics['enterpriseValue']['raw']/dataFinancialData['ebitda']['raw']
+    #EV/EBIT ******   
+    #EV/Revenues = CompanyMovingAverage, dataDefaultKeyStatistics['enterpriseToRevenue']['fmt'] 
+    #PB = CompanyMovingAverage
+    #EBITDA margin = dataFinancialData['ebitdaMargins']['fmt']
+    #EBIT margin ******
+    #Net margin = dataFinancialData['profitMargins']['fmt']
+    #Dividend Yield = dataSummaryDetail['dividendYield']['fmt'] 
+    #ROE = CompanyRatio
+    #P/B = CompanyMovingAverage
+
+  return df
+
 ####################
 # Output Functions #
 ####################

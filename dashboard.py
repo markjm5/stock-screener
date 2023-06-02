@@ -19,7 +19,7 @@ from common import set_zacks_peer_comparison, set_zacks_earnings_surprises, set_
 from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
 from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager
 from common import set_earningswhispers_earnings_calendar
-from common import set_marketscreener_economic_calendar
+from common import set_marketscreener_economic_calendar, get_peer_details
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql_get_volume
 from common import set_price_action_ta, set_todays_insider_trades
 from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
@@ -320,6 +320,23 @@ if option == 'Calendar':
 if option == 'Macroeconomic Data':
     st.subheader(f'Macro Economic Data')
 
+    #cols_gradient = ['common_stock_par', 'retained_earnings']
+    #cols_rename = {"dt": "Date"}
+    #cols_format = {'retained_earnings': '${0:,.2f}','other_equity': '${0:,.2f}','book_value_per_share': '${0:,.2f}', 'Date': "{:%B %Y}"}
+    #cols_drop = ['cid']
+
+    #if(len(df_zacks_balance_sheet_shares) > 0):
+    #   df = style_df_for_display(df_zacks_balance_sheet_shares, cols_gradient, cols_rename, cols_format, cols_drop)
+    #   st.dataframe(df, use_container_width=True)
+
+    #st.markdown("YF Key Stats")
+    #st.dataframe(df_yf_key_stats)
+
+
+    #st.markdown("Finwiz Ratios")
+    #st.dataframe(df_finwiz_stock_data)
+
+
 if option == 'Single Stock One Pager':
     st.write("Get 1 page quantitative data for a Company")
     symbol = st.sidebar.text_input("Symbol", value='MSFT', max_chars=None, key=None, type='default')
@@ -504,35 +521,8 @@ if option == 'Single Stock One Pager':
 
                 st.markdown("Peer Comparison")
 
-                #Market Cap
-                #EV
-                #P/E
-                #EV/EBITDA
-                #EV/EBIT
-                #EV/Revenues
-                #PB
-                #EBITDA margin
-                #EBIT margin
-                #Net margin
-                #Dividend Yield
-                #ROE
-                #P/B
-
-                #cols_gradient = ['common_stock_par', 'retained_earnings']
-                #cols_rename = {"dt": "Date"}
-                #cols_format = {'retained_earnings': '${0:,.2f}','other_equity': '${0:,.2f}','book_value_per_share': '${0:,.2f}', 'Date': "{:%B %Y}"}
-                #cols_drop = ['cid']
-
-                #if(len(df_zacks_balance_sheet_shares) > 0):
-                #   df = style_df_for_display(df_zacks_balance_sheet_shares, cols_gradient, cols_rename, cols_format, cols_drop)
-                #   st.dataframe(df, use_container_width=True)
-
-                #st.markdown("YF Key Stats")
-                #st.dataframe(df_yf_key_stats)
-
-
-                #st.markdown("Finwiz Ratios")
-                #st.dataframe(df_finwiz_stock_data)
+                #TODO: Get peer details and display it in a table
+                df_peers = get_peer_details(df_zacks_peer_comparison)
 
         if option_one_pager == 'Chart':
             st.subheader(f'Chart For: {symbol}')
@@ -554,6 +544,8 @@ if option == 'Single Stock One Pager':
 
 if option == 'S&P Benchmarks':
     st.markdown("S&P Benchmarks")
+
+    #TODO: https://us.spindices.com/documents/additional-material/sp-500-eps-est.xlsx
 
 if option == 'VWAP Calculator':
     st.markdown("VWAP Calculator")
