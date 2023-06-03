@@ -1,6 +1,7 @@
 import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 import streamlit as st
+import io
 import sys
 import requests
 import time
@@ -2305,3 +2306,15 @@ def get_atr_prices(index, number):
   df_sorted_daily_price = df_sorted_daily_price.rename(columns={"Close": index})
 
   return df_sorted_daily_atr, df_sorted_monthly_atr, df_sorted_quarterly_atr, df_sorted_daily_price
+
+def to_excel(df):
+  output = io.BytesIO()
+  writer = pd.ExcelWriter(output, engine='xlsxwriter')
+  df.to_excel(writer, index=False, sheet_name='Sheet1')
+  workbook = writer.book
+  worksheet = writer.sheets['Sheet1']
+  format1 = workbook.add_format({'num_format': '0.00'}) 
+  worksheet.set_column('A:A', None, format1)  
+  writer.save()
+  processed_data = output.getvalue()
+  return processed_data

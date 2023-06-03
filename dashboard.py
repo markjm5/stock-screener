@@ -17,7 +17,7 @@ from datetime import datetime as dt
 from common import set_finwiz_stock_data, set_stockrow_stock_data, set_zacks_balance_sheet_shares
 from common import set_zacks_peer_comparison, set_zacks_earnings_surprises, set_zacks_product_line_geography
 from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
-from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager
+from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager,to_excel
 from common import set_earningswhispers_earnings_calendar, get_atr_prices
 from common import set_marketscreener_economic_calendar, get_peer_details
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql_get_volume
@@ -544,7 +544,6 @@ if option == 'Single Stock One Pager':
                 st.write(message['body'])
 
 if option == 'ATR Calculator':
-    st.markdown("ATR Calculator")
 
     symbol1 = st.sidebar.text_input("Symbol 1", value='', max_chars=None, key=None, type='default')
     symbol2 = st.sidebar.text_input("Symbol 2", value='', max_chars=None, key=None, type='default')
@@ -552,24 +551,32 @@ if option == 'ATR Calculator':
     clicked = st.sidebar.button("Get ATR")
 
     if(clicked):
+        if(len(symbol1.strip()) > 0 and len(symbol2.strip()) > 0):        
+            index1 = symbol1.strip()
+            df_symbol1_sorted_daily_atr, df_symbol1_sorted_monthly_atr, df_symbol1_sorted_quarterly_atr, df_symbol1_sorted_daily_price = get_atr_prices(index1, 1)
+            df_index1 = df_symbol1_sorted_daily_price.drop(['Open', 'High', 'Low','ATR %'], axis=1)
 
-        index1 = symbol1
-        df_symbol1_sorted_daily_atr, df_symbol1_sorted_monthly_atr, df_symbol1_sorted_quarterly_atr, df_symbol1_sorted_daily_price = get_atr_prices(index1, 1)
-        df_index1 = df_symbol1_sorted_daily_price.drop(['Open', 'High', 'Low','ATR %'], axis=1)
+            index2 = symbol2.strip()
+            df_symbol2_sorted_daily_atr, df_symbol2_sorted_monthly_atr, df_symbol2_sorted_quarterly_atr, df_symbol2_sorted_daily_price = get_atr_prices(index2, 2)
 
-        index2 = symbol2
-        df_symbol2_sorted_daily_atr, df_symbol2_sorted_monthly_atr, df_symbol2_sorted_quarterly_atr, df_symbol2_sorted_daily_price = get_atr_prices(index2, 2)
+            df_index2 = df_symbol2_sorted_daily_price.drop(['Open', 'High', 'Low','ATR %'], axis=1)
 
-        df_index2 = df_symbol2_sorted_daily_price.drop(['Open', 'High', 'Low','ATR %'], axis=1)
+            df_updated_indexes = combine_df_on_index(df_index1, df_index2, 'DATE')
 
-        df_updated_indexes = combine_df_on_index(df_index1, df_index2, 'DATE')
+            #TODO: Sort by putting symbol1 first and symbol2 second. Currently it is sorting by alpha order
+            df_sorted = df_updated_indexes.sort_values(by='DATE', ascending = False)
 
-        import pdb; pdb.set_trace()
+            #TODO: Print ATR Results for Daily, Monthly and Quarterly
 
-        #TODO: Sort by putting symbol1 first and symbol2 second. Currently it is sorting by alpha order
-        df_sorted = df_updated_indexes.sort_values(by='DATE', ascending = False)
+            import pdb; pdb.set_trace()
 
-        #TODO: Write to excel file with multiple tabs, and create downloadable link
+            #TODO: Write to excel file with multiple tabs, and create downloadable link
+            df_xlsx = to_excel(df_sorted)
+            st.download_button(label='📥 Download Current Result',
+                                            data=df_xlsx ,
+                                            file_name= 'df_test.xlsx')
+        else:
+            st.write("Please enter 2 ticker symbols")
 
 if option == 'Bottom Up Ideas':
         option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','TA Patterns','Insider Trading', 'Country Exposure', 'Twitter'), 0)
