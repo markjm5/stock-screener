@@ -1504,39 +1504,103 @@ def get_data(table=None, cid=None, innerjoin=None):
   return df
 
 def get_peer_details(df):
+  data = {'Ticker': [],'Market Cap':[],'EV':[],'PE':[],'EV/EBITDA':[],'EV/EBIT':[],'EV/Revenue':[],'EBIT/Margin':[],'ROE':[],'PB':[]}
+
+  df_competitor_metrics = pd.DataFrame(data)
 
   for index, row in df.iterrows():
-    cid = row['cid']
+    temp_row = []
     ticker = row['peer_ticker']
+    cid = sql_get_cid(ticker)    
+    #print(cid)
+    #print(ticker)
     json_price_action = get_yf_price_action(ticker)
     dataSummaryDetail = json_price_action['quoteSummary']['result'][0]['summaryDetail']
     dataDefaultKeyStatistics = json_price_action['quoteSummary']['result'][0]['defaultKeyStatistics']
     #dataSummaryProfile = json_price_action['quoteSummary']['result'][0]['summaryProfile']
-    #dataFinancialData = json_price_action['quoteSummary']['result'][0]['financialData']
-    dataPrice = json_price_action['quoteSummary']['result'][0]['price']
+    dataFinancialData = json_price_action['quoteSummary']['result'][0]['financialData']
+    #dataPrice = json_price_action['quoteSummary']['result'][0]['price']
 
     try:
         div_yield = dataSummaryDetail['dividendYield']['fmt'] 
     except KeyError as e:
         div_yield = None
 
-    import pdb; pdb.set_trace()
-    #TODO: Get the following information for ticker: 
-    #Mkt Cap = CompanyMovingAverage
-    #EV = CompanyMovingAverage
-    #P/E = CompanyRatio
-    #EV/EBITDA = CompanyMovingAverage, dataDefaultKeyStatistics['enterpriseToEbitda']['raw'],dataDefaultKeyStatistics['enterpriseValue']['raw']/dataFinancialData['ebitda']['raw']
-    #EV/EBIT ******   
-    #EV/Revenues = CompanyMovingAverage, dataDefaultKeyStatistics['enterpriseToRevenue']['fmt'] 
-    #PB = CompanyMovingAverage
-    #EBITDA margin = dataFinancialData['ebitdaMargins']['fmt']
-    #EBIT margin ******
-    #Net margin = dataFinancialData['profitMargins']['fmt']
-    #Dividend Yield = dataSummaryDetail['dividendYield']['fmt'] 
-    #ROE = CompanyRatio
-    #P/B = CompanyMovingAverage
+    try:
+      ebitda_margin = dataFinancialData['ebitdaMargins']['fmt']
+    except KeyError as e:
+      ebitda_margin = None
 
-  return df
+    try:
+      net_margin = dataFinancialData['profitMargins']['fmt']
+    except KeyError as e:
+      net_margin = None
+
+    try:
+      dividend_yield = dataSummaryDetail['dividendYield']['fmt'] 
+    except KeyError as e:
+      dividend_yield = None
+
+    df_moving_average = get_data(table="CompanyMovingAverage", cid=cid)
+    df_company_ratio = get_data(table="CompanyRatio", cid=cid)
+    try:
+      pb = df_company_ratio['price_book'][0]
+    except KeyError as e:
+      pb = None
+    try:
+      roe = df_company_ratio['roe'][0]
+    except KeyError as e:
+      roe = None
+    try:
+      market_cap = df_moving_average['market_cap'][0]
+    except KeyError as e:
+      market_cap = None
+    try:
+      ev = df_moving_average['ev'][0]
+    except KeyError as e:
+      ev = None
+    try:
+      pe = df_company_ratio['pe'][0]
+    except KeyError as e:
+      pe = None
+    try:
+      ev_ebitda = dataDefaultKeyStatistics['enterpriseToEbitda']['fmt']
+    except KeyError as e:
+      ev_ebitda = None
+
+    try:
+      ev_revenue = dataDefaultKeyStatistics['enterpriseToRevenue']['fmt']
+    except KeyError as e:
+      ev_revenue = None
+    try:
+      ev_ebit = None
+    except KeyError as e:
+      ev_ebit = None
+    try:
+      ebit_margin = None
+    except KeyError as e:
+      ebit_margin = None
+
+    temp_row.append(ticker)
+    temp_row.append(market_cap)
+    temp_row.append(ev)
+    temp_row.append(pe) 
+    temp_row.append(ev_ebitda) 
+    temp_row.append(ev_ebit) 
+    temp_row.append(ev_revenue) 
+    temp_row.append(ebit_margin)
+    temp_row.append(roe) 
+    temp_row.append(pb)
+
+    df_competitor_metrics.loc[len(df_competitor_metrics.index)] = temp_row
+
+  df_competitor_metrics = df_competitor_metrics.T
+  new_header = df_competitor_metrics.iloc[0] #grab the first row for the header
+  df_competitor_metrics = df_competitor_metrics[1:] #take the data less the header row
+
+  df_competitor_metrics.columns = new_header #set the header row as the df header
+
+  return df_competitor_metrics
 
 ####################
 # Output Functions #

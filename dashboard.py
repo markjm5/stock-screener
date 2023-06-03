@@ -523,7 +523,8 @@ if option == 'Single Stock One Pager':
 
                 #TODO: Get peer details and display it in a table
                 df_peers = get_peer_details(df_zacks_peer_comparison)
-
+                st.dataframe(df_peers)
+                
         if option_one_pager == 'Chart':
             st.subheader(f'Chart For: {symbol}')
             st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
