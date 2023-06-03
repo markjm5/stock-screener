@@ -572,7 +572,7 @@ if option == 'ATR Calculator':
 
             #TODO: Write to excel file with multiple tabs, and create downloadable link
             df_xlsx = to_excel(df_sorted)
-            st.download_button(label='📥 Download Current Result',
+            st.download_button(label='📥 Download ATR Results',
                                             data=df_xlsx ,
                                             file_name= 'df_test.xlsx')
         else:

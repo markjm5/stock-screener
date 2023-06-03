@@ -6,3 +6,4 @@ requests
 tweepy
 matplotlib
 seaborn
+xlsxwriter
