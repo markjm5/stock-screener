@@ -1559,8 +1559,9 @@ def get_peer_details(df):
       ev = df_moving_average['ev'][0]
     except KeyError as e:
       ev = None
+
     try:
-      pe = df_company_ratio['pe'][0]
+      pe = dataSummaryDetail['trailingPE']['fmt'] 
     except KeyError as e:
       pe = None
     try:
@@ -1572,10 +1573,14 @@ def get_peer_details(df):
       ev_revenue = dataDefaultKeyStatistics['enterpriseToRevenue']['fmt']
     except KeyError as e:
       ev_revenue = None
+
+    #TODO: Need to retrieve EV/EBIT
     try:
       ev_ebit = None
     except KeyError as e:
       ev_ebit = None
+
+    #TODO: Need to retrieve EBIT MARGIN
     try:
       ebit_margin = None
     except KeyError as e:
@@ -2134,6 +2139,7 @@ def set_insider_trades_company(df_tickers, logger):
 """
 
 def set_todays_insider_trades(logger):
+  success = False
   try:
     logger.info("Getting Insider Trades")
     url = "http://openinsider.com/insider-purchases"
@@ -2238,3 +2244,64 @@ def format_volume_df(df):
   return df
 
 
+####################################################
+
+def return_atr(df_data):
+  # Creates a new column in the netflix dataframe called 'H-L' and does the high - low
+  df_data['H-L'] = df_data['High'] - df_data['Low']
+
+  # Creates a new column in the netflix dataframe called 'H-C' which is the absolute value of the high on the current day - close previous day
+  # the .shift(1) function takes the close from the previous day
+  df_data['H-C'] = abs(df_data['High'] - df_data['Close'].shift(1))
+
+  # Creates a new column in the netflix dataframe called 'L-C' which is the absolute value of the low on the current day - close previous day
+  df_data['L-C'] = abs(df_data['Low'] - df_data['Close'].shift(1))
+
+  # Creates a new column in the netflix dataframe called 'TR' which chooses which is the highest out of the H-L, H-C and L-C values
+  df_data['TR'] = df_data[['H-L', 'H-C', 'L-C']].max(axis=1)
+
+  # Creates a new column in the netflix datafram called 'ATR' and calculates the ATR
+  df_data['ATR'] = df_data['TR'].rolling(14).mean()
+
+  df_data['ATR %'] = abs(df_data['ATR']/df_data['Open'])
+
+  #Remove unnecessary columns from df_EUR_USD and rename columns
+  #df_data = df_data.drop(['Open', 'High', 'Low', 'Volume'], axis=1)
+  df_data = df_data.drop(['Volume'], axis=1)
+
+  # Creates a new dataframe called netflix_sorted_df using the netflix dataframe
+  # Sorts the dates from newest to oldest, rather than oldest to newest which the Yahoo Finance default
+  df_sorted = df_data.sort_values(by='DATE', ascending = False)
+
+  return df_sorted
+
+def get_atr_prices(index, number):
+  #get date range
+  todays_date = date.today()
+  date_str = "%s-%s-%s" % (todays_date.year, todays_date.month, todays_date.day)
+
+  #################
+  # Get Daily ATR #
+  #################
+
+  df_data = get_yf_historical_stock_data(index, "1d", "2000-12-28", date_str)
+  df_sorted_daily_atr = return_atr(df_data)
+
+  ###################
+  # Get Monthly ATR #
+  ###################
+
+  df_data = get_yf_historical_stock_data(index, "1mo", "2000-12-28", date_str)
+  df_sorted_monthly_atr = return_atr(df_data)
+
+  #####################
+  # Get Quarterly ATR #
+  #####################
+
+  df_data = get_yf_historical_stock_data(index, "3mo", "2000-12-28", date_str)
+  df_sorted_quarterly_atr = return_atr(df_data)
+
+  df_sorted_daily_price = df_sorted_daily_atr.drop(['H-L', 'H-C', 'L-C', 'TR', 'ATR'], axis=1)
+  df_sorted_daily_price = df_sorted_daily_price.rename(columns={"Close": index})
+
+  return df_sorted_daily_atr, df_sorted_monthly_atr, df_sorted_quarterly_atr, df_sorted_daily_price

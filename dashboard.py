@@ -18,10 +18,10 @@ from common import set_finwiz_stock_data, set_stockrow_stock_data, set_zacks_bal
 from common import set_zacks_peer_comparison, set_zacks_earnings_surprises, set_zacks_product_line_geography
 from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
 from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager
-from common import set_earningswhispers_earnings_calendar
+from common import set_earningswhispers_earnings_calendar, get_atr_prices
 from common import set_marketscreener_economic_calendar, get_peer_details
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql_get_volume
-from common import set_price_action_ta, set_todays_insider_trades
+from common import set_price_action_ta, set_todays_insider_trades, combine_df_on_index
 from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
 import seaborn as sns
@@ -72,7 +72,7 @@ st.markdown(f'''
     </style>
 ''',unsafe_allow_html=True)
 
-option = st.sidebar.selectbox("Which Option?", ('Download Data','Macroeconomic Data','Calendar', 'Single Stock One Pager','S&P Benchmarks','VWAP Calculator', 'Bottom Up Ideas'), 2)
+option = st.sidebar.selectbox("Which Option?", ('Download Data','Macroeconomic Data','Calendar', 'Single Stock One Pager','ATR Calculator', 'Bottom Up Ideas'), 2)
 
 st.header(option)
 
@@ -524,7 +524,7 @@ if option == 'Single Stock One Pager':
                 #TODO: Get peer details and display it in a table
                 df_peers = get_peer_details(df_zacks_peer_comparison)
                 st.dataframe(df_peers)
-                
+
         if option_one_pager == 'Chart':
             st.subheader(f'Chart For: {symbol}')
             st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
@@ -543,13 +543,33 @@ if option == 'Single Stock One Pager':
                 st.write(message['created_at'])
                 st.write(message['body'])
 
-if option == 'S&P Benchmarks':
-    st.markdown("S&P Benchmarks")
+if option == 'ATR Calculator':
+    st.markdown("ATR Calculator")
 
-    #TODO: https://us.spindices.com/documents/additional-material/sp-500-eps-est.xlsx
+    symbol1 = st.sidebar.text_input("Symbol 1", value='', max_chars=None, key=None, type='default')
+    symbol2 = st.sidebar.text_input("Symbol 2", value='', max_chars=None, key=None, type='default')
 
-if option == 'VWAP Calculator':
-    st.markdown("VWAP Calculator")
+    clicked = st.sidebar.button("Get ATR")
+
+    if(clicked):
+
+        index1 = symbol1
+        df_symbol1_sorted_daily_atr, df_symbol1_sorted_monthly_atr, df_symbol1_sorted_quarterly_atr, df_symbol1_sorted_daily_price = get_atr_prices(index1, 1)
+        df_index1 = df_symbol1_sorted_daily_price.drop(['Open', 'High', 'Low','ATR %'], axis=1)
+
+        index2 = symbol2
+        df_symbol2_sorted_daily_atr, df_symbol2_sorted_monthly_atr, df_symbol2_sorted_quarterly_atr, df_symbol2_sorted_daily_price = get_atr_prices(index2, 2)
+
+        df_index2 = df_symbol2_sorted_daily_price.drop(['Open', 'High', 'Low','ATR %'], axis=1)
+
+        df_updated_indexes = combine_df_on_index(df_index1, df_index2, 'DATE')
+
+        import pdb; pdb.set_trace()
+
+        #TODO: Sort by putting symbol1 first and symbol2 second. Currently it is sorting by alpha order
+        df_sorted = df_updated_indexes.sort_values(by='DATE', ascending = False)
+
+        #TODO: Write to excel file with multiple tabs, and create downloadable link
 
 if option == 'Bottom Up Ideas':
         option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','TA Patterns','Insider Trading', 'Country Exposure', 'Twitter'), 0)

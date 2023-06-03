@@ -23,14 +23,14 @@ df_tickers_alternate = get_data(table="company")
 df_tickers_one_ticker = df_tickers_alternate.loc[df_tickers_alternate['symbol'].isin(['VSAT'])]
 
 class TestCommon(unittest.TestCase):
-    
+    """
     def test_set_yf_price_action(self):
         self.assertEqual(set_yf_price_action(df_tickers_alternate, logger),True)
         
     """
     def test_scrape_insider_trades(self):
         self.assertEqual(set_todays_insider_trades(logger),True)
-    
+    """
     #def test_set_insider_trades_company(self):
     #    self.assertEqual(set_insider_trades_company(df_tickers1,logger),True)
 
