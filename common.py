@@ -1704,21 +1704,13 @@ def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_f
 
   return style
 
-def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, order_cols=None, format_cols=None):
+def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, format_cols=None):
   #Sorting
   try:
     df = df.sort_values(by=sort_cols, ascending=True)
   except KeyError as e:
     print(f"Error Sorting Columns: {e}")
     pass
-
-  #Ordering
-  if(order_cols):
-    try:
-      df = df.loc[:, order_cols]
-    except KeyError as e:
-      print(f"Error Ordering Columns: {e}")
-      pass
   
   #Dropping Columns
   try:
@@ -1728,7 +1720,6 @@ def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, order_cols=No
     pass
 
   #Formatting Columns
-
   if(format_cols):
     for key in format_cols:
       x = key
@@ -1743,7 +1734,6 @@ def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, order_cols=No
 
       elif(data_type == 'date'):
         try:
-          #df[x] = pd.to_datetime(df['x'],format='%A, %B %d, %Y')
           df[x] = df[x].dt.strftime('%d-%m-%Y')
         except KeyError as e:
           pass
