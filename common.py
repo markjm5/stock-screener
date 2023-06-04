@@ -1756,41 +1756,6 @@ def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, order_cols=No
         except KeyError as e:
           pass
 
-      #print(format_cols[key])
-
-  #if(number_format_cols):
-  #  #Formatting Columns
-  #  for x in number_format_cols:
-  #    # Format Numbers
-  #    try:
-  #      df[x] = df[x].astype(float)
-  #      df[x] = df[x].map('{:,.2f}'.format)
-  #    except KeyError as e:
-  #      print(f"Error Formatting Columns: {e}")
-  #      pass
-  """
-  #TODO: Date Format Columns
-  if(date_format_cols):
-    for x in date_format_cols:
-      # Format Dates
-      try:
-        #df[x] = pd.to_datetime(df['x'],format='%A, %B %d, %Y')
-        df[x] = df[x].dt.strftime('%d-%m-%Y')
-      except KeyError as e:
-        pass
-
-  #TODO: Percentage Format Columns
-  if(percentage_format_cols):
-    for x in percentage_format_cols:
-      # Format Percentages
-      try:
-        df[x] = df[x].astype(float)
-        df[x] = df[x] * 100
-        df[x] = df[x].map('{:,.2f}%'.format)
-      except KeyError as e:
-        pass
-  """
-
   #Renaming Indexes
   df.rename(columns=rename_cols, inplace=True)
 
