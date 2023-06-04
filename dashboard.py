@@ -602,13 +602,14 @@ if option == 'ATR Calculator':
 
             df_updated_indexes = combine_df_on_index(df_index1, df_index2, 'DATE')
 
-            #TODO: Sort by putting symbol1 first and symbol2 second. Currently it is sorting by alpha order
             df_sorted = df_updated_indexes.sort_values(by='DATE', ascending = False)
 
+            # Sort by putting symbol1 first and symbol2 second. 
             df_ordered = df_sorted.loc[:, ['DATE',symbol1,symbol2]]
+
+            # Format Date Field
             df_ordered['DATE'] = df_ordered['DATE'].dt.strftime('%d-%m-%Y')
 
-            #import pdb; pdb.set_trace()
             #TODO: Write to excel file with multiple tabs - Price Action, ATR Daily, ATR Monthly, ATR Quarterly
             df_xlsx = to_excel(df_ordered)
             st.download_button(label='📥 Download ATR Results',
