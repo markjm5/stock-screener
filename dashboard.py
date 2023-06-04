@@ -274,23 +274,26 @@ if option == 'Calendar':
     sort_cols = ['dt']
     drop_cols = ['id' ]
     rename_cols = {'dt': 'Date','dt_time': 'Time', 'ticker':'Ticker', 'company_name':'Company Name', 'market_cap_mil':'Market Cap (M)'}
-    number_format_cols = ['market_cap_mil']
+    #number_format_cols = ['market_cap_mil']
+    format_cols = {'market_cap_mil': 'number', 'dt': 'date' }
 
-    style_t1 = format_df_for_dashboard(df1, sort_cols, drop_cols, rename_cols, number_format_cols)
+    style_t1 = format_df_for_dashboard(df1, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
     st.write(style_t1)
 
     df2 = get_data(table="macro_economiccalendar")
     st.markdown("Economic Calendar")
-    #st.dataframe(df2)
 
     sort_cols = ['dt']
-    drop_cols = ['id' ]
+    drop_cols = ['id']
     rename_cols = {'dt': 'Date','dt_time': 'Time', 'country':'Country', 'economic_event':'Economic Event', 'previous':'Previous Data'}
-    number_format_cols = []
-
-    style_t2 = format_df_for_dashboard(df2, sort_cols, drop_cols, rename_cols, number_format_cols)
-    st.write(style_t2)
-
+    #number_format_cols = []
+    format_cols = {'dt': 'date' }
+    #import pdb; pdb.set_trace()
+    if(len(df2) > 0):
+        style_t2 = format_df_for_dashboard(df2, sort_cols, drop_cols, rename_cols,format_cols=format_cols)
+        st.write(style_t2)
+    else:
+        st.write("Could not retrieve economic calendar")
 
     df3 = get_data(table="macro_whitehouseannouncement")
     st.markdown("Whitehouse News")
@@ -299,9 +302,10 @@ if option == 'Calendar':
     sort_cols = ['dt']
     drop_cols = ['id' ]
     rename_cols = {'dt': 'Date','post_title': 'Title', 'post_url':'URL'}
-    number_format_cols = []
+    #number_format_cols = []
+    format_cols = {'dt': 'date' }
 
-    style_t3 = format_df_for_dashboard(df3, sort_cols, drop_cols, rename_cols, number_format_cols)
+    style_t3 = format_df_for_dashboard(df3, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
     st.write(style_t3)
 
     df4 = get_data(table="macro_geopoliticalcalendar")
@@ -500,10 +504,10 @@ if option == 'Single Stock One Pager':
                 sort_cols = ['revenue']
                 drop_cols = ['cid','id']
                 rename_cols = {'region': 'Region','revenue': 'Revenue'}
-                number_format_cols = ['revenue']
+                format_cols = {'revenue': 'number'}
 
                 if(len(df_zacks_product_line_geography) > 0):
-                    style_t6 = format_df_for_dashboard(df_zacks_product_line_geography, sort_cols, drop_cols, rename_cols, number_format_cols)
+                    style_t6 = format_df_for_dashboard(df_zacks_product_line_geography, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
                     col1.write(style_t6)
                 else:
                     col1.markdown("Geography data does not exist")
@@ -512,9 +516,9 @@ if option == 'Single Stock One Pager':
                 sort_cols = ['peer_ticker']
                 drop_cols = ['cid','id' ]
                 rename_cols = {'peer_company': 'Peer Company','peer_ticker': 'Peer Ticker'}
-                number_format_cols = []
+                format_cols = []
 
-                style_t7 = format_df_for_dashboard(df_zacks_peer_comparison, sort_cols, drop_cols, rename_cols, number_format_cols)
+                style_t7 = format_df_for_dashboard(df_zacks_peer_comparison, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
                 col2.write(style_t7)
 
                 st.markdown("""---""")
@@ -552,25 +556,56 @@ if option == 'ATR Calculator':
 
     if(clicked):
         if(len(symbol1.strip()) > 0 and len(symbol2.strip()) > 0):        
+            #TODO: Need to add formats for date and %
+            sort_cols = []
+            drop_cols = ['Open','High','Low','Close','H-L','H-C','L-C','TR','ATR']
+            rename_cols = {}
+            format_cols = {'DATE': 'date','ATR %': 'percentage' }
+
             index1 = symbol1.strip()
             df_symbol1_sorted_daily_atr, df_symbol1_sorted_monthly_atr, df_symbol1_sorted_quarterly_atr, df_symbol1_sorted_daily_price = get_atr_prices(index1, 1)
             df_index1 = df_symbol1_sorted_daily_price.drop(['Open', 'High', 'Low','ATR %'], axis=1)
 
+            col1,col2,col3 = st.columns(3)
+
+            col1.markdown(f"{index1} Daily ATR") 
+            col2.markdown(f"{index1} Monthly ATR") 
+            col3.markdown(f"{index1} Quarterly ATR") 
+
+            style_t1 = format_df_for_dashboard(df_symbol1_sorted_daily_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+            col1.write(style_t1)
+
+            style_t2 = format_df_for_dashboard(df_symbol1_sorted_monthly_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+            col2.write(style_t2)
+
+            style_t3 = format_df_for_dashboard(df_symbol1_sorted_quarterly_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+            col3.write(style_t3)
+
             index2 = symbol2.strip()
             df_symbol2_sorted_daily_atr, df_symbol2_sorted_monthly_atr, df_symbol2_sorted_quarterly_atr, df_symbol2_sorted_daily_price = get_atr_prices(index2, 2)
-
             df_index2 = df_symbol2_sorted_daily_price.drop(['Open', 'High', 'Low','ATR %'], axis=1)
+
+            col1.markdown(f"{index2} Daily ATR") 
+            col2.markdown(f"{index2} Monthly ATR") 
+            col3.markdown(f"{index2} Quarterly ATR") 
+
+            style_t4 = format_df_for_dashboard(df_symbol2_sorted_daily_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+            col1.write(style_t4)
+
+            style_t5 = format_df_for_dashboard(df_symbol2_sorted_monthly_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+            col2.write(style_t5)
+
+            style_t6 = format_df_for_dashboard(df_symbol2_sorted_quarterly_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+            col3.write(style_t6)
+
+            st.markdown("""---""")
 
             df_updated_indexes = combine_df_on_index(df_index1, df_index2, 'DATE')
 
             #TODO: Sort by putting symbol1 first and symbol2 second. Currently it is sorting by alpha order
             df_sorted = df_updated_indexes.sort_values(by='DATE', ascending = False)
 
-            #TODO: Print ATR Results for Daily, Monthly and Quarterly
-
-            import pdb; pdb.set_trace()
-
-            #TODO: Write to excel file with multiple tabs, and create downloadable link
+            #TODO: Write to excel file with multiple tabs - Price Action, ATR Daily, ATR Monthly, ATR Quarterly
             df_xlsx = to_excel(df_sorted)
             st.download_button(label='📥 Download ATR Results',
                                             data=df_xlsx ,

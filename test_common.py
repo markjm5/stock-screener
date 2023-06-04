@@ -27,20 +27,22 @@ class TestCommon(unittest.TestCase):
     def test_set_yf_price_action(self):
         self.assertEqual(set_yf_price_action(df_tickers_alternate, logger),True)
         
-    """
+    
     def test_scrape_insider_trades(self):
         self.assertEqual(set_todays_insider_trades(logger),True)
-    """
+    
     #def test_set_insider_trades_company(self):
     #    self.assertEqual(set_insider_trades_company(df_tickers1,logger),True)
 
     
     def test_set_ta_pattern_stocks(self):
         self.assertEqual(set_yf_price_action(df_tickers, logger),True)
+    """
 
     def test_scrape_table_marketscreener_economic_calendar(self):
         self.assertEqual(set_marketscreener_economic_calendar(logger),True)
-            
+
+    """            
     def test_set_whitehouse_news(self):
         self.assertEqual(set_whitehouse_news(logger),True)
     

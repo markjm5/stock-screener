@@ -745,6 +745,7 @@ def set_zacks_peer_comparison(df_tickers, logger):
   return success
 
 def set_zacks_earnings_surprises(df_tickers, logger):
+  success = False
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
     logger.info(f'Getting zacks earnings surprises for {ticker}')
@@ -1657,11 +1658,11 @@ def format_fields_for_dashboard(col_names, data):
 
   return style
 
-def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_format_col):
+def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_format_col, date_format_col=None, percentage_format_col=None):
 
   #cols to format
   try:
-    arr_format_cols = df[number_format_col].squeeze().tolist()
+    arr_number_format_cols = df[number_format_col].squeeze().tolist()
   except KeyError as e:
     pass
 
@@ -1689,7 +1690,7 @@ def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_f
   #Formatting Columns
   if(len(df.columns) > 0):
 
-    for x in arr_format_cols:
+    for x in arr_number_format_cols:
       # Format Numbers
       try:
         df[x] = df[x].astype(float)
@@ -1703,7 +1704,7 @@ def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_f
 
   return style
 
-def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols=None):
+def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, order_cols=None, format_cols=None):
   #Sorting
   try:
     df = df.sort_values(by=sort_cols, ascending=True)
@@ -1727,14 +1728,68 @@ def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format
     pass
 
   #Formatting Columns
-  for x in number_format_cols:
-    # Format Numbers
-    try:
-      df[x] = df[x].astype(float)
-      df[x] = df[x].map('{:,.2f}'.format)
-    except KeyError as e:
-      print(f"Error Formatting Columns: {e}")
-      pass
+
+  if(format_cols):
+    for key in format_cols:
+      x = key
+      data_type = format_cols[key]
+      if(data_type == 'number'):
+        try:
+          df[x] = df[x].astype(float)
+          df[x] = df[x].map('{:,.2f}'.format)
+        except KeyError as e:
+          print(f"Error Formatting Columns: {e}")
+          pass
+
+      elif(data_type == 'date'):
+        try:
+          #df[x] = pd.to_datetime(df['x'],format='%A, %B %d, %Y')
+          df[x] = df[x].dt.strftime('%d-%m-%Y')
+        except KeyError as e:
+          pass
+
+      elif(data_type == 'percentage'):
+        try:
+          df[x] = df[x].astype(float)
+          df[x] = df[x] * 100
+          df[x] = df[x].map('{:,.2f}%'.format)
+        except KeyError as e:
+          pass
+
+      #print(format_cols[key])
+
+  #if(number_format_cols):
+  #  #Formatting Columns
+  #  for x in number_format_cols:
+  #    # Format Numbers
+  #    try:
+  #      df[x] = df[x].astype(float)
+  #      df[x] = df[x].map('{:,.2f}'.format)
+  #    except KeyError as e:
+  #      print(f"Error Formatting Columns: {e}")
+  #      pass
+  """
+  #TODO: Date Format Columns
+  if(date_format_cols):
+    for x in date_format_cols:
+      # Format Dates
+      try:
+        #df[x] = pd.to_datetime(df['x'],format='%A, %B %d, %Y')
+        df[x] = df[x].dt.strftime('%d-%m-%Y')
+      except KeyError as e:
+        pass
+
+  #TODO: Percentage Format Columns
+  if(percentage_format_cols):
+    for x in percentage_format_cols:
+      # Format Percentages
+      try:
+        df[x] = df[x].astype(float)
+        df[x] = df[x] * 100
+        df[x] = df[x].map('{:,.2f}%'.format)
+      except KeyError as e:
+        pass
+  """
 
   #Renaming Indexes
   df.rename(columns=rename_cols, inplace=True)
