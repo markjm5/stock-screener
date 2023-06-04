@@ -465,7 +465,8 @@ if option == 'Single Stock One Pager':
 
                 st.markdown("""---""")
 
-                col1,col2,col3 = st.columns(3)
+                #col1,col2,col3 = st.columns(3)
+                col1,col2 = st.columns(2)
 
                 style_t1.hide_columns()
                 col1.write(style_t1.to_html(), unsafe_allow_html=True)
@@ -474,7 +475,9 @@ if option == 'Single Stock One Pager':
                 col2.write(style_t2.to_html(), unsafe_allow_html=True)
 
                 style_t3.hide_columns()
-                col3.write(style_t3.to_html(), unsafe_allow_html=True)
+                #col3.write(style_t3.to_html(), unsafe_allow_html=True)
+                col1.markdown("""---""")
+                col1.write(style_t3.to_html(), unsafe_allow_html=True)
 
                 st.markdown("""---""")
 
@@ -549,8 +552,8 @@ if option == 'Single Stock One Pager':
 
 if option == 'ATR Calculator':
 
-    symbol1 = st.sidebar.text_input("Symbol 1", value='', max_chars=None, key=None, type='default')
-    symbol2 = st.sidebar.text_input("Symbol 2", value='', max_chars=None, key=None, type='default')
+    symbol1 = st.sidebar.text_input("Symbol 1", value='MSFT', max_chars=None, key=None, type='default')
+    symbol2 = st.sidebar.text_input("Symbol 2", value='CRM', max_chars=None, key=None, type='default')
 
     clicked = st.sidebar.button("Get ATR")
 
@@ -609,12 +612,22 @@ if option == 'ATR Calculator':
 
             # Format Date Field
             df_ordered['DATE'] = df_ordered['DATE'].dt.strftime('%d-%m-%Y')
+            file_date = dt.now().strftime('%Y%m%d_%H%M%S')
+
+            filename = f'ATR_{symbol1}_{symbol2}_{file_date}.xlsx'
 
             #TODO: Write to excel file with multiple tabs - Price Action, ATR Daily, ATR Monthly, ATR Quarterly
-            df_xlsx = to_excel(df_ordered)
+            df_xlsx = to_excel(df_ordered,
+                               df_symbol1_sorted_daily_atr,
+                               df_symbol1_sorted_monthly_atr,
+                               df_symbol1_sorted_quarterly_atr,
+                               df_symbol2_sorted_daily_atr,
+                               df_symbol2_sorted_monthly_atr,
+                               df_symbol2_sorted_quarterly_atr                               
+                               )
             st.download_button(label='📥 Download ATR Results',
                                             data=df_xlsx ,
-                                            file_name= 'df_test.xlsx')
+                                            file_name=filename)
         else:
             st.write("Please enter 2 ticker symbols")
 
@@ -667,12 +680,11 @@ if option == 'Bottom Up Ideas':
                 df_stock_volume_3m = format_volume_df(df_stock_volume_3m)    
                 
                 sort_cols = []
-                order_cols = ['symbol','vs_avg_vol_10d','vs_avg_vol_3m', 'last_close', 'company_name', 'outlook', 'index', 'id', 'cid']
+                order_cols = ['symbol','vs_avg_vol_10d','vs_avg_vol_3m', 'last_close', 'company_name', 'outlook']
                 drop_cols = ['index','id', 'cid']
                 rename_cols = {'vs_avg_vol_10d': '% Avg Vol 10d', 'vs_avg_vol_3m': '% Avg Vol 3m', 'outlook': 'Outlook', 'symbol': 'Symbol', 'last_close': 'Last', 'company_name': 'Company'}
-                number_format_cols = []
 
-                style_3m = format_df_for_dashboard(df_stock_volume_3m, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols)                
+                style_3m = format_df_for_dashboard(df_stock_volume_3m, sort_cols, drop_cols, rename_cols, order_cols=order_cols)                
                 style_3m = style_3m.style.pipe(format_outlook)
 
                 st.write(style_3m)
@@ -760,9 +772,8 @@ if option == 'Bottom Up Ideas':
             order_cols = ['filing_date','company_ticker','company_name', 'insider_name', 'insider_title', 'trade_type', 'trade_price', 'percentage_owned']
             drop_cols = ['id']
             rename_cols = {'filing_date': 'Filing Date', 'company_ticker': 'Ticker', 'company_name': 'Company', 'insider_name': 'Insider', 'insider_title': 'Title', 'trade_type': 'Trade', 'trade_price': 'Price', 'percentage_owned': '% Owned'}
-            number_format_cols = []
 
-            style_insider_trading = format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols)                
+            style_insider_trading = format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, order_cols=order_cols)                
 
             st.write(style_insider_trading)
 

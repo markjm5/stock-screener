@@ -1704,7 +1704,7 @@ def format_df_for_dashboard_flip(df, sort_cols, drop_rows, rename_cols, number_f
 
   return style
 
-def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, format_cols=None):
+def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, format_cols=None, order_cols=None):
   #Sorting
   try:
     df = df.sort_values(by=sort_cols, ascending=True)
@@ -1745,6 +1745,10 @@ def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, format_cols=N
           df[x] = df[x].map('{:,.2f}%'.format)
         except KeyError as e:
           pass
+
+  if(order_cols):
+    # Sort by putting symbol1 first and symbol2 second. 
+    df = df.loc[:, order_cols]
 
   #Renaming Indexes
   df.rename(columns=rename_cols, inplace=True)
@@ -2317,12 +2321,22 @@ def get_atr_prices(index, number):
 
   return df_sorted_daily_atr, df_sorted_monthly_atr, df_sorted_quarterly_atr, df_sorted_daily_price
 
-def to_excel(df):
+def to_excel(df_price_action, df_ticker1_daily, df_ticker1_monthly, df_ticker1_quarterly,df_ticker2_daily, df_ticker2_monthly, df_ticker2_quarterly):
+
   output = io.BytesIO()
   writer = pd.ExcelWriter(output, engine='xlsxwriter')
-  df.to_excel(writer, index=False, sheet_name='Sheet1')
+
+  df_price_action.to_excel(writer, index=False, sheet_name='PriceAction')
+  df_ticker1_daily.to_excel(writer, index=False, sheet_name='Ticker1Daily')
+  df_ticker1_monthly.to_excel(writer, index=False, sheet_name='Ticker1Monthly')
+  df_ticker1_quarterly.to_excel(writer, index=False, sheet_name='Ticker1Quarterly')
+  df_ticker2_daily.to_excel(writer, index=False, sheet_name='Ticker2Daily')
+  df_ticker2_monthly.to_excel(writer, index=False, sheet_name='Ticker2Monthly')
+  df_ticker2_quarterly.to_excel(writer, index=False, sheet_name='Ticker2Quarterly')
+
   workbook = writer.book
-  worksheet = writer.sheets['Sheet1']
+  worksheet = writer.sheets['PriceAction']
+
   format1 = workbook.add_format({'num_format': '0.00'}) 
   worksheet.set_column('A:A', None, format1)  
   writer.save()
