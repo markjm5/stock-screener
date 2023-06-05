@@ -24,6 +24,7 @@ from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql
 from common import set_price_action_ta, set_todays_insider_trades, combine_df_on_index
 from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
+from common import set_stlouisfed_data
 import seaborn as sns
 
 debug = False
@@ -79,14 +80,14 @@ st.header(option)
 if option == 'Download Data':
 
     #num_days = st.sidebar.slider('Number of days', 1, 30, 3)
-    clicked1 = st.markdown("Download Macroeconomic Data (takes 1 hour)")
-    clicked1 = st.button(label="Click to Download Macro Data",key="macro_data")
+    clicked1 = st.markdown("Download Price Action Data (takes 15 minutes)")
+    clicked1 = st.button(label="Click to Download Price Action Data",key="price_data")
 
     clicked2 = st.markdown("Download Stock Data (takes 6 hours)")
     clicked2 = st.button(label="Click to Download Stock Data", key="stock_data")
 
-    clicked3 = st.markdown("Download ALL Data (takes 9 hours)")
-    clicked3 = st.button(label="Click to Download ALL Data", key="all_data")
+    clicked3 = st.markdown("Download Macroeconomic Data (takes 45 minutes)")
+    clicked3 = st.button(label="Click to Download Macroeconomic Data", key="macro_data")
 
     if(clicked1):
         #Download Macro Data
@@ -94,7 +95,7 @@ if option == 'Download Data':
         now_start = dt.now()
         start_time = now_start.strftime("%H:%M:%S")    
 
-        st.write(f'Downloading Macro Economic Data...')
+        st.write(f'{start_time} - Downloading Price Data...')
         df_tickers_all = get_zacks_us_companies()       
         df_tickers = get_data(table="company") 
         with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -132,7 +133,7 @@ if option == 'Download Data':
         now_start = dt.now()
         start_time = now_start.strftime("%H:%M:%S")    
 
-        st.write(f'Downloading Stock Data...')
+        st.write(f'{start_time} - Downloading Stock Data...')
         #Download data from zacks and other sources and store it in the database.
         #Use mutithreading to make the download process faster
 
@@ -264,7 +265,26 @@ if option == 'Download Data':
         st.write(f'Status of Finwiz Stock Data: {finwiz_stock_data_status}')
 
     if(clicked3):
-        st.write(f'You clicked button 3!')
+        logger = get_logger()
+        now_start = dt.now()
+        start_time = now_start.strftime("%H:%M:%S")    
+
+        st.write(f'{start_time} - Downloading Macroeconomic Data...')
+        success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
+
+        now_finish = dt.now()
+        finish_time = now_finish.strftime("%H:%M:%S")
+        difference = now_finish - now_start
+        seconds_in_day = 24 * 60 * 60
+        total_time = divmod(difference.days * seconds_in_day + difference.seconds, 60)
+
+        st.write(start_time)
+        st.write(finish_time)
+        st.write(total_time)
+
+        logger.info(f"Start Time: {start_time}")
+        logger.info(f"Start Time: {finish_time}")
+        logger.info(f"Total Time: {total_time}")
 
 if option == 'Calendar':
     #st.subheader(f'Calendar')

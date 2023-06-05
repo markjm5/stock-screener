@@ -596,6 +596,34 @@ def set_stockrow_stock_data(df_tickers, logger):
 
   return success
 
+def set_stlouisfed_data(series_codes, logger):
+  success = False
+  for series_code in series_codes:
+    url = "https://api.stlouisfed.org/fred/series/observations?series_id=%s&api_key=8067a107f45ff78491c1e3117245a0a3&file_type=json" % (series_code,)
+    try:
+      resp = get_page(url)
+
+      json = resp.json() 
+      
+      df = pd.DataFrame(columns=["DATE",series_code])
+
+      for i in range(len(json["observations"])):
+        if(json["observations"][i]["value"] == '.'):
+          obs = '0.00'
+        else:
+          obs = json["observations"][i]["value"]
+        df = df.append({"DATE": json["observations"][i]["date"], series_code: obs}, ignore_index=True)
+
+      df['DATE'] = pd.to_datetime(df['DATE'],format='%Y-%m-%d')
+      df[series_code] = df[series_code].astype('float64') 
+
+      logger.info("Retrieved Data for Series %s" % (series_code,))
+      success = True
+    except Exception as e:
+      logger.error("Could Not get Data for Series %s" % (series_code,))
+
+  return success
+
 def set_zacks_balance_sheet_shares(df_tickers, logger):
   success = False
   for index, row in df_tickers.iterrows():
