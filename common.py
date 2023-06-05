@@ -617,6 +617,12 @@ def set_stlouisfed_data(series_codes, logger):
       df['DATE'] = pd.to_datetime(df['DATE'],format='%Y-%m-%d')
       df[series_code] = df[series_code].astype('float64') 
 
+      # write records to database
+      rename_cols = {'DATE':'series_date'}
+      conflict_cols = 'series_date'
+
+      success = sql_write_df_to_db(df, "Macro_StLouisFed", rename_cols=rename_cols, conflict_cols=conflict_cols)
+
       logger.info("Retrieved Data for Series %s" % (series_code,))
       success = True
     except Exception as e:
@@ -2006,7 +2012,7 @@ def sql_get_cid(ticker):
   return cid
 
 
-def sql_write_df_to_db(df, db_table, rename_cols, additional_col_values, conflict_cols):
+def sql_write_df_to_db(df, db_table, rename_cols=None, additional_col_values=None, conflict_cols=None):
 
   connection, cursor = sql_open_db()
   if(rename_cols):
@@ -2037,7 +2043,7 @@ def sql_write_df_to_db(df, db_table, rename_cols, additional_col_values, conflic
     else:
       sqlCmd = """INSERT INTO {} ({}) VALUES ({});
       """.format(db_table, str1, str2, str3)
-       
+
     cursor.execute(sqlCmd)
     connection.commit()
 
