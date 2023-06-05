@@ -24,7 +24,7 @@ from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql
 from common import set_price_action_ta, set_todays_insider_trades, combine_df_on_index
 from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
-from common import set_stlouisfed_data
+from common import set_stlouisfed_data, temp_load_excel_data_to_db
 import seaborn as sns
 
 debug = False
@@ -270,7 +270,9 @@ if option == 'Download Data':
         start_time = now_start.strftime("%H:%M:%S")    
 
         st.write(f'{start_time} - Downloading Macroeconomic Data...')
-        success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
+        #success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
+
+        success = temp_load_excel_data_to_db()
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")

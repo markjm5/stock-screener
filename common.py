@@ -2376,3 +2376,61 @@ def to_excel(df_price_action, df_ticker1_daily, df_ticker1_monthly, df_ticker1_q
   writer.save()
   processed_data = output.getvalue()
   return processed_data
+
+
+def convert_excelsheet_to_dataframe(excel_file_path,sheet_name,date_exists=False, index_col=None, date_format='%d/%m/%Y'):
+
+  if(isWindows):
+    filepath = os.getcwd()
+    excel_file_path = filepath + excel_file_path.replace("/","\\")
+
+  else:
+    filepath = os.path.realpath(__file__)
+    excel_file_path = filepath[:filepath.rfind('/')] + excel_file_path
+
+  if(index_col):
+    df = pd.read_excel(excel_file_path, sheet_name=sheet_name, index_col=index_col, engine='openpyxl')
+  else:
+    df = pd.read_excel(excel_file_path, sheet_name=sheet_name, engine='openpyxl')
+
+  if(date_exists):
+    df['DATE'] = pd.to_datetime(df['DATE'],format=date_format)
+
+  return df
+
+def temp_load_excel_data_to_db():
+  
+  sheet_name = 'DB Manufacturing ISM'  
+  excel_file_path = '/data/temp_macro_data/03_Leading_Indicators/016_Leading_Indicator_US_ISM_Manufacturing.xlsm'
+
+  # Load original data from excel file into original df
+  df_original = convert_excelsheet_to_dataframe(excel_file_path, sheet_name, False)
+  #TODO: Need to write this data into the database
+
+  #TODO: ISM New Orders, ISM Production, ISM Headline
+
+  rename_cols = {
+    'DATE':'ism_date',                                             
+    'Apparel, Leather & Allied Products':'apparel_leather_allied_products',                        
+    'Chemical Products':'chemical_products',                                         
+    'Computer & Electronic Products':'computer_electronic_products',                            
+    'Electrical Equipment, Appliances & Components':'electrical_equipment_appliances_components',             
+    'Fabricated Metal Products':'fabricated_metal_products',                                 
+    'Food, Beverage & Tobacco Products':'food_beverage_tobacco_products',                         
+    'Furniture & Related Products':'furniture_related_products',                              
+    'Machinery':'machinery',                                                 
+    'Miscellaneous Manufacturing':'miscellaneous_manufacturing',                               
+    'Nonmetallic Mineral Products':'nonmetallic_mineral_products',                              
+    'Paper Products':'paper_products',                                            
+    'Petroleum & Coal Products':'petroleum_coal_products',                                 
+    'Plastics & Rubber Products':'plastics_rubber_products',                                
+    'Primary Metals':'primary_metals',                                            
+    'Printing & Related Support Activities':'printing_related_support_activities',                     
+    'Textile Mills':'textile_mills',                                             
+    'Transportation Equipment':'transportation_equipment',                                  
+    'Wood Products':'wood_products'                              
+  }
+  add_col_values = {}
+  conflict_cols = "ism_date"
+  success = sql_write_df_to_db(df_original, "macro_us_ism_manufacturing_sectors", rename_cols, add_col_values, conflict_cols)
+

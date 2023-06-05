@@ -261,3 +261,40 @@ CREATE TABLE IF NOT EXISTS Macro_StLouisFed (
     PRIMARY KEY (series_date)
 );
 
+CREATE TABLE IF NOT EXISTS macro_us_ism_manufacturing_sectors (
+    ism_date DATE NOT NULL,                                             
+    apparel_leather_allied_products INTEGER,                        
+    chemical_products INTEGER,                                         
+    computer_electronic_products INTEGER,                            
+    electrical_equipment_appliances_components INTEGER,             
+    fabricated_metal_products INTEGER,                                 
+    food_beverage_tobacco_products INTEGER,                         
+    furniture_related_products INTEGER,                              
+    machinery INTEGER,                                                 
+    miscellaneous_manufacturing INTEGER,                               
+    nonmetallic_mineral_products INTEGER,                              
+    paper_products INTEGER,                                            
+    petroleum_coal_products INTEGER,                                 
+    plastics_rubber_products INTEGER,                                
+    primary_metals INTEGER,                                            
+    printing_related_support_activities INTEGER,                     
+    textile_mills INTEGER,                                             
+    transportation_equipment INTEGER,                                  
+    wood_products INTEGER,                              
+    PRIMARY KEY (ism_date)
+);
+
+CREATE TABLE IF NOT EXISTS macro_us_ism_manufacturing_new_orders (
+    ism_date DATE NOT NULL,                                             
+    PRIMARY KEY (ism_date)
+);
+
+CREATE TABLE IF NOT EXISTS macro_us_ism_manufacturing_production (
+    ism_date DATE NOT NULL,                                             
+    PRIMARY KEY (ism_date)
+);
+
+CREATE TABLE IF NOT EXISTS macro_us_ism_manufacturing_headline (
+    ism_date DATE NOT NULL,                                             
+    PRIMARY KEY (ism_date)
+);
