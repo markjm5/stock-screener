@@ -2355,7 +2355,7 @@ def get_atr_prices(index, number):
 
   return df_sorted_daily_atr, df_sorted_monthly_atr, df_sorted_quarterly_atr, df_sorted_daily_price
 
-def to_excel(df_price_action, df_ticker1_daily, df_ticker1_monthly, df_ticker1_quarterly,df_ticker2_daily, df_ticker2_monthly, df_ticker2_quarterly):
+def atr_to_excel(df_price_action, df_ticker1_daily, df_ticker1_monthly, df_ticker1_quarterly,df_ticker2_daily, df_ticker2_monthly, df_ticker2_quarterly):
 
   output = io.BytesIO()
   writer = pd.ExcelWriter(output, engine='xlsxwriter')
@@ -2377,6 +2377,261 @@ def to_excel(df_price_action, df_ticker1_daily, df_ticker1_monthly, df_ticker1_q
   processed_data = output.getvalue()
   return processed_data
 
+def set_ism_manufacturing():
+  para_manufacturing, para_new_orders, para_production, ism_date, ism_month = scrape_ism_manufacturing_data_from_page()        
+
+  # We have scraped the important data from the ism manufacturing website. Now we need to extract the rankings
+  df_manufacturing_rankings = extract_rankings(para_manufacturing, ism_date)
+  df_new_orders_rankings = extract_rankings(para_new_orders, ism_date)
+  df_production_rankings = extract_rankings(para_production, ism_date)
+  df_ism_headline_index = scrape_ism_manufacturing_headline_index(ism_date, ism_month)
+
+  import pdb; pdb.set_trace()
+  #TODO: Write to database
+
+
+def scrape_ism_manufacturing_data_from_page():
+
+    ism_date, ism_month, page = get_ism_manufacturing_page()
+
+    soup = BeautifulSoup(page.content, 'html.parser')
+
+    #get all paragraphs
+    paras = soup.find_all("p", attrs={'class': None})
+
+    para_manufacturing = "" 
+    para_new_orders = ""
+    para_production = ""
+    pattern_manufacturing = re.compile(r'(manufacturing industries (that\s)?report(ed|ing) growth in (January|February|...|December))')
+    pattern_new_orders = re.compile(r'(growth in new orders [A-Za-z,&;\s]* (January|February|...|December))')
+    pattern_production = re.compile(r'(growth in production [A-Za-z,&;\s]* (January|February|...|December))')
+
+    for para in paras:
+        #Get the specific paragraph
+        if(len(pattern_manufacturing.findall(para.text)) > 0):
+            para_manufacturing = para.text
+
+        if(len(pattern_new_orders.findall(para.text)) > 0):
+            para_new_orders = para.text
+
+        if(len(pattern_production.findall(para.text)) > 0):
+            para_production = para.text
+
+    return para_manufacturing, para_new_orders, para_production, ism_date, ism_month
+
+def get_ism_manufacturing_page():
+
+  ism_date, ism_month = get_ism_date(1)
+  #url_ism = get_ism_manufacturing_url(ism_month)
+  url_ism = 'https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/pmi/%s' % (ism_month.lower(),)
+
+  #This is duplicate code found in get_page function but we need to handle special case of ism data where page may not be found and we need to switch to 1 month previous
+  header={'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36'}
+  page = requests.get(url=url_ism,headers=header)
+
+  try:
+      page.raise_for_status()
+  except requests.exceptions.HTTPError as e:
+    if(page.status_code == 404):
+        # Use previous month to get ISM data
+        ism_date, ism_month = get_ism_date(2)
+        #url_ism = get_ism_manufacturing_url(ism_month)
+        url_ism = 'https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/pmi/%s' % (ism_month.lower(),)
+
+        page = get_page(url_ism)
+
+    else:
+        raise Exception("Http Response (%s) Is Not 200: %s" % (url_ism,str(page.status_code)))
+
+  return ism_date, ism_month, page
+
+
+def extract_rankings(industry_str, ism_date):
+
+    #ism_date, ism_month, page = get_ism_manufacturing_content()
+
+    #Use regex (https://pythex.org/) to get substring that contains order of industries. It should return 2 matches - for increase and decrease   
+    pattern_select = re.compile(r'((?<=following order:\s)[A-Za-z,&;\s]*.|(?<=are:\s)[A-Za-z,&;\s]*.|(?<=are\s)[A-Za-z,&;\s]*.)')
+    matches = pattern_select.finditer(industry_str)
+    match_arr = []
+    pattern_remove = r'and|\.'
+    for match in matches:
+        new_str = re.sub(pattern_remove, '',match.group(0))
+        match_arr.append(new_str)
+
+    #put increase and decrease items into arrays
+    increase_arr = match_arr[0].split(';')
+    try:
+        decrease_arr = []
+        decrease_arr = match_arr[1].split(';')        
+    except IndexError as e:
+        #There must only be one industry reporting decrease, so extract that one.
+        pattern_select_decrease = re.compile(r'(only\sindustry[A-Za-z,&;\s]*)')        
+        match = pattern_select_decrease.search(industry_str)
+
+        if(match):
+            pattern_remove = r'only\sindustry[A-Za-z,&;\s]*is\s'
+            new_str = re.sub(pattern_remove, '',match.group(0))
+            if(new_str):
+                decrease_arr.append(new_str)
+
+    df_rankings = pd.DataFrame()
+
+    #Add Rankings columns to df
+    ranking = len(increase_arr)
+    index = 0
+    for industry in increase_arr:
+        df_rankings[industry.lstrip()] = [ranking - index]      
+        index += 1
+
+    ranking = len(decrease_arr)
+    index = 0
+    for industry in decrease_arr:
+        df_rankings[industry.lstrip()] = [0 - (ranking - index)]      
+        index += 1
+
+    if(len(df_rankings.columns) < 18):
+        df_columns_18_industries = ['Machinery','Computer & Electronic Products','Paper Products','Apparel, Leather & Allied Products','Printing & Related Support Activities',
+                            'Primary Metals','Nonmetallic Mineral Products','Petroleum & Coal Products','Plastics & Rubber Products','Miscellaneous Manufacturing',
+                            'Food, Beverage & Tobacco Products','Furniture & Related Products','Transportation Equipment','Chemical Products','Fabricated Metal Products',
+                            'Electrical Equipment, Appliances & Components','Textile Mills','Wood Products']
+
+        #Find out what columns are missing
+        missing_columns = _util_check_diff_list(df_columns_18_industries,df_rankings.columns)
+        
+        #Add missing columns to df_ranking with zero as the rank number
+        for col in missing_columns:
+            df_rankings[col] = [0]
+
+    #Add DATE column to df
+    df_rankings["DATE"] = [ism_date]
+
+    # Reorder Columns
+    # get a list of columns
+    cols = list(df_rankings)
+    # move the column to head of list using index, pop and insert
+    cols.insert(0, cols.pop(cols.index('DATE')))
+    cols.insert(1, cols.pop(cols.index('Apparel, Leather & Allied Products')))
+    cols.insert(2, cols.pop(cols.index('Machinery')))
+    cols.insert(3, cols.pop(cols.index('Paper Products')))
+    cols.insert(4, cols.pop(cols.index('Computer & Electronic Products')))
+    cols.insert(5, cols.pop(cols.index('Petroleum & Coal Products')))
+    cols.insert(6, cols.pop(cols.index('Primary Metals')))
+    cols.insert(7, cols.pop(cols.index('Printing & Related Support Activities')))
+    cols.insert(8, cols.pop(cols.index('Furniture & Related Products')))
+    cols.insert(9, cols.pop(cols.index('Transportation Equipment')))
+    cols.insert(10, cols.pop(cols.index('Chemical Products')))
+    cols.insert(11, cols.pop(cols.index('Food, Beverage & Tobacco Products')))
+    cols.insert(12, cols.pop(cols.index('Miscellaneous Manufacturing')))
+    cols.insert(13, cols.pop(cols.index('Electrical Equipment, Appliances & Components')))
+    cols.insert(14, cols.pop(cols.index('Plastics & Rubber Products')))
+    cols.insert(15, cols.pop(cols.index('Fabricated Metal Products')))
+    cols.insert(16, cols.pop(cols.index('Wood Products')))
+    cols.insert(17, cols.pop(cols.index('Textile Mills')))
+    cols.insert(18, cols.pop(cols.index('Nonmetallic Mineral Products')))
+
+    # reorder
+    df_rankings = df_rankings[cols]
+
+    return df_rankings
+
+
+def scrape_ism_manufacturing_headline_index(ism_date, ism_month):
+
+  #url_ism = get_ism_manufacturing_url(ism_month)
+  url_ism = 'https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/pmi/%s' % (ism_month.lower(),)
+
+  page = get_page(url_ism)
+
+  soup = BeautifulSoup(page.content, 'html.parser')
+
+  #Get all html tables on the page
+  tables = soup.find_all('table')    
+  table_at_a_glance = tables[0]
+  
+  #Convert the tables into dataframes so that we can read the data
+  df_at_a_glance = convert_html_table_to_df(table_at_a_glance, True)
+
+  #Drop Unnecessary Columns
+  column_numbers = [x for x in range(df_at_a_glance.shape[1])]  # list of columns' integer indices
+  column_numbers .remove(2) #removing column integer index 0
+  column_numbers .remove(3)
+  column_numbers .remove(4)
+  column_numbers .remove(5)
+  column_numbers .remove(6)
+  df_at_a_glance = df_at_a_glance.iloc[:, column_numbers] #return all columns except the 0th column
+
+  #Flip df around
+  df_at_a_glance = df_at_a_glance.T
+
+  #Rename Columns
+  df_at_a_glance = df_at_a_glance.rename(columns={0: "ISM", 1:"NEW_ORDERS",2:"PRODUCTION",3:"EMPLOYMENT",4:"DELIVERIES",
+                                                  5:"INVENTORIES",6:"CUSTOMERS_INVENTORIES",7:"PRICES",8:"BACKLOG_OF_ORDERS",9:"EXPORTS",10:"IMPORTS"})
+
+  #Drop the first row because it contains the old column names
+  df_at_a_glance = df_at_a_glance.iloc[1: , :]
+  df_at_a_glance = df_at_a_glance.reset_index()
+  df_at_a_glance = df_at_a_glance.drop(columns='index', axis=1)
+
+  #Fix datatypes of df_at_a_glance
+  for column in df_at_a_glance:
+      df_at_a_glance[column] = pd.to_numeric(df_at_a_glance[column])
+
+  #Add DATE column to df
+  df_at_a_glance["DATE"] = [ism_date]
+
+  # Reorder Columns
+  # get a list of columns
+  cols = list(df_at_a_glance)
+  cols.insert(0, cols.pop(cols.index('DATE')))
+  cols.insert(1, cols.pop(cols.index('NEW_ORDERS')))
+  cols.insert(2, cols.pop(cols.index('IMPORTS')))
+  cols.insert(3, cols.pop(cols.index('BACKLOG_OF_ORDERS')))
+  cols.insert(4, cols.pop(cols.index('PRICES')))
+  cols.insert(5, cols.pop(cols.index('PRODUCTION')))
+  cols.insert(6, cols.pop(cols.index('CUSTOMERS_INVENTORIES')))
+  cols.insert(7, cols.pop(cols.index('INVENTORIES')))
+  cols.insert(8, cols.pop(cols.index('DELIVERIES')))
+  cols.insert(9, cols.pop(cols.index('EMPLOYMENT')))
+  cols.insert(10, cols.pop(cols.index('EXPORTS')))
+  cols.insert(11, cols.pop(cols.index('ISM')))
+
+  # reorder
+  df_at_a_glance = df_at_a_glance[cols]
+
+  return df_at_a_glance
+
+def get_ism_date(delta):
+  #get date range
+  todays_date = date.today()
+
+  #use todays date to get ism month (first day of last month) and use the date in scraping functions
+  ism_date = todays_date - relativedelta(months=delta)
+  ism_date = "01-%s-%s" % (ism_date.month, ism_date.year) #make the ism date the first day of ism month
+  ism_date = dt.strptime(ism_date, "%d-%m-%Y")
+  ism_month = ism_date.strftime("%B")
+
+  return ism_date, ism_month
+
+
+#def get_ism_manufacturing_url(ism_month):
+#  url_ism = 'https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/pmi/%s' % (ism_month.lower(),)
+
+#  return url_ism
+
+
+
+
+##########################################
+
+def temp_load_excel_data_to_db(excel_file_path, sheet_name, database_table,rename_cols=None, conflict_cols=False):
+  
+  # Load original data from excel file into original df
+  df_original = convert_excelsheet_to_dataframe(excel_file_path, sheet_name, False)
+  #TODO: Need to write this data into the database
+  #import pdb; pdb.set_trace()
+  add_col_values = {}
+  success = sql_write_df_to_db(df_original, database_table, rename_cols, add_col_values, conflict_cols)
 
 def convert_excelsheet_to_dataframe(excel_file_path,sheet_name,date_exists=False, index_col=None, date_format='%d/%m/%Y'):
 
@@ -2397,13 +2652,4 @@ def convert_excelsheet_to_dataframe(excel_file_path,sheet_name,date_exists=False
     df['DATE'] = pd.to_datetime(df['DATE'],format=date_format)
 
   return df
-
-def temp_load_excel_data_to_db(excel_file_path, sheet_name, database_table,rename_cols=None, conflict_cols=False):
-  
-  # Load original data from excel file into original df
-  df_original = convert_excelsheet_to_dataframe(excel_file_path, sheet_name, False)
-  #TODO: Need to write this data into the database
-  #import pdb; pdb.set_trace()
-  add_col_values = {}
-  success = sql_write_df_to_db(df_original, database_table, rename_cols, add_col_values, conflict_cols)
 

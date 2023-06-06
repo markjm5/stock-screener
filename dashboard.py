@@ -17,14 +17,14 @@ from datetime import datetime as dt
 from common import set_finwiz_stock_data, set_stockrow_stock_data, set_zacks_balance_sheet_shares
 from common import set_zacks_peer_comparison, set_zacks_earnings_surprises, set_zacks_product_line_geography
 from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
-from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager,to_excel
+from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager,atr_to_excel
 from common import set_earningswhispers_earnings_calendar, get_atr_prices
 from common import set_marketscreener_economic_calendar, get_peer_details
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql_get_volume
 from common import set_price_action_ta, set_todays_insider_trades, combine_df_on_index
 from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
-from common import set_stlouisfed_data, temp_load_excel_data_to_db
+from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing
 import seaborn as sns
 
 debug = False
@@ -272,7 +272,7 @@ if option == 'Download Data':
         st.write(f'{start_time} - Downloading Macroeconomic Data...')
         #success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
         #TODO: Update ISM Manufacturing
-
+        success = set_ism_manufacturing()
 
         #TODO: Use the following code to load data from other excel files into the database
         #sheet_name = 'DB Details'
@@ -649,7 +649,7 @@ if option == 'ATR Calculator':
             filename = f'ATR_{symbol1}_{symbol2}_{file_date}.xlsx'
 
             #TODO: Write to excel file with multiple tabs - Price Action, ATR Daily, ATR Monthly, ATR Quarterly
-            df_xlsx = to_excel(df_ordered,
+            df_xlsx = atr_to_excel(df_ordered,
                                df_symbol1_sorted_daily_atr,
                                df_symbol1_sorted_monthly_atr,
                                df_symbol1_sorted_quarterly_atr,
