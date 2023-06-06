@@ -2379,6 +2379,7 @@ def atr_to_excel(df_price_action, df_ticker1_daily, df_ticker1_monthly, df_ticke
 
 def set_ism_manufacturing(logger):
   success = False
+  logger.info("Getting ISM Manufacturing")
   para_manufacturing, para_new_orders, para_production, ism_date, ism_month = scrape_ism_manufacturing_data_from_page()        
 
   # We have scraped the important data from the ism manufacturing website. Now we need to extract the rankings
@@ -2387,10 +2388,45 @@ def set_ism_manufacturing(logger):
   df_production_rankings = extract_ism_manufacturing_rankings(para_production, ism_date)
   df_ism_headline_index = extract_ism_manufacturing_headline_index(ism_date, ism_month)
 
-  import pdb; pdb.set_trace()
   #TODO: Write to database
+  rename_cols = {
+    'DATE':'ism_date',                                          
+    'Apparel, Leather & Allied Products':'apparel_leather_allied_products',                      
+    'Chemical Products':'chemical_products',                                 
+    'Computer & Electronic Products':'computer_electronic_products',                           
+    'Electrical Equipment, Appliances & Components':'electrical_equipment_appliances_components',             
+    'Fabricated Metal Products':'fabricated_metal_products',                                 
+    'Food, Beverage & Tobacco Products':'food_beverage_tobacco_products',                        
+    'Furniture & Related Products':'furniture_related_products',                             
+    'Machinery':'machinery',                                               
+    'Miscellaneous Manufacturing':'miscellaneous_manufacturing',                              
+    'Nonmetallic Mineral Products':'nonmetallic_mineral_products',                              
+    'Paper Products':'paper_products',                                            
+    'Petroleum & Coal Products':'petroleum_coal_products',                                 
+    'Plastics & Rubber Products':'plastics_rubber_products',                                
+    'Primary Metals':'primary_metals',                                            
+    'Printing & Related Support Activities':'printing_related_support_activities',                     
+    'Textile Mills':'textile_mills',                                            
+    'Transportation Equipment':'transportation_equipment',                                  
+    'Wood Products':'wood_products'  
+  }
+  add_col_values = None
+  conflict_cols = 'ism_date'
 
-  success = True
+  success = sql_write_df_to_db(df_manufacturing_rankings, "macro_us_ism_manufacturing_sectors", rename_cols, add_col_values, conflict_cols)
+  success = sql_write_df_to_db(df_new_orders_rankings, "macro_us_ism_manufacturing_new_orders", rename_cols, add_col_values, conflict_cols)
+  success = sql_write_df_to_db(df_production_rankings, "macro_us_ism_manufacturing_production", rename_cols, add_col_values, conflict_cols)
+
+  import pdb; pdb.set_trace()
+
+  rename_cols = {'Date':'dt','Time':'dt_time','Ticker':'ticker','Company Name':'company_name','Market Cap (Mil)':'market_cap_mil'}
+  add_col_values = None
+  conflict_cols = None
+  success = sql_write_df_to_db(df_ism_headline_index, "macro_us_ism_manufacturing_headline", rename_cols, add_col_values, conflict_cols)
+
+
+
+  logger.info("Successfully retrieved ISM Manufacturing")
 
   return success
 
