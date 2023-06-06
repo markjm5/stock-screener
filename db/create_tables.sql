@@ -343,13 +343,91 @@ CREATE TABLE IF NOT EXISTS macro_us_ism_manufacturing_headline (
     EMPLOYMENT NUMERIC, 
     EXPORTS NUMERIC, 
     ISM NUMERIC, 
-    SP500 NUMERIC, 
-    GDPC1 NUMERIC, 
-    GDPQoQ NUMERIC, 
-    GDPYoY NUMERIC, 
-    GDPQoQ_ANNUALIZED NUMERIC, 
-    GDPC1_QoQ NUMERIC, 
-    GDPC1_QoQ_ANNUALIZED NUMERIC, 
-    GDPC1_YoY NUMERIC, 
+    PRIMARY KEY (ism_date)
+);
+
+CREATE TABLE IF NOT EXISTS macro_us_ism_services_sectors (
+    ism_date DATE NOT NULL,
+    arts_entertainment_recreation INTEGER,
+    other_services INTEGER,
+    health_care_social_assistance INTEGER,
+    accommodation_food_services INTEGER,
+    finance_insurance INTEGER,
+    real_estate_rental_leasing INTEGER,
+    transportation_warehousing INTEGER,
+    mining INTEGER,
+    construction INTEGER,
+    wholesale_trade INTEGER,
+    public_administration INTEGER,
+    professional_scientific_technical_services INTEGER,
+    agriculture_forestry_fishing_hunting INTEGER,
+    information INTEGER,
+    educational_services INTEGER,
+    management_of_companies_support_services INTEGER,
+    retail_trade INTEGER,
+    utilities INTEGER,
+    PRIMARY KEY (ism_date)
+);
+
+CREATE TABLE IF NOT EXISTS macro_us_ism_services_business_activity (
+    ism_date DATE NOT NULL,
+    arts_entertainment_recreation INTEGER,
+    other_services INTEGER,
+    health_care_social_assistance INTEGER,
+    accommodation_food_services INTEGER,
+    finance_insurance INTEGER,
+    real_estate_rental_leasing INTEGER,
+    transportation_warehousing INTEGER,
+    mining INTEGER,
+    construction INTEGER,
+    wholesale_trade INTEGER,
+    public_administration INTEGER,
+    professional_scientific_technical_services INTEGER,
+    agriculture_forestry_fishing_hunting INTEGER,
+    information INTEGER,
+    educational_services INTEGER,
+    management_of_companies_support_services INTEGER,
+    retail_trade INTEGER,
+    utilities INTEGER,
+    PRIMARY KEY (ism_date)
+);
+
+CREATE TABLE IF NOT EXISTS macro_us_ism_services_new_orders (
+    ism_date DATE NOT NULL,
+    arts_entertainment_recreation INTEGER,
+    other_services INTEGER,
+    health_care_social_assistance INTEGER,
+    accommodation_food_services INTEGER,
+    finance_insurance INTEGER,
+    real_estate_rental_leasing INTEGER,
+    transportation_warehousing INTEGER,
+    mining INTEGER,
+    construction INTEGER,
+    wholesale_trade INTEGER,
+    public_administration INTEGER,
+    professional_scientific_technical_services INTEGER,
+    agriculture_forestry_fishing_hunting INTEGER,
+    information INTEGER,
+    educational_services INTEGER,
+    management_of_companies_support_services INTEGER,
+    retail_trade INTEGER,
+    utilities INTEGER,
+    PRIMARY KEY (ism_date)
+);
+
+
+CREATE TABLE IF NOT EXISTS macro_us_ism_services_headline (
+    ism_date  DATE NOT NULL,
+    NEW_ORDERS NUMERIC,                    
+    IMPORTS NUMERIC,                       
+    BACKLOG_OF_ORDERS NUMERIC,             
+    PRICES NUMERIC,                        
+    BUSINESS_ACTIVITY NUMERIC,             
+    INVENTORY_SENTIMENT NUMERIC,           
+    INVENTORIES NUMERIC,                   
+    DELIVERIES NUMERIC,                    
+    EMPLOYMENT NUMERIC,                    
+    EXPORTS NUMERIC,                       
+    ISM NUMERIC,
     PRIMARY KEY (ism_date)
 );

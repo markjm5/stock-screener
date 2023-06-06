@@ -24,7 +24,7 @@ from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql
 from common import set_price_action_ta, set_todays_insider_trades, combine_df_on_index
 from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
-from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing
+from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
 import seaborn as sns
 
 debug = False
@@ -270,19 +270,44 @@ if option == 'Download Data':
         start_time = now_start.strftime("%H:%M:%S")    
 
         st.write(f'{start_time} - Downloading Macroeconomic Data...')
+
+        # Update all St Louis FED Data
         success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
 
         # Update ISM Manufacturing
         success = set_ism_manufacturing(logger)
 
+        # Update ISM Services
+        success = set_ism_services(logger)
+
         #TODO: Use the following code to load data from other excel files into the database
-        #sheet_name = 'DB Details'
-        #excel_file_path = '/data/temp_macro_data/03_Leading_Indicators/016_Leading_Indicator_US_ISM_Manufacturing.xlsm'
+        #sheet_name = 'DB Services ISM'
+
+        #excel_file_path = '/data/temp_macro_data/03_Leading_Indicators/017_Leading_Indicator_US_ISM_Services.xlsm'
         #rename_cols = {
-        #    'DATE':'ism_date'
+        #    'DATE':'ism_date',
+        #    'Arts, Entertainment & Recreation':'arts_entertainment_recreation',
+        #    'Other Services':'other_services',
+        #    'Health Care & Social Assistance':'health_care_social_assistance',
+        #    'Accommodation & Food Services':'accommodation_food_services',
+        #    'Finance & Insurance':'finance_insurance',
+        #    'Real Estate, Rental & Leasing':'real_estate_rental_leasing',
+        #    'Transportation & Warehousing':'transportation_warehousing',
+        #    'Mining':'mining',
+        #    'Construction':'construction',
+        #    'Wholesale Trade':'wholesale_trade',
+        #    'Public Administration':'public_administration',
+        #    'Professional, Scientific & Technical Services':'professional_scientific_technical_services',
+        #    'Agriculture, Forestry, Fishing & Hunting':'agriculture_forestry_fishing_hunting',
+        #    'Information':'information',
+        #    'Educational Services':'educational_services',
+        #    'Management of Companies & Support Services':'management_of_companies_support_services',
+        #    'Retail Trade':'retail_trade',
+        #    'Utilities':'utilities',
         #}
+
         #conflict_cols = "ism_date"
-        #database_table = 'macro_us_ism_manufacturing_headline'
+        #database_table = 'macro_us_ism_services_headline'
         #success = temp_load_excel_data_to_db(excel_file_path, sheet_name, database_table, rename_cols=rename_cols, conflict_cols=conflict_cols)
 
         now_finish = dt.now()
