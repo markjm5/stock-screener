@@ -272,7 +272,7 @@ if option == 'Download Data':
         st.write(f'{start_time} - Downloading Macroeconomic Data...')
         #success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
         #TODO: Update ISM Manufacturing
-        success = set_ism_manufacturing()
+        success = set_ism_manufacturing(logger)
 
         #TODO: Use the following code to load data from other excel files into the database
         #sheet_name = 'DB Details'

@@ -2377,18 +2377,22 @@ def atr_to_excel(df_price_action, df_ticker1_daily, df_ticker1_monthly, df_ticke
   processed_data = output.getvalue()
   return processed_data
 
-def set_ism_manufacturing():
+def set_ism_manufacturing(logger):
+  success = False
   para_manufacturing, para_new_orders, para_production, ism_date, ism_month = scrape_ism_manufacturing_data_from_page()        
 
   # We have scraped the important data from the ism manufacturing website. Now we need to extract the rankings
-  df_manufacturing_rankings = extract_rankings(para_manufacturing, ism_date)
-  df_new_orders_rankings = extract_rankings(para_new_orders, ism_date)
-  df_production_rankings = extract_rankings(para_production, ism_date)
-  df_ism_headline_index = scrape_ism_manufacturing_headline_index(ism_date, ism_month)
+  df_manufacturing_rankings = extract_ism_manufacturing_rankings(para_manufacturing, ism_date)
+  df_new_orders_rankings = extract_ism_manufacturing_rankings(para_new_orders, ism_date)
+  df_production_rankings = extract_ism_manufacturing_rankings(para_production, ism_date)
+  df_ism_headline_index = extract_ism_manufacturing_headline_index(ism_date, ism_month)
 
   import pdb; pdb.set_trace()
   #TODO: Write to database
 
+  success = True
+
+  return success
 
 def scrape_ism_manufacturing_data_from_page():
 
@@ -2446,7 +2450,7 @@ def get_ism_manufacturing_page():
   return ism_date, ism_month, page
 
 
-def extract_rankings(industry_str, ism_date):
+def extract_ism_manufacturing_rankings(industry_str, ism_date):
 
     #ism_date, ism_month, page = get_ism_manufacturing_content()
 
@@ -2535,8 +2539,7 @@ def extract_rankings(industry_str, ism_date):
 
     return df_rankings
 
-
-def scrape_ism_manufacturing_headline_index(ism_date, ism_month):
+def extract_ism_manufacturing_headline_index(ism_date, ism_month):
 
   #url_ism = get_ism_manufacturing_url(ism_month)
   url_ism = 'https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/pmi/%s' % (ism_month.lower(),)
@@ -2612,14 +2615,6 @@ def get_ism_date(delta):
   ism_month = ism_date.strftime("%B")
 
   return ism_date, ism_month
-
-
-#def get_ism_manufacturing_url(ism_month):
-#  url_ism = 'https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/pmi/%s' % (ism_month.lower(),)
-
-#  return url_ism
-
-
 
 
 ##########################################
