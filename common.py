@@ -2398,39 +2398,12 @@ def convert_excelsheet_to_dataframe(excel_file_path,sheet_name,date_exists=False
 
   return df
 
-def temp_load_excel_data_to_db():
+def temp_load_excel_data_to_db(excel_file_path, sheet_name, database_table,rename_cols=None, conflict_cols=False):
   
-  sheet_name = 'DB Manufacturing ISM'  
-  excel_file_path = '/data/temp_macro_data/03_Leading_Indicators/016_Leading_Indicator_US_ISM_Manufacturing.xlsm'
-
   # Load original data from excel file into original df
   df_original = convert_excelsheet_to_dataframe(excel_file_path, sheet_name, False)
   #TODO: Need to write this data into the database
-
-  #TODO: ISM New Orders, ISM Production, ISM Headline
-
-  rename_cols = {
-    'DATE':'ism_date',                                             
-    'Apparel, Leather & Allied Products':'apparel_leather_allied_products',                        
-    'Chemical Products':'chemical_products',                                         
-    'Computer & Electronic Products':'computer_electronic_products',                            
-    'Electrical Equipment, Appliances & Components':'electrical_equipment_appliances_components',             
-    'Fabricated Metal Products':'fabricated_metal_products',                                 
-    'Food, Beverage & Tobacco Products':'food_beverage_tobacco_products',                         
-    'Furniture & Related Products':'furniture_related_products',                              
-    'Machinery':'machinery',                                                 
-    'Miscellaneous Manufacturing':'miscellaneous_manufacturing',                               
-    'Nonmetallic Mineral Products':'nonmetallic_mineral_products',                              
-    'Paper Products':'paper_products',                                            
-    'Petroleum & Coal Products':'petroleum_coal_products',                                 
-    'Plastics & Rubber Products':'plastics_rubber_products',                                
-    'Primary Metals':'primary_metals',                                            
-    'Printing & Related Support Activities':'printing_related_support_activities',                     
-    'Textile Mills':'textile_mills',                                             
-    'Transportation Equipment':'transportation_equipment',                                  
-    'Wood Products':'wood_products'                              
-  }
+  #import pdb; pdb.set_trace()
   add_col_values = {}
-  conflict_cols = "ism_date"
-  success = sql_write_df_to_db(df_original, "macro_us_ism_manufacturing_sectors", rename_cols, add_col_values, conflict_cols)
+  success = sql_write_df_to_db(df_original, database_table, rename_cols, add_col_values, conflict_cols)
 

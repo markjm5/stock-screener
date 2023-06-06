@@ -271,8 +271,18 @@ if option == 'Download Data':
 
         st.write(f'{start_time} - Downloading Macroeconomic Data...')
         #success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
+        #TODO: Update ISM Manufacturing
 
-        success = temp_load_excel_data_to_db()
+
+        #TODO: Use the following code to load data from other excel files into the database
+        #sheet_name = 'DB Details'
+        #excel_file_path = '/data/temp_macro_data/03_Leading_Indicators/016_Leading_Indicator_US_ISM_Manufacturing.xlsm'
+        #rename_cols = {
+        #    'DATE':'ism_date'
+        #}
+        #conflict_cols = "ism_date"
+        #database_table = 'macro_us_ism_manufacturing_headline'
+        #success = temp_load_excel_data_to_db(excel_file_path, sheet_name, database_table, rename_cols=rename_cols, conflict_cols=conflict_cols)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
