@@ -2417,14 +2417,12 @@ def set_ism_manufacturing(logger):
   success = sql_write_df_to_db(df_new_orders_rankings, "macro_us_ism_manufacturing_new_orders", rename_cols, add_col_values, conflict_cols)
   success = sql_write_df_to_db(df_production_rankings, "macro_us_ism_manufacturing_production", rename_cols, add_col_values, conflict_cols)
 
-  import pdb; pdb.set_trace()
-
-  rename_cols = {'Date':'dt','Time':'dt_time','Ticker':'ticker','Company Name':'company_name','Market Cap (Mil)':'market_cap_mil'}
+  rename_cols = {
+      'DATE':'ism_date'
+  }
   add_col_values = None
-  conflict_cols = None
+  conflict_cols = "ism_date"
   success = sql_write_df_to_db(df_ism_headline_index, "macro_us_ism_manufacturing_headline", rename_cols, add_col_values, conflict_cols)
-
-
 
   logger.info("Successfully retrieved ISM Manufacturing")
 
