@@ -7,6 +7,8 @@ import tweepy
 import config 
 import psycopg2, psycopg2.extras
 import plotly.graph_objects as go
+from matplotlib import pyplot as plt
+import seaborn as sns
 import glob
 import os
 import json
@@ -382,6 +384,49 @@ if option == 'Calendar':
 if option == 'Macroeconomic Data':
     st.subheader(f'Macro Economic Data')
 
+    #TODO: Learn about plotting and graphing in python - https://www.youtube.com/watch?v=6GUZXDef2U0&t=2712s
+    #TODO: Learn about different tabular ways to represent data in python, including colour gradient (ie. seaborne?)
+
+    crash_df = sns.load_dataset('car_crashes')
+
+    #fig, ax = plt.subplots()
+    #ax.hist(arr, bins=20)
+    #st.pyplot(fig)
+
+
+    fig, (ax_hist, ax_dis) = plt.subplots(
+        nrows=1,
+        ncols=2,
+        figsize=(6,4)
+    )
+    ax_hist.hist(crash_df["not_distracted"], bins=20)
+    ax_dis.hist(crash_df["not_distracted"], bins=20)
+    st.pyplot(fig)
+
+
+    #fig, (ax_hist, ax_kde) = plt.subplots(
+    #    nrows=1,
+    #    ncols=2,
+    #    figsize=(6,4)
+    #)
+
+    #sns.histplot(
+    #    data=penguins, x="fliper_length_mm", hue="species", multiple="stack", ax="ax_hist"
+    #)
+
+    #sns.kdeplot(
+    #    data=penguins, x="fliper_length_mm", hue="species", multiple="stack", ax="ax_kde"
+    #)
+
+    #ax_hist.set_title("Hello Penguins!")
+    #ax_kde.set_title("Hello again!")
+    #ax_kde.grid(True)
+
+    #fig.set_tight_layout(True) # to prevent axis labels overlapping
+    #st.pyplot(fig)
+
+
+    #TODO: Sample Code for gradient
     #cols_gradient = ['common_stock_par', 'retained_earnings']
     #cols_rename = {"dt": "Date"}
     #cols_format = {'retained_earnings': '${0:,.2f}','other_equity': '${0:,.2f}','book_value_per_share': '${0:,.2f}', 'Date': "{:%B %Y}"}
