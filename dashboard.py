@@ -383,16 +383,24 @@ if option == 'Calendar':
 
 if option == 'Macroeconomic Data':
     st.subheader(f'Macro Economic Data')
+    option_indicator_type = st.sidebar.selectbox("Indicator Type", ('Lagging Indicator','Interest Rates/FX','Leading Indicator'), 0)
+
+    if option_indicator_type == 'Lagging Indicator':
+        option_lagging_indicator_charts = st.sidebar.selectbox("Charts", ('002 - US GDP','005 - US Job Market','006 - PCE','007 - US Inflation','009 - US Industrial Production','011 - US Durable Goods', '011 - US Retail Sales'), 0)
+        pass
+
+    if option_indicator_type == 'Interest Rates/FX':
+        option_interest_rates_fx_charts = st.sidebar.selectbox("Charts", ('012 - Central Banks','014 - Money Supply'), 0)
+        pass
+
+    if option_indicator_type == 'Leading Indicator':
+        option_leading_indicator_charts = st.sidebar.selectbox("Charts", ('016 - US ISM Manufacturing','017 - US ISM Services'), 0)
+        pass
 
     #TODO: Learn about plotting and graphing in python - https://www.youtube.com/watch?v=6GUZXDef2U0&t=2712s
     #TODO: Learn about different tabular ways to represent data in python, including colour gradient (ie. seaborne?)
-
+    #TODO: Learn how to create "tabs" to show different types of charts on a single page
     crash_df = sns.load_dataset('car_crashes')
-
-    #fig, ax = plt.subplots()
-    #ax.hist(arr, bins=20)
-    #st.pyplot(fig)
-
 
     fig, (ax_hist, ax_dis) = plt.subplots(
         nrows=1,
@@ -401,48 +409,8 @@ if option == 'Macroeconomic Data':
     )
     ax_hist.hist(crash_df["not_distracted"], bins=20)
     ax_dis.hist(crash_df["not_distracted"], bins=20)
+
     st.pyplot(fig)
-
-
-    #fig, (ax_hist, ax_kde) = plt.subplots(
-    #    nrows=1,
-    #    ncols=2,
-    #    figsize=(6,4)
-    #)
-
-    #sns.histplot(
-    #    data=penguins, x="fliper_length_mm", hue="species", multiple="stack", ax="ax_hist"
-    #)
-
-    #sns.kdeplot(
-    #    data=penguins, x="fliper_length_mm", hue="species", multiple="stack", ax="ax_kde"
-    #)
-
-    #ax_hist.set_title("Hello Penguins!")
-    #ax_kde.set_title("Hello again!")
-    #ax_kde.grid(True)
-
-    #fig.set_tight_layout(True) # to prevent axis labels overlapping
-    #st.pyplot(fig)
-
-
-    #TODO: Sample Code for gradient
-    #cols_gradient = ['common_stock_par', 'retained_earnings']
-    #cols_rename = {"dt": "Date"}
-    #cols_format = {'retained_earnings': '${0:,.2f}','other_equity': '${0:,.2f}','book_value_per_share': '${0:,.2f}', 'Date': "{:%B %Y}"}
-    #cols_drop = ['cid']
-
-    #if(len(df_zacks_balance_sheet_shares) > 0):
-    #   df = style_df_for_display(df_zacks_balance_sheet_shares, cols_gradient, cols_rename, cols_format, cols_drop)
-    #   st.dataframe(df, use_container_width=True)
-
-    #st.markdown("YF Key Stats")
-    #st.dataframe(df_yf_key_stats)
-
-
-    #st.markdown("Finwiz Ratios")
-    #st.dataframe(df_finwiz_stock_data)
-
 
 if option == 'Single Stock One Pager':
     st.write("Get 1 page quantitative data for a Company")
