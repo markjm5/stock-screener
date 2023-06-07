@@ -380,7 +380,6 @@ if option == 'Calendar':
     style_t4 = format_df_for_dashboard(df4, sort_cols, drop_cols, rename_cols, number_format_cols)
     st.write(style_t4)
 
-
 if option == 'Macroeconomic Data':
     #st.subheader(f'Macro Economic Data')
     option_indicator_type = st.sidebar.selectbox("Indicator Type", ('Lagging Indicator','Interest Rates/FX','Leading Indicator'), 0)
