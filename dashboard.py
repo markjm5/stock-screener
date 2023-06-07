@@ -382,35 +382,61 @@ if option == 'Calendar':
 
 
 if option == 'Macroeconomic Data':
-    st.subheader(f'Macro Economic Data')
+    #st.subheader(f'Macro Economic Data')
     option_indicator_type = st.sidebar.selectbox("Indicator Type", ('Lagging Indicator','Interest Rates/FX','Leading Indicator'), 0)
 
     if option_indicator_type == 'Lagging Indicator':
+        st.subheader(f'Lagging Indicators')
+
         option_lagging_indicator_charts = st.sidebar.selectbox("Charts", ('002 - US GDP','005 - US Job Market','006 - PCE','007 - US Inflation','009 - US Industrial Production','011 - US Durable Goods', '011 - US Retail Sales'), 0)
-        pass
+        if option_lagging_indicator_charts == '002 - US GDP':    
+            tab1, tab2 = st.tabs(["📈 Chart", "🗃 Data"])
+            crash_df = sns.load_dataset('car_crashes')
+
+            tab1.subheader("A tab with a chart")
+            #tab1.line_chart(crash_df)
+
+            tab2.subheader("A tab with the data")
+            #tab2.write(crash_df)
+
+            fig, (ax_hist, ax_dis) = plt.subplots(
+                nrows=1,
+                ncols=2,
+                figsize=(6,4)
+            )
+            ax_hist.hist(crash_df["not_distracted"], bins=20)
+            ax_dis.hist(crash_df["not_distracted"], bins=20)
+            tab1.pyplot(fig)
+
+
+        if option_lagging_indicator_charts == '005 - US Job Market':    
+            pass
+        if option_lagging_indicator_charts == '006 - PCE':
+            pass
+        if option_lagging_indicator_charts == '007 - US Inflation':
+            pass
+        if option_lagging_indicator_charts == '009 - US Industrial Production':
+            pass
+        if option_lagging_indicator_charts == '011 - US Durable Goods':
+            pass
+        if option_lagging_indicator_charts == '011 - US Retail Sales':
+            pass
 
     if option_indicator_type == 'Interest Rates/FX':
+        st.subheader(f'Interest Rates/FX')
+
         option_interest_rates_fx_charts = st.sidebar.selectbox("Charts", ('012 - Central Banks','014 - Money Supply'), 0)
         pass
 
     if option_indicator_type == 'Leading Indicator':
+        st.subheader(f'Leading Indicators')
+
         option_leading_indicator_charts = st.sidebar.selectbox("Charts", ('016 - US ISM Manufacturing','017 - US ISM Services'), 0)
         pass
 
     #TODO: Learn about plotting and graphing in python - https://www.youtube.com/watch?v=6GUZXDef2U0&t=2712s
     #TODO: Learn about different tabular ways to represent data in python, including colour gradient (ie. seaborne?)
     #TODO: Learn how to create "tabs" to show different types of charts on a single page
-    crash_df = sns.load_dataset('car_crashes')
-
-    fig, (ax_hist, ax_dis) = plt.subplots(
-        nrows=1,
-        ncols=2,
-        figsize=(6,4)
-    )
-    ax_hist.hist(crash_df["not_distracted"], bins=20)
-    ax_dis.hist(crash_df["not_distracted"], bins=20)
-
-    st.pyplot(fig)
 
 if option == 'Single Stock One Pager':
     st.write("Get 1 page quantitative data for a Company")
