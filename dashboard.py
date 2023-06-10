@@ -277,10 +277,14 @@ if option == 'Download Data':
         success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
 
         # Update ISM Manufacturing
-        success = set_ism_manufacturing(logger)
+        #success = set_ism_manufacturing(logger)
 
         # Update ISM Services
-        success = set_ism_services(logger)
+        #success = set_ism_services(logger)
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            e1p1 = executor.submit(set_stlouisfed_data, config.STLOUISFED_SERIES, logger)
+            e1p2 = executor.submit(set_ism_manufacturing, logger)
+            e1p3 = executor.submit(set_ism_services, logger)
 
         #TODO: Use the following code to load data from other excel files into the database
         #sheet_name = 'DB Services ISM'
@@ -325,6 +329,10 @@ if option == 'Download Data':
         logger.info(f"Start Time: {start_time}")
         logger.info(f"Start Time: {finish_time}")
         logger.info(f"Total Time: {total_time}")
+
+        handle_exceptions_print_result(e1p1, 1, 1, logger)
+        handle_exceptions_print_result(e1p2, 1, 2, logger)
+        handle_exceptions_print_result(e1p3, 1, 3, logger)
 
 if option == 'Calendar':
     #st.subheader(f'Calendar')
