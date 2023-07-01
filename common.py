@@ -1644,7 +1644,7 @@ def get_peer_details(df):
 
   return df_competitor_metrics
 
-def get_stlouisfed_data(series, period):
+def get_stlouisfed_data(series, period, num_years):
 
   df = get_data(table="macro_stlouisfed")
   df['series_date'] = pd.to_datetime(df['series_date'],format='%Y-%m-%d')
@@ -1667,7 +1667,7 @@ def get_stlouisfed_data(series, period):
 
   # Get the most recent data (ie. last 5 years)
   todays_date = date.today()
-  start_date = todays_date - relativedelta(years=5)
+  start_date = todays_date - relativedelta(years=num_years)
   date_str_start = "%s-%s-%s" % (start_date.year, start_date.month, start_date.day)
 
   df_recent = df_all.loc[(df_all['DATE'] >= date_str_start)].reset_index(drop=True)            

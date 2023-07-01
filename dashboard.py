@@ -398,28 +398,34 @@ if option == 'Macroeconomic Data':
 
         option_lagging_indicator_charts = st.sidebar.selectbox("Charts", ('002 - US GDP','005 - US Job Market','006 - PCE','007 - US Inflation','009 - US Industrial Production','011 - US Durable Goods', '011 - US Retail Sales'), 0)
         if option_lagging_indicator_charts == '002 - US GDP':    
-            tab1, tab2 = st.tabs(["📈 Chart", "🗃 Data"])
+            # gdpc1
 
-            df_us_gdp_all, df_us_gdp_recent = get_stlouisfed_data('gdpc1', 'Q')
+            tab1, tab2 = st.tabs(["📈 Overall GDP", "🗃 Data"])
 
-            tab1.subheader("A tab with a chart")
+            df_us_gdp_all, df_us_gdp_recent = get_stlouisfed_data('gdpc1', 'Q', 10)
+
+            tab1.subheader("Overall GDP")
 
             #Create chart and add it to tab1
             #TODO: Line chart, not histogram
-            fig, (ax_hist, ax_dis) = plt.subplots(
-                nrows=1,
-                ncols=2,
-                figsize=(6,4)
+            fig, (ax_plot1, ax_plot2) = plt.subplots(
+                nrows=2,
+                ncols=1,
+                figsize=(10,10)
             )
-
+            series = "gdpc1"
             #Add the appropriate dataframes to the 2 histogram vars
-            ax_hist.hist(df_us_gdp_all["gdpc1"], bins=20)
-            ax_dis.hist(df_us_gdp_recent["gdpc1"], bins=20)
+            ax_plot1.plot(df_us_gdp_all["DATE"], df_us_gdp_all[series])
+            ax_plot2.plot(df_us_gdp_recent["DATE"], df_us_gdp_recent[series])
+
+            #ax_hist.hist(df_us_gdp_all["gdpc1"], bins=20)
+            #ax_dis.hist(df_us_gdp_recent["gdpc1"], bins=20)
 
             #Add the plot to tab1
             tab1.pyplot(fig)
+            tab1.write(df_us_gdp_recent)
 
-            tab2.subheader("A tab with the data")
+            tab2.subheader("Overall GDP - Data")
             #TODO: Add table to tab2
             tab2.write(df_us_gdp_recent)
 
