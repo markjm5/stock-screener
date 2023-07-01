@@ -400,10 +400,11 @@ if option == 'Macroeconomic Data':
         option_lagging_indicator_charts = st.sidebar.selectbox("Charts", ('002 - US GDP','005 - US Job Market','006 - PCE','007 - US Inflation','009 - US Industrial Production','011 - US Durable Goods', '011 - US Retail Sales'), 0)
         if option_lagging_indicator_charts == '002 - US GDP':    
             # gdpc1
-            tab1, tab2 = st.tabs(["📈 Overall GDP", "📈 QoQ"])
+            tab1, tab2, tab3, tab4 = st.tabs(["📈 Overall US GDP", "📈 US GDP QoQ", "📈 US GDP YoY", "📈 US GDP QoQ Annualized"])
 
             df_us_gdp_all, df_us_gdp_recent = get_stlouisfed_data('gdpc1', 'Q', 10)
 
+            #TAB 1
             tab1.subheader("Overall GDP")
 
             series = "gdpc1"
@@ -424,8 +425,21 @@ if option == 'Macroeconomic Data':
             }
 
             display_chart(chart_settings, df_us_gdp_recent, series, tab1)
+            
+            sort_cols = ['DATE']
+            drop_cols = ['QoQ','YoY','QoQ_ANNUALIZED']
+            rename_cols = {'DATE': 'Date', 'gdpc1':'GDP'}
+            format_cols = {'gdpc1': 'number', 'DATE': 'date' }
 
-            tab1.write(df_us_gdp_recent)
+            cols_gradient = ['gdpc1']
+            rename_cols = {'DATE': 'Date'}
+            cols_format = []
+            cols_drop = ['QoQ','YoY','QoQ_ANNUALIZED']
+
+            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_format,cols_drop)
+            tab1.write(disp)
+
+            #TAB 2
 
             series = "QoQ"
             tab2.subheader("US GDP - QoQ")
@@ -448,7 +462,75 @@ if option == 'Macroeconomic Data':
 
             display_chart(chart_settings, df_us_gdp_recent, series, tab2)
 
-            tab2.write(df_us_gdp_recent)
+            cols_gradient = ['QoQ']
+            rename_cols = {'DATE': 'Date'}
+            cols_format = []
+            cols_drop = ['gdpc1','YoY','QoQ_ANNUALIZED']
+
+            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_format,cols_drop)
+            tab2.write(disp)
+
+            #TAB 3
+            series = "YoY"
+            tab3.subheader("US GDP - YoY")
+
+            chart_settings = {
+                "type": "bar",
+                "title": "US GDP YoY", 
+                "xlabel": "Year", 
+                "ylabel": "GDP YoY", 
+            }
+
+            display_chart(chart_settings, df_us_gdp_all, series, tab3)
+
+            chart_settings = {
+                "type": "bar",
+                "title": "US GDP YoY - Last 10 Years", 
+                "xlabel": "Year", 
+                "ylabel": "GDP YoY", 
+            }
+
+            display_chart(chart_settings, df_us_gdp_recent, series, tab3)
+            #tab3.write(df_us_gdp_recent)
+
+            cols_gradient = ['YoY']
+            rename_cols = {'DATE': 'Date'}
+            cols_format = []
+            cols_drop = ['gdpc1','QoQ','QoQ_ANNUALIZED']
+
+            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_format,cols_drop)
+            tab3.write(disp)
+
+            #TAB 4
+            series = "QoQ_ANNUALIZED"
+            tab4.subheader("US GDP - QoQ Annualized")
+
+            chart_settings = {
+                "type": "bar",
+                "title": "US GDP QoQ Annualized", 
+                "xlabel": "Year", 
+                "ylabel": "GDP QoQ Annualized", 
+            }
+
+            display_chart(chart_settings, df_us_gdp_all, series, tab4)
+
+            chart_settings = {
+                "type": "bar",
+                "title": "US GDP QoQ Annualized - Last 10 Years", 
+                "xlabel": "Year", 
+                "ylabel": "GDP QoQ Annualized", 
+            }
+
+            display_chart(chart_settings, df_us_gdp_recent, series, tab4)
+
+            cols_gradient = ['QoQ_ANNUALIZED']
+            rename_cols = {'DATE': 'Date'}
+            cols_format = []
+            cols_drop = ['gdpc1','QoQ','YoY']
+
+            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_format,cols_drop)
+            tab4.write(disp)
+
 
         if option_lagging_indicator_charts == '005 - US Job Market':    
             pass

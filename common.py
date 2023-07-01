@@ -1703,8 +1703,8 @@ def style_df_for_display(df, cols_gradient, cols_rename, cols_format, cols_drop)
   
   #table_styles = [{'selector': 'tr:hover',
   #    'props': 'background-color: yellow; font-size: 1em;'}]
-
-  df = df.style.background_gradient(cmap='Blues',subset=cols_gradient).format(cols_format)
+  #cmap = plt.cm.get_cmap('YIOrRd')
+  df = df.style.background_gradient(cmap='Oranges',subset=cols_gradient)#.format(cols_format)
   #df = df.hide("preferred_stock", axis=1).hide(axis=0).to_html()
   #df = df.set_table_styles(table_styles)
   #df.hide_columns_ = True 
@@ -1825,6 +1825,9 @@ def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, format_cols=N
   except IndexError as e:
     print(f"Error Dropping Index: {e}")
     pass
+
+  #if(gradient_cols):
+  #  df = df.style.background_gradient(cmap='Blues',subset=gradient_cols)
 
   return df
 
@@ -2964,25 +2967,25 @@ def convert_excelsheet_to_dataframe(excel_file_path,sheet_name,date_exists=False
   return df
 
 def display_chart(settings, df,series, tab):
+  #import pdb; pdb.set_trace()
+  plt.style.use('classic')
 
-    plt.style.use('classic')
+  #Add the appropriate dataframes to the 2 histogram vars
+  if(settings['type'] == 'line'):
+    plt.plot(df["DATE"], df[series])
+  elif(settings['type'] == 'bar'):
+    plt.bar(df["DATE"], df[series], width=50)       
 
-    #Add the appropriate dataframes to the 2 histogram vars
-    if(settings['type'] == 'line'):
-      plt.plot(df["DATE"], df[series])
-    elif(settings['type'] == 'bar'):
-      plt.bar(df["DATE"], df[series], width=50)       
-
-    plt.title(settings['title'])
-    plt.xlabel(settings['xlabel'])
-    plt.ylabel(settings['ylabel'])
-    plt.xticks(rotation='vertical')
-    # Set the font size for x tick labels
-    plt.rc('xtick', labelsize=8)
-    plt.rc('ytick', labelsize=8)            
-    plt.tight_layout()
-    plt.grid(True)
-    tab.pyplot(plt)
-    plt.clf()
+  plt.title(settings['title'])
+  plt.xlabel(settings['xlabel'])
+  plt.ylabel(settings['ylabel'])
+  plt.xticks(rotation='vertical')
+  # Set the font size for x tick labels
+  plt.rc('xtick', labelsize=8)
+  plt.rc('ytick', labelsize=8)            
+  plt.tight_layout()
+  plt.grid(True)
+  tab.pyplot(plt)
+  plt.clf()
    
 
