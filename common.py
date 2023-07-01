@@ -2968,7 +2968,8 @@ def convert_excelsheet_to_dataframe(excel_file_path,sheet_name,date_exists=False
 
 def display_chart(settings, df,series, tab):
   #import pdb; pdb.set_trace()
-  plt.style.use('classic')
+  plt.style.use('ggplot')
+  #plt.style.use('bmh')
 
   #Add the appropriate dataframes to the 2 histogram vars
   if(settings['type'] == 'line'):
