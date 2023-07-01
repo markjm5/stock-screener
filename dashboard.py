@@ -426,17 +426,11 @@ if option == 'Macroeconomic Data':
 
             display_chart(chart_settings, df_us_gdp_recent, series, tab1)
             
-            sort_cols = ['DATE']
-            drop_cols = ['QoQ','YoY','QoQ_ANNUALIZED']
-            rename_cols = {'DATE': 'Date', 'gdpc1':'GDP'}
-            format_cols = {'gdpc1': 'number', 'DATE': 'date' }
-
-            cols_gradient = ['gdpc1']
-            rename_cols = {'DATE': 'Date'}
-            cols_format = []
+            rename_cols = {'DATE': 'Date', 'gdpc1': 'GDP'}
+            cols_gradient = ['GDP']
             cols_drop = ['QoQ','YoY','QoQ_ANNUALIZED']
 
-            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_format,cols_drop)
+            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop)
             tab1.write(disp)
 
             #TAB 2
@@ -464,10 +458,9 @@ if option == 'Macroeconomic Data':
 
             cols_gradient = ['QoQ']
             rename_cols = {'DATE': 'Date'}
-            cols_format = []
             cols_drop = ['gdpc1','YoY','QoQ_ANNUALIZED']
 
-            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_format,cols_drop)
+            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop)
             tab2.write(disp)
 
             #TAB 3
@@ -495,10 +488,9 @@ if option == 'Macroeconomic Data':
 
             cols_gradient = ['YoY']
             rename_cols = {'DATE': 'Date'}
-            cols_format = []
             cols_drop = ['gdpc1','QoQ','QoQ_ANNUALIZED']
 
-            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_format,cols_drop)
+            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop)
             tab3.write(disp)
 
             #TAB 4
@@ -525,10 +517,9 @@ if option == 'Macroeconomic Data':
 
             cols_gradient = ['QoQ_ANNUALIZED']
             rename_cols = {'DATE': 'Date'}
-            cols_format = []
             cols_drop = ['gdpc1','QoQ','YoY']
 
-            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_format,cols_drop)
+            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop)
             tab4.write(disp)
 
 

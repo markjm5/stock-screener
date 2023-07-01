@@ -1695,7 +1695,7 @@ def convert_csv_to_dataframe(excel_file_path):
   return df
 
 
-def style_df_for_display(df, cols_gradient, cols_rename, cols_format, cols_drop):
+def style_df_for_display(df, cols_gradient, cols_rename, cols_drop):
 
   df = df.drop(cols_drop, axis=1)
   df = df.set_index(df.columns[0])
