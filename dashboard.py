@@ -27,6 +27,7 @@ from common import set_price_action_ta, set_todays_insider_trades, combine_df_on
 from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
+from common import display_chart
 import seaborn as sns
 
 debug = False
@@ -399,36 +400,55 @@ if option == 'Macroeconomic Data':
         option_lagging_indicator_charts = st.sidebar.selectbox("Charts", ('002 - US GDP','005 - US Job Market','006 - PCE','007 - US Inflation','009 - US Industrial Production','011 - US Durable Goods', '011 - US Retail Sales'), 0)
         if option_lagging_indicator_charts == '002 - US GDP':    
             # gdpc1
-
-            tab1, tab2 = st.tabs(["📈 Overall GDP", "🗃 Data"])
+            tab1, tab2 = st.tabs(["📈 Overall GDP", "📈 QoQ"])
 
             df_us_gdp_all, df_us_gdp_recent = get_stlouisfed_data('gdpc1', 'Q', 10)
 
             tab1.subheader("Overall GDP")
 
-            #Create chart and add it to tab1
-            #TODO: Line chart, not histogram
-            fig, (ax_plot1, ax_plot2) = plt.subplots(
-                nrows=2,
-                ncols=1,
-                figsize=(10,10)
-            )
             series = "gdpc1"
-            #Add the appropriate dataframes to the 2 histogram vars
-            ax_plot1.plot(df_us_gdp_all["DATE"], df_us_gdp_all[series])
-            ax_plot2.plot(df_us_gdp_recent["DATE"], df_us_gdp_recent[series])
+            chart_settings = {
+                "type": "line",
+                "title": "Total US GDP", 
+                "xlabel": "Year", 
+                "ylabel": "GDP", 
+            }
 
-            #ax_hist.hist(df_us_gdp_all["gdpc1"], bins=20)
-            #ax_dis.hist(df_us_gdp_recent["gdpc1"], bins=20)
+            display_chart(chart_settings, df_us_gdp_all, series, tab1)
 
-            #Add the plot to tab1
-            tab1.pyplot(fig)
+            chart_settings = {
+                "type": "line",
+                "title": "Total US GDP - Last 10 Years", 
+                "xlabel": "Year", 
+                "ylabel": "GDP", 
+            }
+
+            display_chart(chart_settings, df_us_gdp_recent, series, tab1)
+
             tab1.write(df_us_gdp_recent)
 
-            tab2.subheader("Overall GDP - Data")
-            #TODO: Add table to tab2
-            tab2.write(df_us_gdp_recent)
+            series = "QoQ"
+            tab2.subheader("US GDP - QoQ")
 
+            chart_settings = {
+                "type": "bar",
+                "title": "US GDP QoQ", 
+                "xlabel": "Year", 
+                "ylabel": "GDP QoQ", 
+            }
+
+            display_chart(chart_settings, df_us_gdp_all, series, tab2)
+
+            chart_settings = {
+                "type": "bar",
+                "title": "US GDP QoQ - Last 10 Years", 
+                "xlabel": "Year", 
+                "ylabel": "GDP QoQ", 
+            }
+
+            display_chart(chart_settings, df_us_gdp_recent, series, tab2)
+
+            tab2.write(df_us_gdp_recent)
 
         if option_lagging_indicator_charts == '005 - US Job Market':    
             pass
@@ -453,6 +473,14 @@ if option == 'Macroeconomic Data':
         st.subheader(f'Leading Indicators')
 
         option_leading_indicator_charts = st.sidebar.selectbox("Charts", ('016 - US ISM Manufacturing','017 - US ISM Services'), 0)
+        #fig, (ax_plot1, ax_plot2) = plt.subplots(
+        #    nrows=2,
+        #    ncols=1,
+        #    figsize=(10,10)
+        #)
+        #ax_plot1.hist(df_us_gdp_all["gdpc1"], bins=20)
+        #ax_plot2.hist(df_us_gdp_recent["gdpc1"], bins=20)
+
         pass
 
     #TODO: Learn about plotting and graphing in python - https://www.youtube.com/watch?v=6GUZXDef2U0&t=2712s
