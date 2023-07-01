@@ -630,6 +630,7 @@ def set_stlouisfed_data(series_codes, logger):
 
   return success
 
+
 def set_zacks_balance_sheet_shares(df_tickers, logger):
   success = False
   for index, row in df_tickers.iterrows():
@@ -1642,6 +1643,37 @@ def get_peer_details(df):
   df_competitor_metrics.columns = new_header #set the header row as the df header
 
   return df_competitor_metrics
+
+def get_stlouisfed_data(series, period):
+
+  df = get_data(table="macro_stlouisfed")
+  df['series_date'] = pd.to_datetime(df['series_date'],format='%Y-%m-%d')
+  df = df.rename(columns={"series_date":"DATE"})  
+  df[series] = pd.to_numeric(df[series])
+  df_all = df[['DATE',series]][df[series] > 0].sort_values(by=['DATE']).reset_index(drop=True)
+
+  # Calculate additional metrics
+  #YoY, QoQ, QoQ_Annualized
+  if(period == 'Q'):
+    df_all['QoQ'] = (df_all[series] - df_all[series].shift()) / df_all[series].shift()
+    df_all['YoY'] = (df_all[series] - df_all[series].shift(periods=4)) / df_all[series].shift(periods=4)
+    df_all['QoQ_ANNUALIZED'] = ((1 + df_all['QoQ']) ** 4) - 1
+
+  elif(period=='M'):
+    df_all['MoM'] = (df_all[series] - df_all[series].shift()) / df_all[series].shift()
+    df_all['QoQ'] = (df_all[series] - df_all[series].shift(periods=4)) / df_all[series].shift(periods=4)
+    df_all['YoY'] = (df_all[series] - df_all[series].shift(periods=12)) / df_all[series].shift(periods=12)
+    df_all['QoQ_ANNUALIZED'] = ((1 + df_all['QoQ']) ** 12) - 1
+
+  # Get the most recent data (ie. last 5 years)
+  todays_date = date.today()
+  start_date = todays_date - relativedelta(years=5)
+  date_str_start = "%s-%s-%s" % (start_date.year, start_date.month, start_date.day)
+
+  df_recent = df_all.loc[(df_all['DATE'] >= date_str_start)].reset_index(drop=True)            
+
+  return df_all, df_recent
+
 
 ####################
 # Output Functions #

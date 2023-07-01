@@ -20,8 +20,8 @@ from common import set_finwiz_stock_data, set_stockrow_stock_data, set_zacks_bal
 from common import set_zacks_peer_comparison, set_zacks_earnings_surprises, set_zacks_product_line_geography
 from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
 from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager,atr_to_excel
-from common import set_earningswhispers_earnings_calendar, get_atr_prices
-from common import set_marketscreener_economic_calendar, get_peer_details
+from common import set_earningswhispers_earnings_calendar, get_atr_prices, get_stlouisfed_data
+from common import set_marketscreener_economic_calendar, get_peer_details, dataframe_convert_to_numeric
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql_get_volume
 from common import set_price_action_ta, set_todays_insider_trades, combine_df_on_index
 from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
@@ -391,6 +391,7 @@ if option == 'Calendar':
 if option == 'Macroeconomic Data':
     #st.subheader(f'Macro Economic Data')
     option_indicator_type = st.sidebar.selectbox("Indicator Type", ('Lagging Indicator','Interest Rates/FX','Leading Indicator'), 0)
+    logger = get_logger()
 
     if option_indicator_type == 'Lagging Indicator':
         st.subheader(f'Lagging Indicators')
@@ -398,22 +399,29 @@ if option == 'Macroeconomic Data':
         option_lagging_indicator_charts = st.sidebar.selectbox("Charts", ('002 - US GDP','005 - US Job Market','006 - PCE','007 - US Inflation','009 - US Industrial Production','011 - US Durable Goods', '011 - US Retail Sales'), 0)
         if option_lagging_indicator_charts == '002 - US GDP':    
             tab1, tab2 = st.tabs(["📈 Chart", "🗃 Data"])
-            crash_df = sns.load_dataset('car_crashes')
+
+            df_us_gdp_all, df_us_gdp_recent = get_stlouisfed_data('gdpc1', 'Q')
 
             tab1.subheader("A tab with a chart")
-            #tab1.line_chart(crash_df)
 
-            tab2.subheader("A tab with the data")
-            #tab2.write(crash_df)
-
+            #Create chart and add it to tab1
+            #TODO: Line chart, not histogram
             fig, (ax_hist, ax_dis) = plt.subplots(
                 nrows=1,
                 ncols=2,
                 figsize=(6,4)
             )
-            ax_hist.hist(crash_df["not_distracted"], bins=20)
-            ax_dis.hist(crash_df["not_distracted"], bins=20)
+
+            #Add the appropriate dataframes to the 2 histogram vars
+            ax_hist.hist(df_us_gdp_all["gdpc1"], bins=20)
+            ax_dis.hist(df_us_gdp_recent["gdpc1"], bins=20)
+
+            #Add the plot to tab1
             tab1.pyplot(fig)
+
+            tab2.subheader("A tab with the data")
+            #TODO: Add table to tab2
+            tab2.write(df_us_gdp_recent)
 
 
         if option_lagging_indicator_charts == '005 - US Job Market':    
