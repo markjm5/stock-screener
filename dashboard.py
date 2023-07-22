@@ -27,7 +27,7 @@ from common import set_price_action_ta, set_todays_insider_trades, combine_df_on
 from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
-from common import display_chart
+from common import display_chart, return_styled_ism_table1
 import seaborn as sns
 
 debug = False
@@ -546,6 +546,151 @@ if option == 'Macroeconomic Data':
         st.subheader(f'Leading Indicators')
 
         option_leading_indicator_charts = st.sidebar.selectbox("Charts", ('016 - US ISM Manufacturing','017 - US ISM Services'), 0)
+
+        if option_leading_indicator_charts == '016 - US ISM Manufacturing':    
+            tabs = ["📈 Sectors", 
+                    "📈 New Orders", 
+                    "📈 Production", 
+                    "📈 Sector Trends", 
+                    "📈 Details", 
+                    "📈 Charts", 
+                    "📈 Vs GDP"
+                    ]
+            # gdpc1
+            tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(tabs)
+
+            df_sectors = get_data(table="macro_us_ism_manufacturing_sectors")           
+            df_new_orders = get_data(table="macro_us_ism_manufacturing_new_orders")            
+            df_production = get_data(table="macro_us_ism_manufacturing_production")            
+            df_headline = get_data(table="macro_us_ism_manufacturing_headline")            
+
+            df_sectors_last_6_months = df_sectors.tail(3).reset_index(drop=True)
+            df_new_orders_last_6_months = df_new_orders.tail(3).reset_index(drop=True)
+            df_production_last_6_months = df_production.tail(3).reset_index(drop=True)
+
+            #TAB 1
+            tab1.subheader(tabs[0])
+            
+            style_t1 = return_styled_ism_table1(df_sectors_last_6_months)
+            tab1.write(style_t1)
+
+            #Table containing sector values for last 6 months across all sectors
+            #Chart showing sector values across all sectors for last 6 months
+            series = "gdpc1"
+            chart_settings = {
+                "type": "line",
+                "title": "Total US GDP", 
+                "xlabel": "Year", 
+                "ylabel": "GDP", 
+            }
+
+            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+
+            #TAB 2
+            tab2.subheader(tabs[1])
+
+            style_t2 = return_styled_ism_table1(df_new_orders_last_6_months)
+            tab2.write(style_t2)
+
+            series = "gdpc1"
+            chart_settings = {
+                "type": "line",
+                "title": "Total US GDP", 
+                "xlabel": "Year", 
+                "ylabel": "GDP", 
+            }
+
+            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+
+            #TAB 3
+            tab3.subheader(tabs[2])
+
+            style_t3 = return_styled_ism_table1(df_production_last_6_months)
+            tab3.write(style_t3)
+
+            series = "gdpc1"
+            chart_settings = {
+                "type": "line",
+                "title": "Total US GDP", 
+                "xlabel": "Year", 
+                "ylabel": "GDP", 
+            }
+
+            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+
+            #TAB 4
+            tab4.subheader(tabs[3])
+
+            series = "gdpc1"
+            chart_settings = {
+                "type": "line",
+                "title": "Total US GDP", 
+                "xlabel": "Year", 
+                "ylabel": "GDP", 
+            }
+
+            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+
+            #TAB 5
+            tab5.subheader(tabs[4])
+
+            series = "gdpc1"
+            chart_settings = {
+                "type": "line",
+                "title": "Total US GDP", 
+                "xlabel": "Year", 
+                "ylabel": "GDP", 
+            }
+
+            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+
+            #TAB 6
+            tab6.subheader(tabs[5])
+
+            series = "gdpc1"
+            chart_settings = {
+                "type": "line",
+                "title": "Total US GDP", 
+                "xlabel": "Year", 
+                "ylabel": "GDP", 
+            }
+
+            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+
+            #TAB 7
+            tab7.subheader(tabs[6])
+
+            series = "gdpc1"
+            chart_settings = {
+                "type": "line",
+                "title": "Total US GDP", 
+                "xlabel": "Year", 
+                "ylabel": "GDP", 
+            }
+
+            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+
+        if option_leading_indicator_charts == '017 - US ISM Services':    
+
+            # gdpc1
+            tab1, tab2, tab3, tab4 = st.tabs(["📈 Overall US GDP", "📈 US GDP QoQ", "📈 US GDP YoY", "📈 US GDP QoQ Annualized"])
+
+            df_us_gdp_all, df_us_gdp_recent = get_stlouisfed_data('gdpc1', 'Q', 10)
+
+            #TAB 1
+            tab1.subheader("Overall GDP")
+
+            series = "gdpc1"
+            chart_settings = {
+                "type": "line",
+                "title": "Total US GDP", 
+                "xlabel": "Year", 
+                "ylabel": "GDP", 
+            }
+
+            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+
+
         #fig, (ax_plot1, ax_plot2) = plt.subplots(
         #    nrows=2,
         #    ncols=1,

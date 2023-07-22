@@ -1832,9 +1832,13 @@ def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, format_cols=N
   return df
 
 def format_outlook(styler):
-    styler.highlight_max(subset=['Outlook'], color='darkgreen')
-    return styler
+  styler.highlight_max(subset=['Outlook'], color='darkgreen')
+  return styler
 
+def format_columns(df, gradient_cols):
+  styler = df.style.background_gradient(cmap='Blues',subset=gradient_cols)
+  return styler
+   
 
 ####################
 # Helper Functions #
@@ -2731,9 +2735,6 @@ def set_ism_services(logger):
 
   return success
 
-
-  import pdb; pdb.set_trace()
-
 def scrape_services_new_orders_production():
 
     ism_date, ism_month, page = get_ism_services_content()
@@ -2970,7 +2971,7 @@ def display_chart(settings, df,series, tab):
   #import pdb; pdb.set_trace()
   plt.style.use('ggplot')
   #plt.style.use('bmh')
-
+ 
   #Add the appropriate dataframes to the 2 histogram vars
   if(settings['type'] == 'line'):
     plt.plot(df["DATE"], df[series])
@@ -2990,3 +2991,26 @@ def display_chart(settings, df,series, tab):
   plt.clf()
    
 
+def return_styled_ism_table1(df):
+  df_formatted = df.reset_index(drop=True)
+  df_formatted = df_formatted.T
+
+  col1 = str(df_formatted[:1][0]['ism_date']) 
+  col2 = str(df_formatted[:1][1]['ism_date']) 
+  col3 = str(df_formatted[:1][2]['ism_date'])
+  rename_cols = {0: col1,1:col2,2:col3}
+
+  df_formatted = df_formatted.rename(columns=rename_cols)
+  df_formatted = df_formatted.drop('ism_date')
+
+  #TODO Format columns to integers. 
+  df_formatted[col1] = pd.to_numeric(df_formatted[col1])
+  df_formatted[col2] = pd.to_numeric(df_formatted[col2])
+  df_formatted[col3] = pd.to_numeric(df_formatted[col3])
+
+  #TODO: Apply gradient to last column
+  gradient_cols = [col3]
+  style_t3 = format_columns(df_formatted, gradient_cols)
+
+  return style_t3
+   
