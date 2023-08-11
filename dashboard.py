@@ -429,8 +429,13 @@ if option == 'Macroeconomic Data':
             rename_cols = {'DATE': 'Date', 'gdpc1': 'GDP'}
             cols_gradient = ['GDP']
             cols_drop = ['QoQ','YoY','QoQ_ANNUALIZED']
+            format_cols = {
+                'GDP': '{:,.2f}'.format,
+                'Date': lambda t: t.strftime("%m/%d/%Y"),
+            }
+            format_date = True
 
-            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop)
+            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab1.write(disp)
 
             #TAB 2
@@ -459,8 +464,15 @@ if option == 'Macroeconomic Data':
             cols_gradient = ['QoQ']
             rename_cols = {'DATE': 'Date'}
             cols_drop = ['gdpc1','YoY','QoQ_ANNUALIZED']
+            format_cols = {
+                'QoQ': '{:,.2%}'.format,
+                'Date': lambda t: t.strftime("%m/%d/%Y"),
+            }
 
-            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop)
+            #import pdb; pdb.set_trace()
+            #disp = df_us_gdp_recent.style.format(format_cols)
+
+            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab2.write(disp)
 
             #TAB 3
@@ -489,8 +501,12 @@ if option == 'Macroeconomic Data':
             cols_gradient = ['YoY']
             rename_cols = {'DATE': 'Date'}
             cols_drop = ['gdpc1','QoQ','QoQ_ANNUALIZED']
+            format_cols = {
+                'YoY': '{:,.2%}'.format,
+                'Date': lambda t: t.strftime("%m/%d/%Y"),
+            }
 
-            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop)
+            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab3.write(disp)
 
             #TAB 4
@@ -515,11 +531,14 @@ if option == 'Macroeconomic Data':
 
             display_chart(chart_settings, df_us_gdp_recent, series, tab4)
 
-            cols_gradient = ['QoQ_ANNUALIZED']
-            rename_cols = {'DATE': 'Date'}
+            rename_cols = {'DATE': 'Date','QoQ_ANNUALIZED':'QoQ Annualized'}
+            cols_gradient = ['QoQ Annualized']
             cols_drop = ['gdpc1','QoQ','YoY']
-
-            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop)
+            format_cols = {
+                'QoQ Annualized': '{:,.2%}'.format,
+                'Date': lambda t: t.strftime("%m/%d/%Y"),
+            }
+            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab4.write(disp)
 
 
@@ -559,9 +578,9 @@ if option == 'Macroeconomic Data':
             # gdpc1
             tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(tabs)
 
-            df_sectors = get_data(table="macro_us_ism_manufacturing_sectors")           
-            df_new_orders = get_data(table="macro_us_ism_manufacturing_new_orders")            
-            df_production = get_data(table="macro_us_ism_manufacturing_production")            
+            df_sectors = get_data(table="macro_us_ism_manufacturing_sectors").tail(6).reset_index(drop=True)           
+            df_new_orders = get_data(table="macro_us_ism_manufacturing_new_orders").tail(6).reset_index(drop=True)            
+            df_production = get_data(table="macro_us_ism_manufacturing_production").tail(6).reset_index(drop=True)            
             df_headline = get_data(table="macro_us_ism_manufacturing_headline")            
 
             df_sectors_last_6_months = df_sectors.tail(3).reset_index(drop=True)
@@ -570,7 +589,6 @@ if option == 'Macroeconomic Data':
 
             #TAB 1
             tab1.subheader(tabs[0])
-            
             style_t1 = return_styled_ism_table1(df_sectors_last_6_months)
             tab1.write(style_t1)
 
@@ -588,7 +606,6 @@ if option == 'Macroeconomic Data':
 
             #TAB 2
             tab2.subheader(tabs[1])
-
             style_t2 = return_styled_ism_table1(df_new_orders_last_6_months)
             tab2.write(style_t2)
 
@@ -604,7 +621,6 @@ if option == 'Macroeconomic Data':
 
             #TAB 3
             tab3.subheader(tabs[2])
-
             style_t3 = return_styled_ism_table1(df_production_last_6_months)
             tab3.write(style_t3)
 

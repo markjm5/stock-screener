@@ -1695,16 +1695,18 @@ def convert_csv_to_dataframe(excel_file_path):
   return df
 
 
-def style_df_for_display(df, cols_gradient, cols_rename, cols_drop):
+def style_df_for_display(df, cols_gradient, cols_rename, cols_drop, cols_format=None):
 
   df = df.drop(cols_drop, axis=1)
-  df = df.set_index(df.columns[0])
+  #if(format_date):
+  #   df['DATE'] = df['DATE'].dt.strftime('%m/%d/%Y')
   df = df.rename(columns=cols_rename)
-  
+  #df = df.set_index(df.columns[0])
+  #import pdb; pdb.set_trace()
   #table_styles = [{'selector': 'tr:hover',
   #    'props': 'background-color: yellow; font-size: 1em;'}]
   #cmap = plt.cm.get_cmap('YIOrRd')
-  df = df.style.background_gradient(cmap='Oranges',subset=cols_gradient)#.format(cols_format)
+  df = df.style.background_gradient(cmap='Oranges',subset=cols_gradient).format(cols_format)
   #df = df.hide("preferred_stock", axis=1).hide(axis=0).to_html()
   #df = df.set_table_styles(table_styles)
   #df.hide_columns_ = True 
