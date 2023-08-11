@@ -431,7 +431,7 @@ if option == 'Macroeconomic Data':
             cols_drop = ['QoQ','YoY','QoQ_ANNUALIZED']
             format_cols = {
                 'GDP': '{:,.2f}'.format,
-                'Date': lambda t: t.strftime("%m/%d/%Y"),
+                'Date': lambda t: t.strftime("%m-%d-%Y"),
             }
             format_date = True
 
@@ -466,7 +466,7 @@ if option == 'Macroeconomic Data':
             cols_drop = ['gdpc1','YoY','QoQ_ANNUALIZED']
             format_cols = {
                 'QoQ': '{:,.2%}'.format,
-                'Date': lambda t: t.strftime("%m/%d/%Y"),
+                'Date': lambda t: t.strftime("%m-%d-%Y"),
             }
 
             #import pdb; pdb.set_trace()
@@ -503,7 +503,7 @@ if option == 'Macroeconomic Data':
             cols_drop = ['gdpc1','QoQ','QoQ_ANNUALIZED']
             format_cols = {
                 'YoY': '{:,.2%}'.format,
-                'Date': lambda t: t.strftime("%m/%d/%Y"),
+                'Date': lambda t: t.strftime("%m-%d-%Y"),
             }
 
             disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
@@ -536,7 +536,7 @@ if option == 'Macroeconomic Data':
             cols_drop = ['gdpc1','QoQ','YoY']
             format_cols = {
                 'QoQ Annualized': '{:,.2%}'.format,
-                'Date': lambda t: t.strftime("%m/%d/%Y"),
+                'Date': lambda t: t.strftime("%m-%d-%Y"),
             }
             disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab4.write(disp)

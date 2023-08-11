@@ -1834,7 +1834,7 @@ def format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, format_cols=N
   return df
 
 def format_outlook(styler):
-  styler.highlight_max(subset=['Outlook'], color='darkgreen')
+  styler.highlight_max(subset=['Outlook'], color='yellow')
   return styler
 
 def format_columns(df, gradient_cols):
