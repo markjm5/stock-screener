@@ -30,7 +30,7 @@ from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manu
 from common import display_chart, return_styled_ism_table1
 import seaborn as sns
 
-debug = True
+debug = False
 st.set_page_config(
     page_title="Stock Screener App",
     page_icon=":shark:",
@@ -287,6 +287,8 @@ if option == 'Download Data':
             e1p1 = executor.submit(set_stlouisfed_data, config.STLOUISFED_SERIES, logger)
             e1p2 = executor.submit(set_ism_manufacturing, logger)
             e1p3 = executor.submit(set_ism_services, logger)
+
+        #TODO: Download ADP report and store in database
 
         #TODO: Use the following code to load data from other excel files into the database
         #sheet_name = 'DB Services ISM'
@@ -545,8 +547,6 @@ if option == 'Macroeconomic Data':
         if option_lagging_indicator_charts == '005 - US Job Market':    
             tab1, tab2, tab3, tab4 = st.tabs(["📈 US NFP", "📈 US Jobless Claims", "📈 Graphs", "📈 US ADP"])
 
-            #TODO: Replace with US jobs data
-
             #TAB 1
             tab1.subheader("Non-Farm Payroll")
 
@@ -655,6 +655,39 @@ if option == 'Macroeconomic Data':
 
             #TAB 3
             tab3.subheader("Graphs")
+
+            series = "payems"
+            chart_settings = {
+                "type": "line",
+                "title": "NFP", 
+                "xlabel": "Year", 
+                "ylabel": "Total NFP", 
+            }
+
+            display_chart(chart_settings, df_us_payems_all, series, tab3)
+
+            #df_us_unrate_all
+            series = "unrate"
+            chart_settings = {
+                "type": "line",
+                "title": "Unemployment Rate", 
+                "xlabel": "Year", 
+                "ylabel": "Unemployed %", 
+            }
+
+            display_chart(chart_settings, df_us_unrate_all, series, tab3)
+
+            #df_us_civpart_all
+            series = "civpart"
+            chart_settings = {
+                "type": "line",
+                "title": "Labour Participation Rate", 
+                "xlabel": "Year", 
+                "ylabel": "Participation %", 
+            }
+
+            display_chart(chart_settings, df_us_civpart_all, series, tab3)
+
 
 
             #TAB 4
