@@ -18,6 +18,7 @@ import psycopg2, psycopg2.extras
 import config
 import logging
 from matplotlib import pyplot as plt
+from selenium.common.exceptions import TimeoutException as ste
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
@@ -54,7 +55,6 @@ def get_page_selenium(url):
   chrome_options = Options()
   chrome_options.add_argument("--headless")
   chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows Phone 10.0; Android 4.2.1; Microsoft; Lumia 640 XL LTE) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Mobile Safari/537.36 Edge/12.10166")
-
 
   driver = webdriver.Chrome(ChromeDriverManager().install(),options=chrome_options)
   driver.get(url)
@@ -381,16 +381,24 @@ def set_finwiz_stock_data(df_tickers, logger):
 
 def set_stockrow_stock_data(df_tickers, logger):
   success = False
+  failed_tickers = []
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
     count = index
-    #import pdb; pdb.set_trace()
+
     logger.info(f'Getting stockrow data for ({index}) {ticker}')
 
     df = pd.DataFrame()
     df2 = pd.DataFrame()
 
-    page = get_page_selenium('https://stockrow.com/%s' % (ticker))
+    try:
+      page = get_page_selenium('https://stockrow.com/%s' % (ticker))
+    except TimeoutError as e:
+      failed_tickers.append(ticker)
+      logger.exception(f'Timed Out for {ticker} from stockrow')
+    except ste as e:
+      failed_tickers.append(ticker)
+      logger.exception(f'Selenium Timed Out for {ticker} from stockrow')
 
     soup = BeautifulSoup(page, 'html.parser')
 
@@ -422,6 +430,7 @@ def set_stockrow_stock_data(df_tickers, logger):
 
                 df.loc[len(df.index)] = temp_row
       except IndexError as e:
+        failed_tickers.append(ticker)
         logger.exception(f'Did not load table for {ticker} from stockrow')
 
     #Only execute the following if we have a dataframe that contains data
@@ -438,11 +447,19 @@ def set_stockrow_stock_data(df_tickers, logger):
         # reorder
         df = df.loc[:, cols]
       except IndexError as e:
+        failed_tickers.append(ticker)
         logger.exception(f'No YEAR column for {ticker} from stockrow')
 
     #Get WSJ Data
-    page = get_page_selenium("https://www.wsj.com/market-data/quotes/%s/financials/annual/income-statement" % (ticker))
-
+    try:
+      page = get_page_selenium("https://www.wsj.com/market-data/quotes/%s/financials/annual/income-statement" % (ticker))
+    except TimeoutError as e:
+      failed_tickers.append(ticker)
+      logger.exception(f'Timed Out for {ticker} from wsj')
+    except ste as e:
+      failed_tickers.append(ticker)
+      logger.exception(f'Selenium Timed Out for {ticker} from wsj')
+       
     soup = BeautifulSoup(page, 'html.parser')
     tables = soup.find_all('table')
     try:
@@ -491,8 +508,9 @@ def set_stockrow_stock_data(df_tickers, logger):
       #print(df2)
       #df2.drop([" "], axis=1) #Hack: Drop any null columns. Better to just remove them upstream
     except IndexError as e:
+      failed_tickers.append(ticker)
       logger.exception(f'Did not load table for {ticker} from wsj')
-
+       
     #Only proceed to format the data and write to database if we have data about the ticker at this point
     if(df.empty == False):      
       #Lets drop all NULL columns from df2
@@ -594,7 +612,13 @@ def set_stockrow_stock_data(df_tickers, logger):
         conflict_cols = "cid, forecast_year"
         success = sql_write_df_to_db(df_transposed, "CompanyForecast", rename_cols, add_col_values, conflict_cols)
         logger.info(f'Successfully Saved stockrow data for {ticker}')
+      else:
+        failed_tickers.append(ticker)
+        logger.exception(f'COULD NOT save stockrow data for {ticker} ({cid}) because there was no cid')
 
+  # to remove duplicated from list 
+  failed_tickers = list(set(failed_tickers))         
+  logger.exception(f'Failed Tickers: {failed_tickers}')
   return success
 
 def set_stlouisfed_data(series_codes, logger):
@@ -1700,14 +1724,20 @@ def style_df_for_display(df, cols_gradient, cols_rename, cols_drop, cols_format=
   df = df.drop(cols_drop, axis=1)
   #if(format_date):
   #   df['DATE'] = df['DATE'].dt.strftime('%m/%d/%Y')
+  #import pdb; pdb.set_trace()
+  df = df.sort_values(by=['DATE'], ascending=False)
   df = df.rename(columns=cols_rename)
   #df = df.set_index(df.columns[0])
-  #import pdb; pdb.set_trace()
   #table_styles = [{'selector': 'tr:hover',
   #    'props': 'background-color: yellow; font-size: 1em;'}]
   #cmap = plt.cm.get_cmap('YIOrRd')
-  df = df.style.background_gradient(cmap='Oranges',subset=cols_gradient).format(cols_format)
-  #df = df.hide("preferred_stock", axis=1).hide(axis=0).to_html()
+  #import pdb; pdb.set_trace()
+  df = df.style.background_gradient(cmap='Oranges',subset=cols_gradient).format(cols_format).hide(axis=0)
+
+  #import pdb; pdb.set_trace()
+  #import pdb; pdb.set_trace()
+  #df = df.to_html()
+  #df = df.hide(axis=0)
   #df = df.set_table_styles(table_styles)
   #df.hide_columns_ = True 
   return df
@@ -2093,9 +2123,13 @@ def sql_write_df_to_db(df, db_table, rename_cols=None, additional_col_values=Non
 
   return success
 
-def sql_escape_str(str):
-  str = str.replace("'", "''")
-  return str
+def sql_escape_str(escape_str):
+  try:
+    escape_str = escape_str.replace("'", "''")
+  except AttributeError as e:
+    escape_str = str(escape_str)
+    #logger.exception(f"Error: {e}")
+  return escape_str
 
 def sql_format_str(value):
   if(pd.isnull(value)):

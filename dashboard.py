@@ -30,7 +30,7 @@ from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manu
 from common import display_chart, return_styled_ism_table1
 import seaborn as sns
 
-debug = False
+debug = True
 st.set_page_config(
     page_title="Stock Screener App",
     page_icon=":shark:",
@@ -150,8 +150,9 @@ if option == 'Download Data':
             #e1p1 = set_zacks_balance_sheet_shares(df_tickers1, logger)
             #e2p1 = set_zacks_earnings_surprises(df_tickers1, logger)
             #e3p1 = set_zacks_product_line_geography(df_tickers1, logger)
-            e4p1 = set_finwiz_stock_data(df_tickers, logger)
-            #e5p1 = set_stockrow_stock_data(df_tickers1, logger)
+            #e4p1 = set_finwiz_stock_data(df_tickers, logger)
+            #import pdb; pdb.set_trace()
+            e5p1 = set_stockrow_stock_data(df_tickers2, logger)
             #e6p1 = set_yf_key_stats(df_tickers1, logger) 
             #e7p1 = set_zacks_peer_comparison(df_tickers5, logger)
             import pdb; pdb.set_trace()
@@ -436,7 +437,7 @@ if option == 'Macroeconomic Data':
             format_date = True
 
             disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
-            tab1.write(disp)
+            tab1.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 2
 
@@ -473,7 +474,7 @@ if option == 'Macroeconomic Data':
             #disp = df_us_gdp_recent.style.format(format_cols)
 
             disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
-            tab2.write(disp)
+            tab2.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 3
             series = "YoY"
@@ -496,7 +497,6 @@ if option == 'Macroeconomic Data':
             }
 
             display_chart(chart_settings, df_us_gdp_recent, series, tab3)
-            #tab3.write(df_us_gdp_recent)
 
             cols_gradient = ['YoY']
             rename_cols = {'DATE': 'Date'}
@@ -507,7 +507,7 @@ if option == 'Macroeconomic Data':
             }
 
             disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
-            tab3.write(disp)
+            tab3.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 4
             series = "QoQ_ANNUALIZED"
@@ -539,11 +539,57 @@ if option == 'Macroeconomic Data':
                 'Date': lambda t: t.strftime("%m-%d-%Y"),
             }
             disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
-            tab4.write(disp)
+            tab4.markdown(disp.to_html(), unsafe_allow_html=True)
 
 
         if option_lagging_indicator_charts == '005 - US Job Market':    
-            pass
+            tab1, tab2, tab3, tab4 = st.tabs(["📈 US NFP", "📈 US Jobless Claims", "📈 Graphs", "📈 US ADP"])
+
+            #TODO: Replace with US jobs data
+
+            #TAB 1
+            tab1.subheader("Non-Farm Payroll")
+
+            # NFP	
+            df_us_payems_all, df_us_payems_recent = get_stlouisfed_data('payems', 'M', 10)
+
+            #TODO: Add - Monthly change in K, 3 month average, unemployment rate, participation rate
+            #TODO: Add Charts
+            
+            rename_cols = {'DATE': 'Date','QoQ_ANNUALIZED':'QoQ Annualized', 'payems': 'NFP'}
+            cols_gradient = ['NFP']
+            cols_drop = ['QoQ_ANNUALIZED','QoQ','YoY']
+            format_cols = {
+                'NFP': '{:,.2%}'.format,
+                'Date': lambda t: t.strftime("%m-%d-%Y"),
+                'MoM': '{:,.2%}'.format,
+            }
+            disp = style_df_for_display(df_us_payems_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab1.markdown(disp.to_html(), unsafe_allow_html=True)
+
+            # Unemployment Rate
+            df_us_unrate_all, df_us_unrate_recent = get_stlouisfed_data('unrate', 'M', 10)
+
+            # Participation Rate	
+            df_us_civpart_all, df_us_civpart_recent = get_stlouisfed_data('civpart', 'M', 10)
+            
+            #TAB 2
+            tab2.subheader("Jobless Claims")
+
+            # Jobless Claims
+            df_us_icsa_all, df_us_icsa_recent = get_stlouisfed_data('icsa', 'M', 10)
+
+            #TAB 3
+            tab3.subheader("Graphs")
+
+
+            #TAB 4
+            tab4.subheader("ADP National Employment Report")
+            #ADP = ADP
+            #TODO:
+            #df_us_payems_all, df_us_payems_recent = get_stlouisfed_data('payems', 'Q', 10)
+
+
         if option_lagging_indicator_charts == '006 - PCE':
             pass
         if option_lagging_indicator_charts == '007 - US Inflation':
