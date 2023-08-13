@@ -152,7 +152,7 @@ if option == 'Download Data':
             #e3p1 = set_zacks_product_line_geography(df_tickers1, logger)
             #e4p1 = set_finwiz_stock_data(df_tickers, logger)
             #import pdb; pdb.set_trace()
-            e5p1 = set_stockrow_stock_data(df_tickers2, logger)
+            e5p1 = set_stockrow_stock_data(df_tickers3, logger)
             #e6p1 = set_yf_key_stats(df_tickers1, logger) 
             #e7p1 = set_zacks_peer_comparison(df_tickers5, logger)
             import pdb; pdb.set_trace()
@@ -393,7 +393,7 @@ if option == 'Calendar':
 if option == 'Macroeconomic Data':
     #st.subheader(f'Macro Economic Data')
     option_indicator_type = st.sidebar.selectbox("Indicator Type", ('Lagging Indicator','Interest Rates/FX','Leading Indicator'), 0)
-    logger = get_logger()
+    #logger = get_logger()
 
     if option_indicator_type == 'Lagging Indicator':
         st.subheader(f'Lagging Indicators')
@@ -552,26 +552,42 @@ if option == 'Macroeconomic Data':
 
             # NFP	
             df_us_payems_all, df_us_payems_recent = get_stlouisfed_data('payems', 'M', 10)
+            cols_drop = ['QoQ_ANNUALIZED','QoQ','YoY','MoM']            
+            df_us_payems_recent = df_us_payems_recent.drop(cols_drop, axis=1)
 
-            #TODO: Add - Monthly change in K, 3 month average, unemployment rate, participation rate
+            # Unemployment Rate
+            df_us_unrate_all, df_us_unrate_recent = get_stlouisfed_data('unrate', 'M', 10)
+            cols_drop = ['QoQ_ANNUALIZED','QoQ','YoY','MoM']            
+            df_us_unrate_recent = df_us_unrate_recent.drop(cols_drop, axis=1)
+
+            # Participation Rate	
+            df_us_civpart_all, df_us_civpart_recent = get_stlouisfed_data('civpart', 'M', 10)
+            cols_drop = ['QoQ_ANNUALIZED','QoQ','YoY','MoM']            
+            df_us_civpart_recent = df_us_civpart_recent.drop(cols_drop, axis=1)
+
+            df_us_payems_recent = combine_df_on_index(df_us_payems_recent, df_us_unrate_recent, 'DATE')
+            df_us_payems_recent = combine_df_on_index(df_us_payems_recent, df_us_civpart_recent, 'DATE')
+            df_us_payems_recent['unrate'] = df_us_payems_recent['unrate']/100
+            df_us_payems_recent['diff'] = (df_us_payems_recent['payems'] - df_us_payems_recent['payems'].shift()) 
+
+            #Monthly change in K, 3 month average, unemployment rate, participation rate
+            df_us_payems_recent = df_us_payems_recent.loc[:, ['DATE','payems','diff','unrate','civpart']]
+
             #TODO: Add Charts
             
-            rename_cols = {'DATE': 'Date','QoQ_ANNUALIZED':'QoQ Annualized', 'payems': 'NFP'}
-            cols_gradient = ['NFP']
-            cols_drop = ['QoQ_ANNUALIZED','QoQ','YoY']
+            rename_cols = {'DATE': 'Date','diff':'Monthly Change (K)' ,'payems': 'NFP', 'unrate':'Unemployment Rate', 'civpart':'Participation Rate'}
+            cols_gradient = ['Monthly Change (K)']
+            cols_drop = []
             format_cols = {
-                'NFP': '{:,.2%}'.format,
+                'NFP': '{:,.0f}'.format,
+                'Unemployment Rate': '{:,.2%}'.format,
+                'Participation Rate': '{:,.2f}'.format,
                 'Date': lambda t: t.strftime("%m-%d-%Y"),
-                'MoM': '{:,.2%}'.format,
+                'Monthly Change (K)': '{:,.0f}'.format,
             }
             disp = style_df_for_display(df_us_payems_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab1.markdown(disp.to_html(), unsafe_allow_html=True)
 
-            # Unemployment Rate
-            df_us_unrate_all, df_us_unrate_recent = get_stlouisfed_data('unrate', 'M', 10)
-
-            # Participation Rate	
-            df_us_civpart_all, df_us_civpart_recent = get_stlouisfed_data('civpart', 'M', 10)
             
             #TAB 2
             tab2.subheader("Jobless Claims")
