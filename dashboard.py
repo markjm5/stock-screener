@@ -573,8 +573,29 @@ if option == 'Macroeconomic Data':
             #Monthly change in K, 3 month average, unemployment rate, participation rate
             df_us_payems_recent = df_us_payems_recent.loc[:, ['DATE','payems','diff','unrate','civpart']]
 
-            #TODO: Add Charts
-            
+            # Add Charts
+            series = "payems"
+
+            chart_settings = {
+                "type": "line",
+                "title": "All Employees: Total Nonfarm Payrolls, Thousands of Persons, Monthly, Seasonally Adjusted", 
+                "xlabel": "Period", 
+                "ylabel": "Persons", 
+            }
+
+            display_chart(chart_settings, df_us_payems_recent, series, tab1)
+
+            series = "diff"
+
+            chart_settings = {
+                "type": "line",
+                "title": "Monthly Change in K", 
+                "xlabel": "Period", 
+                "ylabel": "Persons", 
+            }
+
+            display_chart(chart_settings, df_us_payems_recent, series, tab1)
+
             rename_cols = {'DATE': 'Date','diff':'Monthly Change (K)' ,'payems': 'NFP', 'unrate':'Unemployment Rate', 'civpart':'Participation Rate'}
             cols_gradient = ['Monthly Change (K)']
             cols_drop = []
@@ -594,6 +615,43 @@ if option == 'Macroeconomic Data':
 
             # Jobless Claims
             df_us_icsa_all, df_us_icsa_recent = get_stlouisfed_data('icsa', 'M', 10)
+            cols_drop = ['QoQ_ANNUALIZED','QoQ','YoY','MoM']            
+            df_us_icsa_recent = df_us_icsa_recent.drop(cols_drop, axis=1)
+            df_us_icsa_recent['icsa_var'] = (df_us_icsa_recent['icsa'] - df_us_icsa_recent['icsa'].shift()) 
+
+            df_us_ccsa_all, df_us_ccsa_recent = get_stlouisfed_data('ccsa', 'M', 10)
+            df_us_ccsa_recent = df_us_ccsa_recent.drop(cols_drop, axis=1)
+            df_us_ccsa_recent['ccsa_var'] = (df_us_ccsa_recent['ccsa'] - df_us_ccsa_recent['ccsa'].shift()) 
+
+            df_us_icsa_recent = combine_df_on_index(df_us_icsa_recent, df_us_ccsa_recent, 'DATE')
+            df_us_icsa_recent = df_us_icsa_recent.loc[:, ['DATE','icsa','icsa_var','ccsa','ccsa_var']]
+
+            df_us_icsa_100_periods = df_us_icsa_recent.tail(100)
+
+            series = "icsa"
+            chart_settings = {
+                "type": "line",
+                "title": "Initial Claims", 
+                "xlabel": "Period", 
+                "ylabel": "Persons", 
+            }
+
+            display_chart(chart_settings, df_us_icsa_recent, series, tab2)
+            display_chart(chart_settings, df_us_icsa_100_periods, series, tab2)
+
+
+            rename_cols = {'DATE': 'Date','icsa':'Initial Claims' ,'ccsa': 'Continued Claims', 'icsa_var':'IC Var', 'ccsa_var':'CC Var'}
+            cols_gradient = ['Initial Claims']
+            cols_drop = []
+            format_cols = {
+                'Initial Claims': '{:,.0f}'.format,
+                'IC Var': '{:,.0f}'.format,
+                'Continued Claims': '{:,.0f}'.format,
+                'CC Var': '{:,.0f}'.format,
+                'Date': lambda t: t.strftime("%m-%d-%Y"),
+            }
+            disp = style_df_for_display(df_us_icsa_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab2.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 3
             tab3.subheader("Graphs")
