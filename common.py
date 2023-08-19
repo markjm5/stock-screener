@@ -26,6 +26,9 @@ from datetime import date
 from datetime import datetime as dt
 from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
 
 isWindows = False
 
@@ -49,7 +52,7 @@ def get_page(url):
 
   return page
 
-def get_page_selenium(url):
+def get_page_selenium(url,wait_until_element_id=None):
 
   #Selenium Browser Emulation Tool
   chrome_options = Options()
@@ -58,12 +61,20 @@ def get_page_selenium(url):
 
   driver = webdriver.Chrome(ChromeDriverManager().install(),options=chrome_options)
   driver.get(url)
+
   driver.implicitly_wait(10)  
+
+  if(wait_until_element_id):
+    elem = WebDriverWait(driver, 30).until(
+    EC.presence_of_element_located((By.ID, wait_until_element_id)))  
+
   time.sleep(5)
   html = driver.page_source
   driver.close()
   
   return html
+
+
 
 
 def get_yf_historical_stock_data(ticker, interval, start, end):
@@ -819,8 +830,8 @@ def set_zacks_earnings_surprises(df_tickers, logger):
     page = get_page(url)
     soup = BeautifulSoup(page.content, 'html.parser')
     new_df_earnings = pd.DataFrame()
+    
     #Get Earnings Release Date
-
     try:
       table_earnings_release_date = soup.find_all('table')[2]
       df_earnings_release_date = convert_html_table_to_df(table_earnings_release_date,True)
@@ -833,19 +844,45 @@ def set_zacks_earnings_surprises(df_tickers, logger):
     except (ValueError, KeyError) as e:
       logger.exception(f'Earnings Date is NA for {ticker}')
 
-    #Need to extract Earnings and Sales Surprises data from json object in javascript on page
-    #scripts = soup.find_all('script')[29]
     try:
-      scripts = soup.find_all('script')[25]
+      #javascript tag contains an object with all the data
+      scripts = soup.find_all('script')[20]
+ 
       match_pattern = re.compile(r'(?<=\= ).*\}')
       match_string = scripts.text.strip().replace('\n','')
       matches = match_pattern.findall(match_string)
+
+      #Extract the overall string that should contain the earnings and sales data
       match_string = matches[0]
-      json_object = json.loads(match_string)
 
-      list_earnings_announcements_earnings = json_object['earnings_announcements_earnings_table']
-      list_earnings_announcements_sales = json_object['earnings_announcements_sales_table']
+      #Extra formatting that needs to be cleaned up
+      match_string = match_string.replace('<div class=\\"right pos positive pos_icon showinline up\\">','')
+      match_string = match_string.replace('<div class=\\"right neg negative neg_icon showinline down\\">','')
+      match_string = match_string.replace('<div class=\\"right pos_na showinline\\">','')
+      match_string = match_string.replace('</div>','')
 
+      # regex needs to be tighter: "earnings_announcements_earnings_table" : <START>[[ ]]</END>
+      match_pattern_earnings = re.compile(r'"earnings_announcements_earnings_table"[\s]*:[\s]*\[[\s]*\[[\s"0-9/,$.+%A-Za-z\]\[-]*][\s]*\]') ## NEED TO FIX
+      match_pattern_sales = re.compile(r'"earnings_announcements_sales_table"[\s]*:[\s]*\[[\s]*\[[\s"0-9/,$.+%A-Za-z\]\[-]*][\s]*\]') ## NEED TO FIX
+
+      #Extract list for earnings and sales from script contents
+      list_earnings_announcements_earnings = match_pattern_earnings.findall(match_string)[0]
+      list_earnings_announcements_sales = match_pattern_sales.findall(match_string)[0]
+ 
+      # Convert strings into 2 lists 
+      # - list_earnings_announcements_earnings
+      # - list_earnings_announcements_sales
+
+      list_earnings_announcements_earnings = "{" + list_earnings_announcements_earnings + "}"
+      list_earnings_announcements_sales = "{" + list_earnings_announcements_sales + "}"
+
+      json_object_earnings = json.loads(list_earnings_announcements_earnings)
+      json_object_sales = json.loads(list_earnings_announcements_sales)
+
+      list_earnings_announcements_earnings = json_object_earnings['earnings_announcements_earnings_table']
+      list_earnings_announcements_sales = json_object_sales['earnings_announcements_sales_table']
+
+      #Add column names and format data
       df_earnings_surprises = convert_list_to_df(list_earnings_announcements_earnings)
       df_earnings_surprises = df_earnings_surprises.drop(df_earnings_surprises.iloc[:, 4:7],axis = 1)
       df_earnings_surprises.rename(columns={ df_earnings_surprises.columns[0]: "DATE",df_earnings_surprises.columns[1]: "PERIOD",df_earnings_surprises.columns[2]: "EPS_ESTIMATE",df_earnings_surprises.columns[3]: "EPS_REPORTED" }, inplace = True)

@@ -30,7 +30,7 @@ from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manu
 from common import display_chart, return_styled_ism_table1
 import seaborn as sns
 
-debug = False
+debug = True
 st.set_page_config(
     page_title="Stock Screener App",
     page_icon=":shark:",
@@ -148,11 +148,11 @@ if option == 'Download Data':
             #df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL','AIMC'])]
             # Write the output of all these functions into the database
             #e1p1 = set_zacks_balance_sheet_shares(df_tickers1, logger)
-            #e2p1 = set_zacks_earnings_surprises(df_tickers1, logger)
+            e2p1 = set_zacks_earnings_surprises(df_tickers1, logger)
             #e3p1 = set_zacks_product_line_geography(df_tickers1, logger)
             #e4p1 = set_finwiz_stock_data(df_tickers, logger)
             #import pdb; pdb.set_trace()
-            e5p1 = set_stockrow_stock_data(df_tickers3, logger)
+            #e5p1 = set_stockrow_stock_data(df_tickers3, logger)
             #e6p1 = set_yf_key_stats(df_tickers1, logger) 
             #e7p1 = set_zacks_peer_comparison(df_tickers5, logger)
             import pdb; pdb.set_trace()
