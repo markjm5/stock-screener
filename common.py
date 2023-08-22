@@ -1053,9 +1053,9 @@ def set_earningswhispers_earnings_calendar(df_us_companies, logger):
 
 def scrape_earningswhispers_day(day, df_us_companies):
   url = "https://www.earningswhispers.com/calendar?sb=c&d=%s&t=all" % (day,)
-
+  import pdb; pdb.set_trace()
   page = get_page_selenium(url)
-
+  
   #soup = BeautifulSoup(page.content, 'html.parser')
   soup = BeautifulSoup(page, 'html.parser')
 
@@ -1756,7 +1756,7 @@ def convert_csv_to_dataframe(excel_file_path):
   return df
 
 
-def style_df_for_display(df, cols_gradient, cols_rename, cols_drop, cols_format=None):
+def style_df_for_display_date(df, cols_gradient, cols_rename, cols_drop, cols_format=None):
 
   df = df.drop(cols_drop, axis=1)
   #if(format_date):
@@ -1777,6 +1777,13 @@ def style_df_for_display(df, cols_gradient, cols_rename, cols_drop, cols_format=
   #df = df.hide(axis=0)
   #df = df.set_table_styles(table_styles)
   #df.hide_columns_ = True 
+  return df
+
+def style_df_for_display(df, cols_gradient, cols_rename, cols_drop, cols_format=None):
+
+  df = df.drop(cols_drop, axis=1)
+  df = df.rename(columns=cols_rename)
+  df = df.style.background_gradient(cmap='Oranges',subset=cols_gradient).format(cols_format).hide(axis=0)
   return df
 
 def format_fields_for_dashboard(col_names, data):
@@ -2048,10 +2055,33 @@ def handle_exceptions_print_result(future, executor_num, process_num, logger):
   exception = future.exception()
   if exception:
     logger.error(f'EXCEPTION of Executor {executor_num} Process {process_num}: {exception}')
-    st.write(f'EXCEPTION of Executor {executor_num} Process {process_num}: {exception}')
+    #st.write(f'EXCEPTION of Executor {executor_num} Process {process_num}: {exception}')
+    return 1
+  
   else:
     logger.info(f'Status of Executor {executor_num} Process {process_num}: {future.result()}')
-    st.write(f'Status of Executor {executor_num} Process {process_num}: {future.result()}')
+    #st.write(f'Status of Executor {executor_num} Process {process_num}: {future.result()}')
+    return 0
+
+"""
+def display_execution_results(executor_count, range_tuple, logger):
+  data = {'Executor':[],'Process':[],'Result':[]}
+  df_result = pd.DataFrame(data)
+  executor_count = executor_count
+  
+  for x in range_tuple:
+      result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
+      temp_row = [executor_count,x,result]
+      df_result.loc[len(df_result.index)] = temp_row
+
+  rename_cols = {}
+  cols_gradient = ['Result']
+  cols_drop = []
+
+  disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+
+  return disp
+"""
 
 # Function to clean the names
 def clean_dates(date_name):

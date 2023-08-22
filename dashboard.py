@@ -24,13 +24,13 @@ from common import set_earningswhispers_earnings_calendar, get_atr_prices, get_s
 from common import set_marketscreener_economic_calendar, get_peer_details, dataframe_convert_to_numeric
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql_get_volume
 from common import set_price_action_ta, set_todays_insider_trades, combine_df_on_index
-from common import style_df_for_display, format_fields_for_dashboard, get_yf_price_action
+from common import style_df_for_display, style_df_for_display_date, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
 from common import display_chart, return_styled_ism_table1
 import seaborn as sns
 
-debug = True
+debug = False
 st.set_page_config(
     page_title="Stock Screener App",
     page_icon=":shark:",
@@ -113,23 +113,41 @@ if option == 'Download Data':
         finish_time = now_finish.strftime("%H:%M:%S")
         difference = now_finish - now_start
         seconds_in_day = 24 * 60 * 60
-        total_time = divmod(difference.days * seconds_in_day + difference.seconds, 60)
+        minutes, seconds = divmod(difference.days * seconds_in_day + difference.seconds, 60)
+        total_time = '{:02} minutes {:02} seconds'.format(int(minutes), int(seconds))
 
-        st.write(start_time)
-        st.write(finish_time)
-        st.write(total_time)
+        data = {'Start Time':[],'End Time':[],'Total Time':[]}
+        df_time = pd.DataFrame(data)
+        temp_row = [start_time,finish_time,total_time]
+        df_time.loc[len(df_time.index)] = temp_row
+
+        sort_cols = []
+        drop_cols = []
+        rename_cols = {}
+        format_cols = {}
+
+        style_t1 = format_df_for_dashboard(df_time, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+        st.write(style_t1)
 
         logger.info(f"Start Time: {start_time}")
         logger.info(f"Start Time: {finish_time}")
         logger.info(f"Total Time: {total_time}")
 
-        handle_exceptions_print_result(e1p1, 1, 1, logger)
-        handle_exceptions_print_result(e1p2, 1, 2, logger)
-        handle_exceptions_print_result(e1p3, 1, 3, logger)
-        handle_exceptions_print_result(e1p4, 1, 4, logger)
-        handle_exceptions_print_result(e1p5, 1, 5, logger)
-        handle_exceptions_print_result(e1p6, 1, 6, logger)
+        executor_count = 1
+        data = {'Executor':[],'Process':[],'Result':[]}
+        df_result = pd.DataFrame(data)
+        
+        for x in range(1,7):
+            result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
+            temp_row = [executor_count,x,result]
+            df_result.loc[len(df_result.index)] = temp_row
 
+        rename_cols = {}
+        cols_gradient = ['Result']
+        cols_drop = []
+        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+
+        st.markdown(disp.to_html(), unsafe_allow_html=True)
 
     if(clicked2):
         logger = get_logger()
@@ -148,11 +166,11 @@ if option == 'Download Data':
             #df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL','AIMC'])]
             # Write the output of all these functions into the database
             #e1p1 = set_zacks_balance_sheet_shares(df_tickers1, logger)
-            e2p1 = set_zacks_earnings_surprises(df_tickers1, logger)
+            #e2p1 = set_zacks_earnings_surprises(df_tickers1, logger)
             #e3p1 = set_zacks_product_line_geography(df_tickers1, logger)
             #e4p1 = set_finwiz_stock_data(df_tickers, logger)
             #import pdb; pdb.set_trace()
-            #e5p1 = set_stockrow_stock_data(df_tickers3, logger)
+            e5p4 = set_stockrow_stock_data(df_tickers4, logger)
             #e6p1 = set_yf_key_stats(df_tickers1, logger) 
             #e7p1 = set_zacks_peer_comparison(df_tickers5, logger)
             import pdb; pdb.set_trace()
@@ -214,51 +232,152 @@ if option == 'Download Data':
         finish_time = now_finish.strftime("%H:%M:%S")
         difference = now_finish - now_start
         seconds_in_day = 24 * 60 * 60
-        total_time = divmod(difference.days * seconds_in_day + difference.seconds, 60)
+        minutes, seconds = divmod(difference.days * seconds_in_day + difference.seconds, 60)
+        total_time = '{:02} minutes {:02} seconds'.format(int(minutes), int(seconds))
 
-        st.write(start_time)
-        st.write(finish_time)
-        st.write(total_time)
+        data = {'Start Time':[],'End Time':[],'Total Time':[]}
+        df_time = pd.DataFrame(data)
+        temp_row = [start_time,finish_time,total_time]
+        df_time.loc[len(df_time.index)] = temp_row
+
+        sort_cols = []
+        drop_cols = []
+        rename_cols = {}
+        format_cols = {}
+
+        style_t1 = format_df_for_dashboard(df_time, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+        st.write(style_t1)
 
         logger.info(f"Start Time: {start_time}")
         logger.info(f"Start Time: {finish_time}")
         logger.info(f"Total Time: {total_time}")
 
-        handle_exceptions_print_result(e1p1, 1, 1, logger)
-        handle_exceptions_print_result(e1p2, 1, 2, logger)
-        handle_exceptions_print_result(e1p3, 1, 3, logger)
-        handle_exceptions_print_result(e1p4, 1, 4, logger)
-        handle_exceptions_print_result(e1p5, 1, 5, logger)
+        executor_count = 1
+        data = {'Executor':[],'Process':[],'Result':[]}
+        df_result = pd.DataFrame(data)
+        
+        for x in range(1,6):
+            result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
+            temp_row = [executor_count,x,result]
+            df_result.loc[len(df_result.index)] = temp_row
 
-        handle_exceptions_print_result(e2p1, 2, 1, logger)
-        handle_exceptions_print_result(e2p2, 2, 2, logger)
-        handle_exceptions_print_result(e2p3, 2, 3, logger)
-        handle_exceptions_print_result(e2p4, 2, 4, logger)
-        handle_exceptions_print_result(e2p5, 2, 5, logger)
+        rename_cols = {}
+        cols_gradient = ['Result']
+        cols_drop = []
+        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        st.markdown(disp.to_html(), unsafe_allow_html=True)
 
-        handle_exceptions_print_result(e3p1, 3, 1, logger)
-        handle_exceptions_print_result(e3p2, 3, 2, logger)
-        handle_exceptions_print_result(e3p3, 3, 3, logger)
-        handle_exceptions_print_result(e3p4, 3, 4, logger)
-        handle_exceptions_print_result(e3p5, 3, 5, logger)
+        executor_count = 2
+        data = {'Executor':[],'Process':[],'Result':[]}
+        df_result = pd.DataFrame(data)
+        
+        for x in range(1,6):
+            result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
+            temp_row = [executor_count,x,result]
+            df_result.loc[len(df_result.index)] = temp_row
 
-        handle_exceptions_print_result(e5p1, 5, 1, logger)
-        handle_exceptions_print_result(e5p2, 5, 2, logger)
-        handle_exceptions_print_result(e5p3, 5, 3, logger)
-        handle_exceptions_print_result(e5p4, 5, 4, logger)
-        handle_exceptions_print_result(e5p5, 5, 5, logger)
+        rename_cols = {}
+        cols_gradient = ['Result']
+        cols_drop = []
+        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        st.markdown(disp.to_html(), unsafe_allow_html=True)
 
-        handle_exceptions_print_result(e6p1, 6, 1, logger)
-        handle_exceptions_print_result(e6p2, 6, 2, logger)
-        handle_exceptions_print_result(e6p3, 6, 3, logger)
-        handle_exceptions_print_result(e6p4, 6, 4, logger)
-        handle_exceptions_print_result(e6p5, 6, 5, logger)
+        executor_count = 3
+        data = {'Executor':[],'Process':[],'Result':[]}
+        df_result = pd.DataFrame(data)
+        
+        for x in range(1,6):
+            result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
+            temp_row = [executor_count,x,result]
+            df_result.loc[len(df_result.index)] = temp_row
 
-        handle_exceptions_print_result(e7p1, 7, 1, logger)
-        handle_exceptions_print_result(e7p2, 7, 2, logger)
-        handle_exceptions_print_result(e7p3, 7, 3, logger)
-        handle_exceptions_print_result(e7p4, 7, 4, logger)
-        handle_exceptions_print_result(e7p5, 7, 5, logger)
+        rename_cols = {}
+        cols_gradient = ['Result']
+        cols_drop = []
+        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        st.markdown(disp.to_html(), unsafe_allow_html=True)
+
+        executor_count = 5
+        data = {'Executor':[],'Process':[],'Result':[]}
+        df_result = pd.DataFrame(data)
+        
+        for x in range(1,6):
+            result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
+            temp_row = [executor_count,x,result]
+            df_result.loc[len(df_result.index)] = temp_row
+
+        rename_cols = {}
+        cols_gradient = ['Result']
+        cols_drop = []
+        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        st.markdown(disp.to_html(), unsafe_allow_html=True)
+
+        executor_count = 6
+        data = {'Executor':[],'Process':[],'Result':[]}
+        df_result = pd.DataFrame(data)
+        
+        for x in range(1,6):
+            result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
+            temp_row = [executor_count,x,result]
+            df_result.loc[len(df_result.index)] = temp_row
+
+        rename_cols = {}
+        cols_gradient = ['Result']
+        cols_drop = []
+        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        st.markdown(disp.to_html(), unsafe_allow_html=True)
+
+        executor_count = 7
+        range_tuple = (1,6)
+        data = {'Executor':[],'Process':[],'Result':[]}
+        df_result = pd.DataFrame(data)
+        
+        for x in range(1,6):
+            result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
+            temp_row = [executor_count,x,result]
+            df_result.loc[len(df_result.index)] = temp_row
+
+        rename_cols = {}
+        cols_gradient = ['Result']
+        cols_drop = []
+        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        st.markdown(disp.to_html(), unsafe_allow_html=True)
+
+        #handle_exceptions_print_result(e1p1, 1, 1, logger)
+        #handle_exceptions_print_result(e1p2, 1, 2, logger)
+        #handle_exceptions_print_result(e1p3, 1, 3, logger)
+        #handle_exceptions_print_result(e1p4, 1, 4, logger)
+        #handle_exceptions_print_result(e1p5, 1, 5, logger)
+
+        #handle_exceptions_print_result(e2p1, 2, 1, logger)
+        #handle_exceptions_print_result(e2p2, 2, 2, logger)
+        #handle_exceptions_print_result(e2p3, 2, 3, logger)
+        #handle_exceptions_print_result(e2p4, 2, 4, logger)
+        #handle_exceptions_print_result(e2p5, 2, 5, logger)
+
+        #handle_exceptions_print_result(e3p1, 3, 1, logger)
+        #handle_exceptions_print_result(e3p2, 3, 2, logger)
+        #handle_exceptions_print_result(e3p3, 3, 3, logger)
+        #handle_exceptions_print_result(e3p4, 3, 4, logger)
+        #handle_exceptions_print_result(e3p5, 3, 5, logger)
+
+        #handle_exceptions_print_result(e5p1, 5, 1, logger)
+        #handle_exceptions_print_result(e5p2, 5, 2, logger)
+        #handle_exceptions_print_result(e5p3, 5, 3, logger)
+        #handle_exceptions_print_result(e5p4, 5, 4, logger)
+        #handle_exceptions_print_result(e5p5, 5, 5, logger)
+
+        #handle_exceptions_print_result(e6p1, 6, 1, logger)
+        #handle_exceptions_print_result(e6p2, 6, 2, logger)
+        #handle_exceptions_print_result(e6p3, 6, 3, logger)
+        #handle_exceptions_print_result(e6p4, 6, 4, logger)
+        #handle_exceptions_print_result(e6p5, 6, 5, logger)
+
+        #handle_exceptions_print_result(e7p1, 7, 1, logger)
+        #handle_exceptions_print_result(e7p2, 7, 2, logger)
+        #handle_exceptions_print_result(e7p3, 7, 3, logger)
+        #handle_exceptions_print_result(e7p4, 7, 4, logger)
+        #handle_exceptions_print_result(e7p5, 7, 5, logger)
 
         #handle_exceptions_print_result(e8p1, 8, 1, logger)
         #handle_exceptions_print_result(e8p2, 8, 2, logger)
@@ -324,19 +443,43 @@ if option == 'Download Data':
         finish_time = now_finish.strftime("%H:%M:%S")
         difference = now_finish - now_start
         seconds_in_day = 24 * 60 * 60
-        total_time = divmod(difference.days * seconds_in_day + difference.seconds, 60)
+        minutes, seconds = divmod(difference.days * seconds_in_day + difference.seconds, 60)
+        total_time = '{:02} minutes {:02} seconds'.format(int(minutes), int(seconds))
 
-        st.write(start_time)
-        st.write(finish_time)
-        st.write(total_time)
+        data = {'Start Time':[],'End Time':[],'Total Time':[]}
+        df_time = pd.DataFrame(data)
+        temp_row = [start_time,finish_time,total_time]
+        df_time.loc[len(df_time.index)] = temp_row
+
+        sort_cols = []
+        drop_cols = []
+        rename_cols = {}
+        format_cols = {}
+
+        style_t1 = format_df_for_dashboard(df_time, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+        st.write(style_t1)
 
         logger.info(f"Start Time: {start_time}")
         logger.info(f"Start Time: {finish_time}")
         logger.info(f"Total Time: {total_time}")
 
-        handle_exceptions_print_result(e1p1, 1, 1, logger)
-        handle_exceptions_print_result(e1p2, 1, 2, logger)
-        handle_exceptions_print_result(e1p3, 1, 3, logger)
+        #handle_exceptions_print_result(e1p1, 1, 1, logger)
+        #handle_exceptions_print_result(e1p2, 1, 2, logger)
+        #handle_exceptions_print_result(e1p3, 1, 3, logger)
+        executor_count = 1
+        data = {'Executor':[],'Process':[],'Result':[]}
+        df_result = pd.DataFrame(data)
+        
+        for x in range(1,4):
+            result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
+            temp_row = [executor_count,x,result]
+            df_result.loc[len(df_result.index)] = temp_row
+
+        rename_cols = {}
+        cols_gradient = ['Result']
+        cols_drop = []
+        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        st.markdown(disp.to_html(), unsafe_allow_html=True)
 
 if option == 'Calendar':
     #st.subheader(f'Calendar')
@@ -438,7 +581,7 @@ if option == 'Macroeconomic Data':
             }
             format_date = True
 
-            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp = style_df_for_display_date(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab1.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 2
@@ -475,7 +618,7 @@ if option == 'Macroeconomic Data':
             #import pdb; pdb.set_trace()
             #disp = df_us_gdp_recent.style.format(format_cols)
 
-            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp = style_df_for_display_date(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab2.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 3
@@ -508,7 +651,7 @@ if option == 'Macroeconomic Data':
                 'Date': lambda t: t.strftime("%m-%d-%Y"),
             }
 
-            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp = style_df_for_display_date(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab3.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 4
@@ -540,7 +683,7 @@ if option == 'Macroeconomic Data':
                 'QoQ Annualized': '{:,.2%}'.format,
                 'Date': lambda t: t.strftime("%m-%d-%Y"),
             }
-            disp = style_df_for_display(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp = style_df_for_display_date(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab4.markdown(disp.to_html(), unsafe_allow_html=True)
 
 
@@ -606,7 +749,7 @@ if option == 'Macroeconomic Data':
                 'Date': lambda t: t.strftime("%m-%d-%Y"),
                 'Monthly Change (K)': '{:,.0f}'.format,
             }
-            disp = style_df_for_display(df_us_payems_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp = style_df_for_display_date(df_us_payems_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab1.markdown(disp.to_html(), unsafe_allow_html=True)
 
             
@@ -650,7 +793,7 @@ if option == 'Macroeconomic Data':
                 'CC Var': '{:,.0f}'.format,
                 'Date': lambda t: t.strftime("%m-%d-%Y"),
             }
-            disp = style_df_for_display(df_us_icsa_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp = style_df_for_display_date(df_us_icsa_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab2.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 3
@@ -688,17 +831,99 @@ if option == 'Macroeconomic Data':
 
             display_chart(chart_settings, df_us_civpart_all, series, tab3)
 
-
-
             #TAB 4
             tab4.subheader("ADP National Employment Report")
             #ADP = ADP
-            #TODO:
+            #TODO: Display the appropriate charts and tables
             #df_us_payems_all, df_us_payems_recent = get_stlouisfed_data('payems', 'Q', 10)
 
 
         if option_lagging_indicator_charts == '006 - PCE':
-            pass
+
+            tab1, tab2, tab3 = st.tabs(["📈 PCE Deflator", "📈 PCE Core", "📈 PCE Core vs Core CPI"])
+
+            #TODO: Display the appropriate charts and tables
+
+            df_us_pcepi_all, df_us_pcepi_recent = get_stlouisfed_data('pcepi', 'Q', 10)
+            df_us_pcepilfe_all, df_us_pcepilfe_recent = get_stlouisfed_data('pcepilfe', 'Q', 10)
+            df_us_dfedtaru_all, df_us_dfedtaru_recent = get_stlouisfed_data('dfedtaru', 'Q', 10)
+            df_us_cpilfesl_all, df_us_cpilfesl_recent = get_stlouisfed_data('cpilfesl', 'Q', 10)
+
+            #TAB 1
+            tab1.subheader("PCE Deflator")
+
+            series = "YoY"
+            chart_settings = {
+                "type": "line",
+                "title": "PCE YoY", 
+                "xlabel": "Year", 
+                "ylabel": "YoY Change", 
+            }
+
+            display_chart(chart_settings, df_us_pcepi_all, series, tab1)
+
+            chart_settings = {
+                "type": "line",
+                "title": "PCE YoY - Last 10 Years", 
+                "xlabel": "Year", 
+                "ylabel": "YoY Change", 
+            }
+
+            display_chart(chart_settings, df_us_pcepi_recent, series, tab1)
+            
+            rename_cols = {'DATE': 'Date', 'pcepi': 'PCE'}
+            cols_gradient = ['YoY']
+            cols_drop = ['QoQ','QoQ_ANNUALIZED']
+            format_cols = {
+                'YoY': '{:,.2%}'.format,
+                'PCE': '{:,.2f}'.format,
+                'Date': lambda t: t.strftime("%m-%d-%Y"),
+            }
+
+            disp = style_df_for_display_date(df_us_pcepi_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab1.markdown(disp.to_html(), unsafe_allow_html=True)
+
+            #TAB 2
+            tab1.subheader("PCE Core")
+
+            series = "YoY"
+            chart_settings = {
+                "type": "line",
+                "title": "PCE Core YoY", 
+                "xlabel": "Year", 
+                "ylabel": "YoY Change", 
+            }
+
+            display_chart(chart_settings, df_us_pcepilfe_all, series, tab2)
+
+            chart_settings = {
+                "type": "line",
+                "title": "PCE Core YoY - Last 10 Years", 
+                "xlabel": "Year", 
+                "ylabel": "YoY Change", 
+            }
+
+            display_chart(chart_settings, df_us_pcepilfe_recent, series, tab2)
+            
+            rename_cols = {'DATE': 'Date', 'pcepilfe': 'PCE Core'}
+            cols_gradient = ['YoY']
+            cols_drop = ['QoQ','QoQ_ANNUALIZED']
+            format_cols = {
+                'YoY': '{:,.2%}'.format,
+                'PCE Core': '{:,.2f}'.format,
+                'Date': lambda t: t.strftime("%m-%d-%Y"),
+            }
+
+            disp = style_df_for_display_date(df_us_pcepilfe_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab2.markdown(disp.to_html(), unsafe_allow_html=True)
+
+            #TODO: Superimpose df_us_dfedtaru_all
+            #TODO: Show 2% fed fund target rate
+            #TODO: Show y axis as percentage
+            #TAB 3
+
+
+
         if option_lagging_indicator_charts == '007 - US Inflation':
             pass
         if option_lagging_indicator_charts == '009 - US Industrial Production':
