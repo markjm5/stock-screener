@@ -29,6 +29,7 @@ from common import format_df_for_dashboard_flip, format_df_for_dashboard, format
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
 from common import display_chart, return_styled_ism_table1
 import seaborn as sns
+from copy import deepcopy
 
 debug = False
 st.set_page_config(
@@ -559,6 +560,7 @@ if option == 'Macroeconomic Data':
                 "title": "Total US GDP", 
                 "xlabel": "Year", 
                 "ylabel": "GDP", 
+                "ypercentage": False,
             }
 
             display_chart(chart_settings, df_us_gdp_all, series, tab1)
@@ -568,6 +570,8 @@ if option == 'Macroeconomic Data':
                 "title": "Total US GDP - Last 10 Years", 
                 "xlabel": "Year", 
                 "ylabel": "GDP", 
+                "ypercentage": False,
+
             }
 
             display_chart(chart_settings, df_us_gdp_recent, series, tab1)
@@ -594,6 +598,8 @@ if option == 'Macroeconomic Data':
                 "title": "US GDP QoQ", 
                 "xlabel": "Year", 
                 "ylabel": "GDP QoQ", 
+                "ypercentage": True,
+
             }
 
             display_chart(chart_settings, df_us_gdp_all, series, tab2)
@@ -603,9 +609,11 @@ if option == 'Macroeconomic Data':
                 "title": "US GDP QoQ - Last 10 Years", 
                 "xlabel": "Year", 
                 "ylabel": "GDP QoQ", 
+                "ypercentage": True,
+
             }
 
-            display_chart(chart_settings, df_us_gdp_recent, series, tab2)
+            display_chart(chart_settings, deepcopy(df_us_gdp_recent), series, tab2)
 
             cols_gradient = ['QoQ']
             rename_cols = {'DATE': 'Date'}
@@ -629,7 +637,9 @@ if option == 'Macroeconomic Data':
                 "type": "bar",
                 "title": "US GDP YoY", 
                 "xlabel": "Year", 
-                "ylabel": "GDP YoY", 
+                "ylabel": "GDP YoY",
+                "ypercentage": True,
+
             }
 
             display_chart(chart_settings, df_us_gdp_all, series, tab3)
@@ -639,9 +649,11 @@ if option == 'Macroeconomic Data':
                 "title": "US GDP YoY - Last 10 Years", 
                 "xlabel": "Year", 
                 "ylabel": "GDP YoY", 
+                "ypercentage": True,
+
             }
 
-            display_chart(chart_settings, df_us_gdp_recent, series, tab3)
+            display_chart(chart_settings, deepcopy(df_us_gdp_recent), series, tab3)
 
             cols_gradient = ['YoY']
             rename_cols = {'DATE': 'Date'}
@@ -663,6 +675,8 @@ if option == 'Macroeconomic Data':
                 "title": "US GDP QoQ Annualized", 
                 "xlabel": "Year", 
                 "ylabel": "GDP QoQ Annualized", 
+                "ypercentage": True,
+
             }
 
             display_chart(chart_settings, df_us_gdp_all, series, tab4)
@@ -672,9 +686,11 @@ if option == 'Macroeconomic Data':
                 "title": "US GDP QoQ Annualized - Last 10 Years", 
                 "xlabel": "Year", 
                 "ylabel": "GDP QoQ Annualized", 
+                "ypercentage": True,
+
             }
 
-            display_chart(chart_settings, df_us_gdp_recent, series, tab4)
+            display_chart(chart_settings, deepcopy(df_us_gdp_recent), series, tab4)
 
             rename_cols = {'DATE': 'Date','QoQ_ANNUALIZED':'QoQ Annualized'}
             cols_gradient = ['QoQ Annualized']
@@ -724,6 +740,8 @@ if option == 'Macroeconomic Data':
                 "title": "All Employees: Total Nonfarm Payrolls, Thousands of Persons, Monthly, Seasonally Adjusted", 
                 "xlabel": "Period", 
                 "ylabel": "Persons", 
+                "ypercentage": False,
+
             }
 
             display_chart(chart_settings, df_us_payems_recent, series, tab1)
@@ -735,6 +753,8 @@ if option == 'Macroeconomic Data':
                 "title": "Monthly Change in K", 
                 "xlabel": "Period", 
                 "ylabel": "Persons", 
+                "ypercentage": False,
+
             }
 
             display_chart(chart_settings, df_us_payems_recent, series, tab1)
@@ -777,6 +797,8 @@ if option == 'Macroeconomic Data':
                 "title": "Initial Claims", 
                 "xlabel": "Period", 
                 "ylabel": "Persons", 
+                "ypercentage": False,
+
             }
 
             display_chart(chart_settings, df_us_icsa_recent, series, tab2)
@@ -805,6 +827,8 @@ if option == 'Macroeconomic Data':
                 "title": "NFP", 
                 "xlabel": "Year", 
                 "ylabel": "Total NFP", 
+                "ypercentage": False,
+
             }
 
             display_chart(chart_settings, df_us_payems_all, series, tab3)
@@ -816,6 +840,8 @@ if option == 'Macroeconomic Data':
                 "title": "Unemployment Rate", 
                 "xlabel": "Year", 
                 "ylabel": "Unemployed %", 
+                "ypercentage": False,
+
             }
 
             display_chart(chart_settings, df_us_unrate_all, series, tab3)
@@ -827,6 +853,8 @@ if option == 'Macroeconomic Data':
                 "title": "Labour Participation Rate", 
                 "xlabel": "Year", 
                 "ylabel": "Participation %", 
+                "ypercentage": False,
+
             }
 
             display_chart(chart_settings, df_us_civpart_all, series, tab3)
@@ -844,10 +872,10 @@ if option == 'Macroeconomic Data':
 
             #TODO: Display the appropriate charts and tables
 
-            df_us_pcepi_all, df_us_pcepi_recent = get_stlouisfed_data('pcepi', 'Q', 10)
-            df_us_pcepilfe_all, df_us_pcepilfe_recent = get_stlouisfed_data('pcepilfe', 'Q', 10)
-            df_us_dfedtaru_all, df_us_dfedtaru_recent = get_stlouisfed_data('dfedtaru', 'Q', 10)
-            df_us_cpilfesl_all, df_us_cpilfesl_recent = get_stlouisfed_data('cpilfesl', 'Q', 10)
+            df_us_pcepi_all, df_us_pcepi_recent = get_stlouisfed_data('pcepi', 'M', 10)
+            df_us_pcepilfe_all, df_us_pcepilfe_recent = get_stlouisfed_data('pcepilfe', 'M', 10)
+            df_us_dfedtaru_all, df_us_dfedtaru_recent = get_stlouisfed_data('dfedtaru', 'M', 10)
+            df_us_cpilfesl_all, df_us_cpilfesl_recent = get_stlouisfed_data('cpilfesl', 'M', 10)
 
             #TAB 1
             tab1.subheader("PCE Deflator")
@@ -858,6 +886,8 @@ if option == 'Macroeconomic Data':
                 "title": "PCE YoY", 
                 "xlabel": "Year", 
                 "ylabel": "YoY Change", 
+                "ypercentage": True,
+
             }
 
             display_chart(chart_settings, df_us_pcepi_all, series, tab1)
@@ -867,24 +897,27 @@ if option == 'Macroeconomic Data':
                 "title": "PCE YoY - Last 10 Years", 
                 "xlabel": "Year", 
                 "ylabel": "YoY Change", 
+                "ypercentage": True,
+
             }
 
-            display_chart(chart_settings, df_us_pcepi_recent, series, tab1)
+            display_chart(chart_settings, deepcopy(df_us_pcepi_recent), series, tab1)
             
-            rename_cols = {'DATE': 'Date', 'pcepi': 'PCE'}
+            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'pcepi': 'PCE'}
             cols_gradient = ['YoY']
             cols_drop = ['QoQ','QoQ_ANNUALIZED']
             format_cols = {
+                'MoM': '{:,.2%}'.format,
                 'YoY': '{:,.2%}'.format,
                 'PCE': '{:,.2f}'.format,
-                'Date': lambda t: t.strftime("%m-%d-%Y"),
+                'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
             }
 
             disp = style_df_for_display_date(df_us_pcepi_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab1.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 2
-            tab1.subheader("PCE Core")
+            tab2.subheader("PCE Core")
 
             series = "YoY"
             chart_settings = {
@@ -892,6 +925,7 @@ if option == 'Macroeconomic Data':
                 "title": "PCE Core YoY", 
                 "xlabel": "Year", 
                 "ylabel": "YoY Change", 
+                "ypercentage": True,
             }
 
             display_chart(chart_settings, df_us_pcepilfe_all, series, tab2)
@@ -901,17 +935,19 @@ if option == 'Macroeconomic Data':
                 "title": "PCE Core YoY - Last 10 Years", 
                 "xlabel": "Year", 
                 "ylabel": "YoY Change", 
+                "ypercentage": True,
             }
 
-            display_chart(chart_settings, df_us_pcepilfe_recent, series, tab2)
+            display_chart(chart_settings, deepcopy(df_us_pcepilfe_recent), series, tab2)
             
-            rename_cols = {'DATE': 'Date', 'pcepilfe': 'PCE Core'}
+            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'pcepilfe': 'PCE Core'}
             cols_gradient = ['YoY']
             cols_drop = ['QoQ','QoQ_ANNUALIZED']
             format_cols = {
+                'MoM': '{:,.2%}'.format,
                 'YoY': '{:,.2%}'.format,
-                'PCE Core': '{:,.2f}'.format,
-                'Date': lambda t: t.strftime("%m-%d-%Y"),
+                'PCE': '{:,.2f}'.format,
+                'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
             }
 
             disp = style_df_for_display_date(df_us_pcepilfe_recent,cols_gradient,rename_cols,cols_drop,format_cols)
@@ -919,9 +955,10 @@ if option == 'Macroeconomic Data':
 
             #TODO: Superimpose df_us_dfedtaru_all
             #TODO: Show 2% fed fund target rate
-            #TODO: Show y axis as percentage
-            #TAB 3
+            
 
+            #TAB 3
+            tab3.subheader("PCE Core vs Core CPI")
 
 
         if option_lagging_indicator_charts == '007 - US Inflation':
@@ -978,6 +1015,8 @@ if option == 'Macroeconomic Data':
                 "title": "Total US GDP", 
                 "xlabel": "Year", 
                 "ylabel": "GDP", 
+                "ypercentage": False,
+
             }
 
             #display_chart(chart_settings, df_us_gdp_all, series, tab1)
@@ -993,6 +1032,8 @@ if option == 'Macroeconomic Data':
                 "title": "Total US GDP", 
                 "xlabel": "Year", 
                 "ylabel": "GDP", 
+                "ypercentage": False,
+
             }
 
             #display_chart(chart_settings, df_us_gdp_all, series, tab1)
@@ -1008,6 +1049,8 @@ if option == 'Macroeconomic Data':
                 "title": "Total US GDP", 
                 "xlabel": "Year", 
                 "ylabel": "GDP", 
+                "ypercentage": False,
+
             }
 
             #display_chart(chart_settings, df_us_gdp_all, series, tab1)
@@ -1021,6 +1064,8 @@ if option == 'Macroeconomic Data':
                 "title": "Total US GDP", 
                 "xlabel": "Year", 
                 "ylabel": "GDP", 
+                "ypercentage": False,
+
             }
 
             #display_chart(chart_settings, df_us_gdp_all, series, tab1)
@@ -1034,6 +1079,8 @@ if option == 'Macroeconomic Data':
                 "title": "Total US GDP", 
                 "xlabel": "Year", 
                 "ylabel": "GDP", 
+                "ypercentage": False,
+
             }
 
             #display_chart(chart_settings, df_us_gdp_all, series, tab1)
@@ -1047,6 +1094,8 @@ if option == 'Macroeconomic Data':
                 "title": "Total US GDP", 
                 "xlabel": "Year", 
                 "ylabel": "GDP", 
+                "ypercentage": False,
+
             }
 
             #display_chart(chart_settings, df_us_gdp_all, series, tab1)
@@ -1060,6 +1109,8 @@ if option == 'Macroeconomic Data':
                 "title": "Total US GDP", 
                 "xlabel": "Year", 
                 "ylabel": "GDP", 
+                "ypercentage": False,
+
             }
 
             #display_chart(chart_settings, df_us_gdp_all, series, tab1)
@@ -1080,6 +1131,8 @@ if option == 'Macroeconomic Data':
                 "title": "Total US GDP", 
                 "xlabel": "Year", 
                 "ylabel": "GDP", 
+                "ypercentage": False,
+
             }
 
             #display_chart(chart_settings, df_us_gdp_all, series, tab1)

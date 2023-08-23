@@ -17,6 +17,7 @@ import yfinance as yf
 import psycopg2, psycopg2.extras
 import config
 import logging
+import matplotlib.ticker as mtick
 from matplotlib import pyplot as plt
 from selenium.common.exceptions import TimeoutException as ste
 from selenium import webdriver
@@ -3071,10 +3072,17 @@ def convert_excelsheet_to_dataframe(excel_file_path,sheet_name,date_exists=False
   return df
 
 def display_chart(settings, df,series, tab):
+  #ax = df['myvar'].plot(kind='bar')
+  #ax.yaxis.set_major_formatter(mtick.PercentFormatter())
+
   #import pdb; pdb.set_trace()
   plt.style.use('ggplot')
   #plt.style.use('bmh')
- 
+  
+  if(settings['ypercentage']):
+    df[series] = df[series] * 100
+    plt.gca().yaxis.set_major_formatter(mtick.PercentFormatter())            
+
   #Add the appropriate dataframes to the 2 histogram vars
   if(settings['type'] == 'line'):
     plt.plot(df["DATE"], df[series])
@@ -3087,7 +3095,7 @@ def display_chart(settings, df,series, tab):
   plt.xticks(rotation='vertical')
   # Set the font size for x tick labels
   plt.rc('xtick', labelsize=8)
-  plt.rc('ytick', labelsize=8)            
+  plt.rc('ytick', labelsize=8)
   plt.tight_layout()
   plt.grid(True)
   tab.pyplot(plt)
