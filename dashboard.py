@@ -934,6 +934,8 @@ if option == 'Macroeconomic Data':
 
             display_chart(chart_settings, df_us_pcepilfe_all, series, tab2, series2)
 
+            #TODO: Superimpose df_us_dfedtaru_all into chart as well as table
+
             chart_settings = {
                 "type": "line",
                 "title": "PCE Core YoY - Last 10 Years", 
@@ -942,7 +944,7 @@ if option == 'Macroeconomic Data':
                 "ypercentage": True,
             }
 
-            display_chart(chart_settings, deepcopy(df_us_pcepilfe_recent), series, tab2, series2)
+            display_chart(chart_settings, deepcopy(df_us_pcepilfe_recent), series, tab2)
             
             rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'pcepilfe': 'PCE Core', 'target_rate_percent': 'Fed Target'}
             cols_gradient = ['YoY']
