@@ -918,6 +918,10 @@ if option == 'Macroeconomic Data':
 
             #TAB 2
             tab2.subheader("PCE Core")
+            df_us_pcepilfe_all["target_rate_percent"] = 2
+            df_us_pcepilfe_recent["target_rate_percent"] = 2
+            series2 = "target_rate_percent"
+            #import pdb; pdb.set_trace()
 
             series = "YoY"
             chart_settings = {
@@ -928,7 +932,7 @@ if option == 'Macroeconomic Data':
                 "ypercentage": True,
             }
 
-            display_chart(chart_settings, df_us_pcepilfe_all, series, tab2)
+            display_chart(chart_settings, df_us_pcepilfe_all, series, tab2, series2)
 
             chart_settings = {
                 "type": "line",
@@ -938,12 +942,13 @@ if option == 'Macroeconomic Data':
                 "ypercentage": True,
             }
 
-            display_chart(chart_settings, deepcopy(df_us_pcepilfe_recent), series, tab2)
+            display_chart(chart_settings, deepcopy(df_us_pcepilfe_recent), series, tab2, series2)
             
-            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'pcepilfe': 'PCE Core'}
+            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'pcepilfe': 'PCE Core', 'target_rate_percent': 'Fed Target'}
             cols_gradient = ['YoY']
             cols_drop = ['QoQ','QoQ_ANNUALIZED']
             format_cols = {
+                'Fed Target': '{:,.2f}%'.format,
                 'MoM': '{:,.2%}'.format,
                 'YoY': '{:,.2%}'.format,
                 'PCE': '{:,.2f}'.format,
@@ -1006,6 +1011,8 @@ if option == 'Macroeconomic Data':
             tab1.subheader(tabs[0])
             style_t1 = return_styled_ism_table1(df_sectors_last_6_months)
             tab1.write(style_t1)
+
+            #TODO: Subplotting all the sectors: https://www.geeksforgeeks.org/plot-multiple-plots-in-matplotlib/
 
             #Table containing sector values for last 6 months across all sectors
             #Chart showing sector values across all sectors for last 6 months

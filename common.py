@@ -3071,7 +3071,7 @@ def convert_excelsheet_to_dataframe(excel_file_path,sheet_name,date_exists=False
 
   return df
 
-def display_chart(settings, df,series, tab):
+def display_chart(settings, df,series, tab, series2=None):
   #ax = df['myvar'].plot(kind='bar')
   #ax.yaxis.set_major_formatter(mtick.PercentFormatter())
 
@@ -3086,6 +3086,9 @@ def display_chart(settings, df,series, tab):
   #Add the appropriate dataframes to the 2 histogram vars
   if(settings['type'] == 'line'):
     plt.plot(df["DATE"], df[series])
+    if(series2):
+      plt.plot(df["DATE"], df[series2])
+
   elif(settings['type'] == 'bar'):
     plt.bar(df["DATE"], df[series], width=50)       
 
