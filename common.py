@@ -1939,8 +1939,8 @@ def combine_df(df_original, df_new):
 
   return df_original.combine(df_new, take_larger, overwrite=False)  
 
-def append_two_df(df1, df2):
-  merged_data = pd.merge(df1, df2, how='outer', on='DATE')
+def append_two_df(df1, df2, how='outer'):
+  merged_data = pd.merge(df1, df2, how=how, on='DATE')
   return merged_data
 
 def take_larger(s1, s2):

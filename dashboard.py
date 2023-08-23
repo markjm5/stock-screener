@@ -27,7 +27,7 @@ from common import set_price_action_ta, set_todays_insider_trades, combine_df_on
 from common import style_df_for_display, style_df_for_display_date, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
-from common import display_chart, return_styled_ism_table1
+from common import display_chart, return_styled_ism_table1, append_two_df
 import seaborn as sns
 from copy import deepcopy
 
@@ -935,6 +935,11 @@ if option == 'Macroeconomic Data':
             display_chart(chart_settings, df_us_pcepilfe_all, series, tab2, series2)
 
             #TODO: Superimpose df_us_dfedtaru_all into chart as well as table
+            cols_drop = ['QoQ_ANNUALIZED','QoQ','YoY','MoM']            
+            df_us_dfedtaru_recent = df_us_dfedtaru_recent.drop(cols_drop, axis=1)
+            df_us_pcepilfe_recent = append_two_df(df_us_pcepilfe_recent,df_us_dfedtaru_recent, 'inner')
+            #import pdb; pdb.set_trace()
+            series2 = 'dfedtaru'
 
             chart_settings = {
                 "type": "line",
@@ -944,13 +949,14 @@ if option == 'Macroeconomic Data':
                 "ypercentage": True,
             }
 
-            display_chart(chart_settings, deepcopy(df_us_pcepilfe_recent), series, tab2)
+            display_chart(chart_settings, deepcopy(df_us_pcepilfe_recent), series, tab2, series2)
             
-            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'pcepilfe': 'PCE Core', 'target_rate_percent': 'Fed Target'}
+            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'pcepilfe': 'PCE Core', 'target_rate_percent': 'Fed Target', 'dfedtaru': 'Fed Fund Target'}
             cols_gradient = ['YoY']
             cols_drop = ['QoQ','QoQ_ANNUALIZED']
             format_cols = {
                 'Fed Target': '{:,.2f}%'.format,
+                'Fed Fund Target': '{:,.2f}%'.format,
                 'MoM': '{:,.2%}'.format,
                 'YoY': '{:,.2%}'.format,
                 'PCE': '{:,.2f}'.format,
