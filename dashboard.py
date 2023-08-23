@@ -87,11 +87,14 @@ if option == 'Download Data':
     clicked1 = st.markdown("Download Price Action Data (takes 15 minutes)")
     clicked1 = st.button(label="Click to Download Price Action Data",key="price_data")
 
-    clicked2 = st.markdown("Download Stock Data (takes 6 hours)")
+    clicked2 = st.markdown("Download Stock Data (takes 1 hour)")
     clicked2 = st.button(label="Click to Download Stock Data", key="stock_data")
 
-    clicked3 = st.markdown("Download Macroeconomic Data (takes 45 minutes)")
-    clicked3 = st.button(label="Click to Download Macroeconomic Data", key="macro_data")
+    clicked3 = st.markdown("Download Stock Row Data (takes 6 hours)")
+    clicked3 = st.button(label="Click to Download Stock Row Data", key="stock_row_data")
+
+    clicked4 = st.markdown("Download Macroeconomic Data (takes 45 minutes)")
+    clicked4 = st.button(label="Click to Download Macroeconomic Data", key="macro_data")
 
     if(clicked1):
         #Download Macro Data
@@ -100,7 +103,6 @@ if option == 'Download Data':
         start_time = now_start.strftime("%H:%M:%S")    
 
         st.write(f'{start_time} - Downloading Price Data...')
-        df_tickers_all = get_zacks_us_companies()       
         df_tickers = get_data(table="company") 
         with concurrent.futures.ProcessPoolExecutor() as executor:
             e1p1 = executor.submit(set_earningswhispers_earnings_calendar, df_tickers_all, logger)
@@ -170,10 +172,7 @@ if option == 'Download Data':
             #e2p1 = set_zacks_earnings_surprises(df_tickers1, logger)
             #e3p1 = set_zacks_product_line_geography(df_tickers1, logger)
             #e4p1 = set_finwiz_stock_data(df_tickers, logger)
-            #import pdb; pdb.set_trace()
-            e5p4 = set_stockrow_stock_data(df_tickers4, logger)
-            #e6p1 = set_yf_key_stats(df_tickers1, logger) 
-            #e7p1 = set_zacks_peer_comparison(df_tickers5, logger)
+            e5p1 = set_stockrow_stock_data(df_tickers4, logger)
             import pdb; pdb.set_trace()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -198,26 +197,19 @@ if option == 'Download Data':
             e3p4 = executor.submit(set_zacks_product_line_geography, df_tickers4, logger)
             e3p5 = executor.submit(set_zacks_product_line_geography, df_tickers5, logger)
 
-            #Executor 5: set_stockrow_stock_data
-            e5p1 = executor.submit(set_stockrow_stock_data, df_tickers1, logger)
-            e5p2 = executor.submit(set_stockrow_stock_data, df_tickers2, logger)
-            e5p3 = executor.submit(set_stockrow_stock_data, df_tickers3, logger)
-            e5p4 = executor.submit(set_stockrow_stock_data, df_tickers4, logger)
-            e5p5 = executor.submit(set_stockrow_stock_data, df_tickers5, logger)
+            #Executor 4: set_yf_key_stats
+            e4p1 = executor.submit(set_yf_key_stats, df_tickers1, logger)
+            e4p2 = executor.submit(set_yf_key_stats, df_tickers2, logger)
+            e4p3 = executor.submit(set_yf_key_stats, df_tickers3, logger)
+            e4p4 = executor.submit(set_yf_key_stats, df_tickers4, logger)
+            e4p5 = executor.submit(set_yf_key_stats, df_tickers5, logger)
 
-            #Executor 6: set_yf_key_stats
-            e6p1 = executor.submit(set_yf_key_stats, df_tickers1, logger)
-            e6p2 = executor.submit(set_yf_key_stats, df_tickers2, logger)
-            e6p3 = executor.submit(set_yf_key_stats, df_tickers3, logger)
-            e6p4 = executor.submit(set_yf_key_stats, df_tickers4, logger)
-            e6p5 = executor.submit(set_yf_key_stats, df_tickers5, logger)
-
-            #Executor 7: set_zacks_peer_comparison
-            e7p1 = executor.submit(set_zacks_peer_comparison, df_tickers1, logger)
-            e7p2 = executor.submit(set_zacks_peer_comparison, df_tickers2, logger)
-            e7p3 = executor.submit(set_zacks_peer_comparison, df_tickers3, logger)
-            e7p4 = executor.submit(set_zacks_peer_comparison, df_tickers4, logger)
-            e7p5 = executor.submit(set_zacks_peer_comparison, df_tickers5, logger)
+            #Executor 5: set_zacks_peer_comparison
+            e5p1 = executor.submit(set_zacks_peer_comparison, df_tickers1, logger)
+            e5p2 = executor.submit(set_zacks_peer_comparison, df_tickers2, logger)
+            e5p3 = executor.submit(set_zacks_peer_comparison, df_tickers3, logger)
+            e5p4 = executor.submit(set_zacks_peer_comparison, df_tickers4, logger)
+            e5p5 = executor.submit(set_zacks_peer_comparison, df_tickers5, logger)
 
             #Executor 8: set_insider_trades_company
             #e8p1 = executor.submit(set_insider_trades_company, df_tickers1, logger)
@@ -298,6 +290,21 @@ if option == 'Download Data':
         disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
+        executor_count = 4
+        data = {'Executor':[],'Process':[],'Result':[]}
+        df_result = pd.DataFrame(data)
+        
+        for x in range(1,6):
+            result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
+            temp_row = [executor_count,x,result]
+            df_result.loc[len(df_result.index)] = temp_row
+
+        rename_cols = {}
+        cols_gradient = ['Result']
+        cols_drop = []
+        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        st.markdown(disp.to_html(), unsafe_allow_html=True)
+
         executor_count = 5
         data = {'Executor':[],'Process':[],'Result':[]}
         df_result = pd.DataFrame(data)
@@ -313,82 +320,73 @@ if option == 'Download Data':
         disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
-        executor_count = 6
-        data = {'Executor':[],'Process':[],'Result':[]}
-        df_result = pd.DataFrame(data)
-        
-        for x in range(1,6):
-            result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
-            temp_row = [executor_count,x,result]
-            df_result.loc[len(df_result.index)] = temp_row
-
-        rename_cols = {}
-        cols_gradient = ['Result']
-        cols_drop = []
-        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
-        st.markdown(disp.to_html(), unsafe_allow_html=True)
-
-        executor_count = 7
-        range_tuple = (1,6)
-        data = {'Executor':[],'Process':[],'Result':[]}
-        df_result = pd.DataFrame(data)
-        
-        for x in range(1,6):
-            result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
-            temp_row = [executor_count,x,result]
-            df_result.loc[len(df_result.index)] = temp_row
-
-        rename_cols = {}
-        cols_gradient = ['Result']
-        cols_drop = []
-        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
-        st.markdown(disp.to_html(), unsafe_allow_html=True)
-
-        #handle_exceptions_print_result(e1p1, 1, 1, logger)
-        #handle_exceptions_print_result(e1p2, 1, 2, logger)
-        #handle_exceptions_print_result(e1p3, 1, 3, logger)
-        #handle_exceptions_print_result(e1p4, 1, 4, logger)
-        #handle_exceptions_print_result(e1p5, 1, 5, logger)
-
-        #handle_exceptions_print_result(e2p1, 2, 1, logger)
-        #handle_exceptions_print_result(e2p2, 2, 2, logger)
-        #handle_exceptions_print_result(e2p3, 2, 3, logger)
-        #handle_exceptions_print_result(e2p4, 2, 4, logger)
-        #handle_exceptions_print_result(e2p5, 2, 5, logger)
-
-        #handle_exceptions_print_result(e3p1, 3, 1, logger)
-        #handle_exceptions_print_result(e3p2, 3, 2, logger)
-        #handle_exceptions_print_result(e3p3, 3, 3, logger)
-        #handle_exceptions_print_result(e3p4, 3, 4, logger)
-        #handle_exceptions_print_result(e3p5, 3, 5, logger)
-
-        #handle_exceptions_print_result(e5p1, 5, 1, logger)
-        #handle_exceptions_print_result(e5p2, 5, 2, logger)
-        #handle_exceptions_print_result(e5p3, 5, 3, logger)
-        #handle_exceptions_print_result(e5p4, 5, 4, logger)
-        #handle_exceptions_print_result(e5p5, 5, 5, logger)
-
-        #handle_exceptions_print_result(e6p1, 6, 1, logger)
-        #handle_exceptions_print_result(e6p2, 6, 2, logger)
-        #handle_exceptions_print_result(e6p3, 6, 3, logger)
-        #handle_exceptions_print_result(e6p4, 6, 4, logger)
-        #handle_exceptions_print_result(e6p5, 6, 5, logger)
-
-        #handle_exceptions_print_result(e7p1, 7, 1, logger)
-        #handle_exceptions_print_result(e7p2, 7, 2, logger)
-        #handle_exceptions_print_result(e7p3, 7, 3, logger)
-        #handle_exceptions_print_result(e7p4, 7, 4, logger)
-        #handle_exceptions_print_result(e7p5, 7, 5, logger)
-
-        #handle_exceptions_print_result(e8p1, 8, 1, logger)
-        #handle_exceptions_print_result(e8p2, 8, 2, logger)
-        #handle_exceptions_print_result(e8p3, 8, 3, logger)
-        #handle_exceptions_print_result(e8p4, 8, 4, logger)
-        #handle_exceptions_print_result(e8p5, 8, 5, logger)
-
         st.write(f'Status of Finwiz Stock Data: {finwiz_stock_data_status}')
 
     if(clicked3):
+        logger = get_logger()
+        now_start = dt.now()
+        start_time = now_start.strftime("%H:%M:%S")    
+
+        st.write(f'{start_time} - Downloading Macroeconomic Data...')
+
+        df_tickers, success = write_zacks_ticker_data_to_db(df_tickers_all, logger)
+        df_tickers1, df_tickers2, df_tickers3, df_tickers4, df_tickers5 = np.array_split(df_tickers, 5)
+
+        if(debug):
+            #DEBUG CODE
+            #df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL','AIMC'])]
+            # Write the output of all these functions into the database
+            #e1p1 = set_zacks_balance_sheet_shares(df_tickers1, logger)
+            import pdb; pdb.set_trace()
+
+        with concurrent.futures.ProcessPoolExecutor() as executor:            
+            #Executor 1: set_stockrow_stock_data
+            e1p1 = executor.submit(set_stockrow_stock_data, df_tickers1, logger)
+            e1p2 = executor.submit(set_stockrow_stock_data, df_tickers2, logger)
+            e1p3 = executor.submit(set_stockrow_stock_data, df_tickers3, logger)
+            e1p4 = executor.submit(set_stockrow_stock_data, df_tickers4, logger)
+            e1p5 = executor.submit(set_stockrow_stock_data, df_tickers5, logger)
+
+        now_finish = dt.now()
+        finish_time = now_finish.strftime("%H:%M:%S")
+        difference = now_finish - now_start
+        seconds_in_day = 24 * 60 * 60
+        minutes, seconds = divmod(difference.days * seconds_in_day + difference.seconds, 60)
+        total_time = '{:02} minutes {:02} seconds'.format(int(minutes), int(seconds))
+
+        data = {'Start Time':[],'End Time':[],'Total Time':[]}
+        df_time = pd.DataFrame(data)
+        temp_row = [start_time,finish_time,total_time]
+        df_time.loc[len(df_time.index)] = temp_row
+
+        sort_cols = []
+        drop_cols = []
+        rename_cols = {}
+        format_cols = {}
+
+        style_t1 = format_df_for_dashboard(df_time, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+        st.write(style_t1)
+
+        logger.info(f"Start Time: {start_time}")
+        logger.info(f"Start Time: {finish_time}")
+        logger.info(f"Total Time: {total_time}")
+
+        executor_count = 1
+        data = {'Executor':[],'Process':[],'Result':[]}
+        df_result = pd.DataFrame(data)
+        
+        for x in range(1,6):
+            result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
+            temp_row = [executor_count,x,result]
+            df_result.loc[len(df_result.index)] = temp_row
+
+        rename_cols = {}
+        cols_gradient = ['Result']
+        cols_drop = []
+        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        st.markdown(disp.to_html(), unsafe_allow_html=True)
+
+    if(clicked4):
         logger = get_logger()
         now_start = dt.now()
         start_time = now_start.strftime("%H:%M:%S")    
@@ -964,15 +962,11 @@ if option == 'Macroeconomic Data':
             }
 
             disp = style_df_for_display_date(df_us_pcepilfe_recent,cols_gradient,rename_cols,cols_drop,format_cols)
-            tab2.markdown(disp.to_html(), unsafe_allow_html=True)
-
-            #TODO: Superimpose df_us_dfedtaru_all
-            #TODO: Show 2% fed fund target rate
-            
+            tab2.markdown(disp.to_html(), unsafe_allow_html=True)           
 
             #TAB 3
             tab3.subheader("PCE Core vs Core CPI")
-
+            #TODO
 
         if option_lagging_indicator_charts == '007 - US Inflation':
             pass
