@@ -3088,6 +3088,8 @@ def display_chart(settings, df,series, tab, series2=None):
     plt.plot(df["DATE"], df[series])
     if(series2):
       plt.plot(df["DATE"], df[series2])
+      # Insert legend because we now have multiple values
+      plt.legend([series, series2], fontsize="x-small", loc="upper left")
 
   elif(settings['type'] == 'bar'):
     plt.bar(df["DATE"], df[series], width=50)       

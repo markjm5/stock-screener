@@ -31,7 +31,6 @@ from common import display_chart, return_styled_ism_table1, append_two_df
 import seaborn as sns
 from copy import deepcopy
 
-debug = False
 st.set_page_config(
     page_title="Stock Screener App",
     page_icon=":shark:",
@@ -153,6 +152,8 @@ if option == 'Download Data':
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
     if(clicked2):
+        debug = False
+
         logger = get_logger()
         now_start = dt.now()
         start_time = now_start.strftime("%H:%M:%S")    
@@ -171,8 +172,8 @@ if option == 'Download Data':
             #e1p1 = set_zacks_balance_sheet_shares(df_tickers1, logger)
             #e2p1 = set_zacks_earnings_surprises(df_tickers1, logger)
             #e3p1 = set_zacks_product_line_geography(df_tickers1, logger)
-            #e4p1 = set_finwiz_stock_data(df_tickers, logger)
-            e5p1 = set_stockrow_stock_data(df_tickers4, logger)
+            #e4p1 = set_yf_key_stats(df_tickers, logger)
+            e5p1 = set_zacks_peer_comparison(df_tickers4, logger)
             import pdb; pdb.set_trace()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -323,6 +324,8 @@ if option == 'Download Data':
         st.write(f'Status of Finwiz Stock Data: {finwiz_stock_data_status}')
 
     if(clicked3):
+        debug = True
+
         logger = get_logger()
         now_start = dt.now()
         start_time = now_start.strftime("%H:%M:%S")    
@@ -336,7 +339,7 @@ if option == 'Download Data':
             #DEBUG CODE
             #df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL','AIMC'])]
             # Write the output of all these functions into the database
-            #e1p1 = set_zacks_balance_sheet_shares(df_tickers1, logger)
+            e1p1 = set_stockrow_stock_data(df_tickers1, logger)
             import pdb; pdb.set_trace()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:            
