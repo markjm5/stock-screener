@@ -152,7 +152,7 @@ if option == 'Download Data':
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
     if(clicked2):
-        debug = False
+        debug = True
 
         logger = get_logger()
         now_start = dt.now()
@@ -171,9 +171,9 @@ if option == 'Download Data':
             # Write the output of all these functions into the database
             #e1p1 = set_zacks_balance_sheet_shares(df_tickers1, logger)
             #e2p1 = set_zacks_earnings_surprises(df_tickers1, logger)
-            #e3p1 = set_zacks_product_line_geography(df_tickers1, logger)
+            e3p1 = set_zacks_product_line_geography(df_tickers1, logger)
             #e4p1 = set_yf_key_stats(df_tickers, logger)
-            e5p1 = set_zacks_peer_comparison(df_tickers4, logger)
+            #e5p1 = set_zacks_peer_comparison(df_tickers4, logger)
             import pdb; pdb.set_trace()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:
@@ -972,7 +972,168 @@ if option == 'Macroeconomic Data':
             #TODO
 
         if option_lagging_indicator_charts == '007 - US Inflation':
-            pass
+            tab1, tab2, tab3, tab4 = st.tabs(["📈 CPI", "📈 CPI Food", "📈 CPI Energy", "📈 CPI Core"])
+
+            #TODO: Display the appropriate charts and tables
+            df_us_cpiaucsl_all, df_us_cpiaucsl_recent = get_stlouisfed_data('cpiaucsl', 'M', 10)
+            df_us_cpifabsl_all, df_us_cpifabsl_recent = get_stlouisfed_data('cpifabsl', 'M', 10)
+            df_us_cpiengsl_all, df_us_cpiengsl_recent = get_stlouisfed_data('cpiengsl', 'M', 10)
+            df_us_cpilfesl_all, df_us_cpilfesl_recent = get_stlouisfed_data('cpilfesl', 'M', 10)
+
+            #TAB 1
+            tab1.subheader("CPI")
+
+            series = "YoY"
+            chart_settings = {
+                "type": "line",
+                "title": "CPI YoY", 
+                "xlabel": "Year", 
+                "ylabel": "YoY Change", 
+                "ypercentage": True,
+
+            }
+
+            display_chart(chart_settings, df_us_cpiaucsl_all, series, tab1)
+
+            chart_settings = {
+                "type": "line",
+                "title": "CPI YoY - Last 10 Years", 
+                "xlabel": "Year", 
+                "ylabel": "YoY Change", 
+                "ypercentage": True,
+
+            }
+
+            display_chart(chart_settings, deepcopy(df_us_cpiaucsl_recent), series, tab1)
+            
+            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'cpiaucsl': 'CPI'}
+            cols_gradient = ['YoY']
+            cols_drop = ['QoQ','QoQ_ANNUALIZED']
+            format_cols = {
+                'MoM': '{:,.2%}'.format,
+                'YoY': '{:,.2%}'.format,
+                'CPI': '{:,.2f}'.format,
+                'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
+            }
+
+            disp = style_df_for_display_date(df_us_cpiaucsl_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab1.markdown(disp.to_html(), unsafe_allow_html=True)           
+
+           #TAB 2
+            tab2.subheader("CPI Food & Beverages")
+
+            series = "YoY"
+            chart_settings = {
+                "type": "line",
+                "title": "CPI Food & Beverages YoY", 
+                "xlabel": "Year", 
+                "ylabel": "YoY Change", 
+                "ypercentage": True,
+
+            }
+
+            display_chart(chart_settings, df_us_cpifabsl_all, series, tab2)
+
+            chart_settings = {
+                "type": "line",
+                "title": "CPI Food & Beverages YoY - Last 10 Years", 
+                "xlabel": "Year", 
+                "ylabel": "YoY Change", 
+                "ypercentage": True,
+
+            }
+
+            display_chart(chart_settings, deepcopy(df_us_cpifabsl_recent), series, tab2)
+            
+            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'cpifabsl': 'CPI Food & Beverages'}
+            cols_gradient = ['YoY']
+            cols_drop = ['QoQ','QoQ_ANNUALIZED']
+            format_cols = {
+                'MoM': '{:,.2%}'.format,
+                'YoY': '{:,.2%}'.format,
+                'CPI Food & Beverages': '{:,.2f}'.format,
+                'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
+            }
+
+            disp = style_df_for_display_date(df_us_cpifabsl_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab2.markdown(disp.to_html(), unsafe_allow_html=True)           
+
+            #TAB 3
+            tab3.subheader("CPI Energy")
+
+            series = "YoY"
+            chart_settings = {
+                "type": "line",
+                "title": "CPI Energy YoY", 
+                "xlabel": "Year", 
+                "ylabel": "YoY Change", 
+                "ypercentage": True,
+            }
+
+            display_chart(chart_settings, df_us_cpiengsl_all, series, tab3)
+
+            chart_settings = {
+                "type": "line",
+                "title": "CPI Energy YoY - Last 10 Years", 
+                "xlabel": "Year", 
+                "ylabel": "YoY Change", 
+                "ypercentage": True,
+
+            }
+
+            display_chart(chart_settings, deepcopy(df_us_cpiengsl_recent), series, tab3)
+            
+            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'cpiengsl': 'CPI Energy'}
+            cols_gradient = ['YoY']
+            cols_drop = ['QoQ','QoQ_ANNUALIZED']
+            format_cols = {
+                'MoM': '{:,.2%}'.format,
+                'YoY': '{:,.2%}'.format,
+                'CPI Energy': '{:,.2f}'.format,
+                'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
+            }
+
+            disp = style_df_for_display_date(df_us_cpiengsl_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab3.markdown(disp.to_html(), unsafe_allow_html=True)           
+
+            #TAB 4
+            tab4.subheader("CPI Core")
+
+            series = "YoY"
+            chart_settings = {
+                "type": "line",
+                "title": "CPI Core YoY", 
+                "xlabel": "Year", 
+                "ylabel": "YoY Change", 
+                "ypercentage": True,
+            }
+
+            display_chart(chart_settings, df_us_cpilfesl_all, series, tab4)
+
+            chart_settings = {
+                "type": "line",
+                "title": "CPI Core YoY - Last 10 Years", 
+                "xlabel": "Year", 
+                "ylabel": "YoY Change", 
+                "ypercentage": True,
+
+            }
+
+            display_chart(chart_settings, deepcopy(df_us_cpilfesl_recent), series, tab4)
+            
+            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'cpilfesl': 'CPI Core'}
+            cols_gradient = ['YoY']
+            cols_drop = ['QoQ','QoQ_ANNUALIZED']
+            format_cols = {
+                'MoM': '{:,.2%}'.format,
+                'YoY': '{:,.2%}'.format,
+                'CPI Core': '{:,.2f}'.format,
+                'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
+            }
+
+            disp = style_df_for_display_date(df_us_cpilfesl_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab4.markdown(disp.to_html(), unsafe_allow_html=True)           
+
         if option_lagging_indicator_charts == '009 - US Industrial Production':
             pass
         if option_lagging_indicator_charts == '011 - US Durable Goods':
