@@ -18,6 +18,7 @@ import psycopg2, psycopg2.extras
 import config
 import logging
 import matplotlib.ticker as mtick
+from copy import deepcopy
 from matplotlib import pyplot as plt
 from selenium.common.exceptions import TimeoutException as ste
 from selenium import webdriver
@@ -33,7 +34,7 @@ from dateutil.relativedelta import relativedelta
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
-from zipfile import ZipFile
+#from zipfile import ZipFile
 
 isWindows = False
 
@@ -941,8 +942,11 @@ def set_zacks_earnings_surprises(df_tickers, logger):
   return success
 
 def set_zacks_product_line_geography(df_tickers, logger):
+  success = False
   for index, row in df_tickers.iterrows():
     ticker = row['Ticker']  
+    table_product_line_geography = []
+    table_rows = []
 
     logger.info(f'Getting zacks product line and geography for {ticker}')
 
@@ -956,9 +960,12 @@ def set_zacks_product_line_geography(df_tickers, logger):
     soup = BeautifulSoup(page.content, 'html.parser')
     table = soup.find_all('table')
 
-    table_product_line_geography = soup.find_all('table')[2]
-    table_rows = table_product_line_geography.find_all('tr')
-    
+    try:
+      table_product_line_geography = soup.find_all('table')[2]
+      table_rows = table_product_line_geography.find_all('tr')
+    except IndexError as e:
+      logger.exception(f'Did not load Zacks Geography for {ticker}')
+
     file_dict = {}
     df = pd.DataFrame()
 
@@ -3147,3 +3154,50 @@ def return_styled_ism_table1(df):
 
   return style_t3
    
+
+def standard_display(series_name, tab, title, period):
+   
+  #eval("df_us%s_all" % series), df_us_gdp_recent = get_stlouisfed_data('gdpc1', 'Q', 10)
+  #eval('df_us{0}_all'.format(series)), eval('df_us{0}_recent'.format(series)) 
+  
+  df_series_all, df_series_recent = get_stlouisfed_data(series_name, period, 10)
+
+  series = "YoY"
+  tab.subheader(title)
+
+  chart_settings = {
+      "type": "line",
+      "title": title, 
+      "xlabel": "Year", 
+      "ylabel": title,
+      "ypercentage": True,
+
+  }
+
+  display_chart(chart_settings, df_series_all, series, tab)
+
+  chart_settings = {
+      "type": "line",
+      "title": '{0} - Last 10 Years'.format(title), 
+      "xlabel": "Year", 
+      "ylabel": title, 
+      "ypercentage": True,
+  }
+
+  display_chart(chart_settings, deepcopy(df_series_recent), series, tab)
+
+  rename_cols = {'DATE': 'Date (MM-DD-YYYY)', series_name: title}
+  cols_gradient = ['YoY']
+  cols_drop = ['QoQ','QoQ_ANNUALIZED']
+  format_cols = {
+      'MoM': '{:,.2%}'.format,
+      'YoY': '{:,.2%}'.format,
+      title: '{:,.2f}'.format,
+      'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
+  }
+
+  disp = style_df_for_display_date(df_series_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+
+  tab.markdown(disp.to_html(), unsafe_allow_html=True)
+
+  return df_series_all, df_series_recent

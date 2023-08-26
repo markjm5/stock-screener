@@ -27,7 +27,7 @@ from common import set_price_action_ta, set_todays_insider_trades, combine_df_on
 from common import style_df_for_display, style_df_for_display_date, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
-from common import display_chart, return_styled_ism_table1, append_two_df
+from common import display_chart, return_styled_ism_table1, append_two_df, standard_display
 import seaborn as sns
 from copy import deepcopy
 
@@ -152,7 +152,7 @@ if option == 'Download Data':
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
     if(clicked2):
-        debug = True
+        debug = False
 
         logger = get_logger()
         now_start = dt.now()
@@ -872,50 +872,12 @@ if option == 'Macroeconomic Data':
             tab1, tab2, tab3 = st.tabs(["📈 PCE Deflator", "📈 PCE Core", "📈 PCE Core vs Core CPI"])
 
             #TODO: Display the appropriate charts and tables
-
-            df_us_pcepi_all, df_us_pcepi_recent = get_stlouisfed_data('pcepi', 'M', 10)
-            df_us_pcepilfe_all, df_us_pcepilfe_recent = get_stlouisfed_data('pcepilfe', 'M', 10)
-            df_us_dfedtaru_all, df_us_dfedtaru_recent = get_stlouisfed_data('dfedtaru', 'M', 10)
-            df_us_cpilfesl_all, df_us_cpilfesl_recent = get_stlouisfed_data('cpilfesl', 'M', 10)
+            df_us_pcepilfe_all, df_us_pcepilfe_recent = standard_display('pcepilfe', tab1,'PCE Core', 'M')
+            df_us_dfedtaru_all, df_us_dfedtaru_recent = get_stlouisfed_data('dfedtaru', 'M',10)
+            #df_us_cpilfesl_all, df_us_cpilfesl_recent = standard_display('cpilfesl', 'M',10)
 
             #TAB 1
-            tab1.subheader("PCE Deflator")
-
-            series = "YoY"
-            chart_settings = {
-                "type": "line",
-                "title": "PCE YoY", 
-                "xlabel": "Year", 
-                "ylabel": "YoY Change", 
-                "ypercentage": True,
-
-            }
-
-            display_chart(chart_settings, df_us_pcepi_all, series, tab1)
-
-            chart_settings = {
-                "type": "line",
-                "title": "PCE YoY - Last 10 Years", 
-                "xlabel": "Year", 
-                "ylabel": "YoY Change", 
-                "ypercentage": True,
-
-            }
-
-            display_chart(chart_settings, deepcopy(df_us_pcepi_recent), series, tab1)
-            
-            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'pcepi': 'PCE'}
-            cols_gradient = ['YoY']
-            cols_drop = ['QoQ','QoQ_ANNUALIZED']
-            format_cols = {
-                'MoM': '{:,.2%}'.format,
-                'YoY': '{:,.2%}'.format,
-                'PCE': '{:,.2f}'.format,
-                'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
-            }
-
-            disp = style_df_for_display_date(df_us_pcepi_recent,cols_gradient,rename_cols,cols_drop,format_cols)
-            tab1.markdown(disp.to_html(), unsafe_allow_html=True)
+            df_us_pcepi_all, df_us_pcepi_recent = standard_display('pcepi', tab1,'PCE Deflator','M')
 
             #TAB 2
             tab2.subheader("PCE Core")
@@ -972,170 +934,64 @@ if option == 'Macroeconomic Data':
             #TODO
 
         if option_lagging_indicator_charts == '007 - US Inflation':
-            tab1, tab2, tab3, tab4 = st.tabs(["📈 CPI", "📈 CPI Food", "📈 CPI Energy", "📈 CPI Core"])
+            tabs_list = ["📈 CPI", "📈 CPI Food", "📈 CPI Energy", "📈 CPI Core"]
+            tab1, tab2, tab3, tab4 = st.tabs(tabs_list)
 
-            #TODO: Display the appropriate charts and tables
-            df_us_cpiaucsl_all, df_us_cpiaucsl_recent = get_stlouisfed_data('cpiaucsl', 'M', 10)
-            df_us_cpifabsl_all, df_us_cpifabsl_recent = get_stlouisfed_data('cpifabsl', 'M', 10)
-            df_us_cpiengsl_all, df_us_cpiengsl_recent = get_stlouisfed_data('cpiengsl', 'M', 10)
-            df_us_cpilfesl_all, df_us_cpilfesl_recent = get_stlouisfed_data('cpilfesl', 'M', 10)
+            # Display the appropriate charts and tables
+            #TAB1
+            df_us_cpiaucsl_all, df_us_cpiaucsl_recent = standard_display('cpiaucsl', tab1, 'CPI', 'M')
 
-            #TAB 1
-            tab1.subheader("CPI")
+            #TAB2
+            df_us_cpifabsl_all, df_us_cpifabsl_recent = standard_display('cpifabsl', tab2, 'CPI Food & Beverages', 'M')
 
-            series = "YoY"
-            chart_settings = {
-                "type": "line",
-                "title": "CPI YoY", 
-                "xlabel": "Year", 
-                "ylabel": "YoY Change", 
-                "ypercentage": True,
+            #TAB3
+            df_us_cpiengsl_all, df_us_cpiengsl_recent = standard_display('cpiengsl', tab3, 'CPI Energy', 'M')
 
-            }
-
-            display_chart(chart_settings, df_us_cpiaucsl_all, series, tab1)
-
-            chart_settings = {
-                "type": "line",
-                "title": "CPI YoY - Last 10 Years", 
-                "xlabel": "Year", 
-                "ylabel": "YoY Change", 
-                "ypercentage": True,
-
-            }
-
-            display_chart(chart_settings, deepcopy(df_us_cpiaucsl_recent), series, tab1)
-            
-            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'cpiaucsl': 'CPI'}
-            cols_gradient = ['YoY']
-            cols_drop = ['QoQ','QoQ_ANNUALIZED']
-            format_cols = {
-                'MoM': '{:,.2%}'.format,
-                'YoY': '{:,.2%}'.format,
-                'CPI': '{:,.2f}'.format,
-                'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
-            }
-
-            disp = style_df_for_display_date(df_us_cpiaucsl_recent,cols_gradient,rename_cols,cols_drop,format_cols)
-            tab1.markdown(disp.to_html(), unsafe_allow_html=True)           
-
-           #TAB 2
-            tab2.subheader("CPI Food & Beverages")
-
-            series = "YoY"
-            chart_settings = {
-                "type": "line",
-                "title": "CPI Food & Beverages YoY", 
-                "xlabel": "Year", 
-                "ylabel": "YoY Change", 
-                "ypercentage": True,
-
-            }
-
-            display_chart(chart_settings, df_us_cpifabsl_all, series, tab2)
-
-            chart_settings = {
-                "type": "line",
-                "title": "CPI Food & Beverages YoY - Last 10 Years", 
-                "xlabel": "Year", 
-                "ylabel": "YoY Change", 
-                "ypercentage": True,
-
-            }
-
-            display_chart(chart_settings, deepcopy(df_us_cpifabsl_recent), series, tab2)
-            
-            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'cpifabsl': 'CPI Food & Beverages'}
-            cols_gradient = ['YoY']
-            cols_drop = ['QoQ','QoQ_ANNUALIZED']
-            format_cols = {
-                'MoM': '{:,.2%}'.format,
-                'YoY': '{:,.2%}'.format,
-                'CPI Food & Beverages': '{:,.2f}'.format,
-                'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
-            }
-
-            disp = style_df_for_display_date(df_us_cpifabsl_recent,cols_gradient,rename_cols,cols_drop,format_cols)
-            tab2.markdown(disp.to_html(), unsafe_allow_html=True)           
-
-            #TAB 3
-            tab3.subheader("CPI Energy")
-
-            series = "YoY"
-            chart_settings = {
-                "type": "line",
-                "title": "CPI Energy YoY", 
-                "xlabel": "Year", 
-                "ylabel": "YoY Change", 
-                "ypercentage": True,
-            }
-
-            display_chart(chart_settings, df_us_cpiengsl_all, series, tab3)
-
-            chart_settings = {
-                "type": "line",
-                "title": "CPI Energy YoY - Last 10 Years", 
-                "xlabel": "Year", 
-                "ylabel": "YoY Change", 
-                "ypercentage": True,
-
-            }
-
-            display_chart(chart_settings, deepcopy(df_us_cpiengsl_recent), series, tab3)
-            
-            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'cpiengsl': 'CPI Energy'}
-            cols_gradient = ['YoY']
-            cols_drop = ['QoQ','QoQ_ANNUALIZED']
-            format_cols = {
-                'MoM': '{:,.2%}'.format,
-                'YoY': '{:,.2%}'.format,
-                'CPI Energy': '{:,.2f}'.format,
-                'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
-            }
-
-            disp = style_df_for_display_date(df_us_cpiengsl_recent,cols_gradient,rename_cols,cols_drop,format_cols)
-            tab3.markdown(disp.to_html(), unsafe_allow_html=True)           
-
-            #TAB 4
-            tab4.subheader("CPI Core")
-
-            series = "YoY"
-            chart_settings = {
-                "type": "line",
-                "title": "CPI Core YoY", 
-                "xlabel": "Year", 
-                "ylabel": "YoY Change", 
-                "ypercentage": True,
-            }
-
-            display_chart(chart_settings, df_us_cpilfesl_all, series, tab4)
-
-            chart_settings = {
-                "type": "line",
-                "title": "CPI Core YoY - Last 10 Years", 
-                "xlabel": "Year", 
-                "ylabel": "YoY Change", 
-                "ypercentage": True,
-
-            }
-
-            display_chart(chart_settings, deepcopy(df_us_cpilfesl_recent), series, tab4)
-            
-            rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'cpilfesl': 'CPI Core'}
-            cols_gradient = ['YoY']
-            cols_drop = ['QoQ','QoQ_ANNUALIZED']
-            format_cols = {
-                'MoM': '{:,.2%}'.format,
-                'YoY': '{:,.2%}'.format,
-                'CPI Core': '{:,.2f}'.format,
-                'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
-            }
-
-            disp = style_df_for_display_date(df_us_cpilfesl_recent,cols_gradient,rename_cols,cols_drop,format_cols)
-            tab4.markdown(disp.to_html(), unsafe_allow_html=True)           
+            #TAB4
+            df_us_cpilfesl_all, df_us_cpilfesl_recent = standard_display('cpilfesl', tab4, 'CPI Core', 'M')
 
         if option_lagging_indicator_charts == '009 - US Industrial Production':
-            pass
+            tabs_list = ["📈 IP from start", 
+                        "📈 Industrial Production", 
+                        "📈 Capacity Utilization", 
+                        "📈 Materials", 
+                        "📈 Consumer Goods", 
+                        "📈 Business Equipment", 
+                        "📈 Construction", 
+                        "📈 Manu", 
+                        "📈 Mining", 
+                        "📈 Utilities"]
+            tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs(tabs_list)
+            #TAB1
+            df_indpro_all, df_indpro_recent = standard_display('indpro', tab1, 'IP From Start', 'M')
+
+            #TAB2
+            df_us_ipb54100s_all, df_us_ipb54100s_recent = standard_display('ipb54100s', tab2,'Industrial Production','M')
+
+            #TAB3
+            df_us_ipbuseq_all, df_us_ipbuseq_recent = standard_display('ipbuseq', tab3,'Capacity Utilization','M')
+
+            #TAB4
+            df_us_ipcongd_all, df_us_ipcongd_recent = standard_display('ipcongd', tab4,'Materials','M')
+
+            #TAB5
+            df_us_ipman_all, df_us_ipman_recent = standard_display('ipman', tab5,'Consumer Goods','M')
+
+            #TAB6
+            df_us_ipmat_all, df_us_ipmat_recent = standard_display('ipmat', tab6,'Business Equipment','M')
+
+            #TAB7
+            df_us_ipmine_all, df_us_ipmine_recent = standard_display('ipmine', tab7,'Construction','M')
+
+            #TAB8
+            df_us_iputil_all, df_us_iputil_recent = standard_display('iputil', tab8,'Manufacturing','M')
+
+            #TAB9
+            df_us_tcu_all, df_us_tcu_recent = standard_display('tcu', tab9,'Mining','M')
+
+            #TAB10
+            df_us_wpsfd4131_all, df_us_wpsfd4131_recent = standard_display('wpsfd4131', tab10,'Utilities','M')
+
         if option_lagging_indicator_charts == '011 - US Durable Goods':
             pass
         if option_lagging_indicator_charts == '011 - US Retail Sales':

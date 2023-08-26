@@ -20,10 +20,10 @@ df_tickers5 = df_tickers.loc[df_tickers['Ticker'].isin(['ACGL'])]
 df_tickers6 = df_tickers.loc[df_tickers['Ticker'].isin(['ADRNY'])]
 df_tickers7 = df_tickers.loc[df_tickers['Ticker'].isin(['ADM'])]
 df_tickers8 = df_tickers.loc[df_tickers['Ticker'].isin(['BC'])]
+df_tickers9 = df_tickers.loc[df_tickers['Ticker'].isin(['BRK.A'])]
 
 #df_tickers_alternate = get_data(table="company") 
 #df_tickers_one_ticker = df_tickers_alternate.loc[df_tickers_alternate['symbol'].isin(['VSAT'])]
-
 
 class TestCommon(unittest.TestCase):
     
@@ -67,8 +67,8 @@ class TestCommon(unittest.TestCase):
     #    self.assertEqual(set_zacks_earnings_surprises(df_tickers1, logger),True)
     
     #Executor 3
-    #def test_set_zacks_product_line_geography(self):
-    #    self.assertEqual(set_zacks_product_line_geography(df_tickers1, logger),True)
+    def test_set_zacks_product_line_geography(self):
+        self.assertEqual(set_zacks_product_line_geography(df_tickers9, logger),True)
     
     #Executor 4
     #def test_set_finwiz_stock_data(self):
@@ -77,9 +77,8 @@ class TestCommon(unittest.TestCase):
     
 
     #Executor 5
-    def test_set_stockrow_stock_data(self):
-        self.assertEqual(set_stockrow_stock_data(df_tickers1, logger),True)
-
+    #def test_set_stockrow_stock_data(self):
+    #    self.assertEqual(set_stockrow_stock_data(df_tickers1, logger),True)
     
     #Executor 6
     #def test_set_yf_key_stats(self):
