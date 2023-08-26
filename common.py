@@ -3155,14 +3155,20 @@ def return_styled_ism_table1(df):
   return style_t3
    
 
-def standard_display(series_name, tab, title, period):
+def standard_display(series_name, tab, title, period, series_display):
    
   #eval("df_us%s_all" % series), df_us_gdp_recent = get_stlouisfed_data('gdpc1', 'Q', 10)
   #eval('df_us{0}_all'.format(series)), eval('df_us{0}_recent'.format(series)) 
   
   df_series_all, df_series_recent = get_stlouisfed_data(series_name, period, 10)
 
-  series = "YoY"
+  series = series_display
+
+  if(series == 'YoY' or series == 'MoM'):
+     ypercentage = True
+  else:
+     ypercentage = False
+
   tab.subheader(title)
 
   chart_settings = {
@@ -3170,7 +3176,7 @@ def standard_display(series_name, tab, title, period):
       "title": title, 
       "xlabel": "Year", 
       "ylabel": title,
-      "ypercentage": True,
+      "ypercentage": ypercentage,
 
   }
 
@@ -3181,7 +3187,7 @@ def standard_display(series_name, tab, title, period):
       "title": '{0} - Last 10 Years'.format(title), 
       "xlabel": "Year", 
       "ylabel": title, 
-      "ypercentage": True,
+      "ypercentage": ypercentage,
   }
 
   display_chart(chart_settings, deepcopy(df_series_recent), series, tab)

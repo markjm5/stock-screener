@@ -872,12 +872,12 @@ if option == 'Macroeconomic Data':
             tab1, tab2, tab3 = st.tabs(["📈 PCE Deflator", "📈 PCE Core", "📈 PCE Core vs Core CPI"])
 
             #TODO: Display the appropriate charts and tables
-            df_us_pcepilfe_all, df_us_pcepilfe_recent = standard_display('pcepilfe', tab1,'PCE Core', 'M')
+            df_us_pcepilfe_all, df_us_pcepilfe_recent = standard_display('pcepilfe', tab1,'PCE Core', 'M','YoY')
             df_us_dfedtaru_all, df_us_dfedtaru_recent = get_stlouisfed_data('dfedtaru', 'M',10)
-            #df_us_cpilfesl_all, df_us_cpilfesl_recent = standard_display('cpilfesl', 'M',10)
+            #df_us_cpilfesl_all, df_us_cpilfesl_recent = standard_display('cpilfesl', 'M',10,'YoY')
 
             #TAB 1
-            df_us_pcepi_all, df_us_pcepi_recent = standard_display('pcepi', tab1,'PCE Deflator','M')
+            df_us_pcepi_all, df_us_pcepi_recent = standard_display('pcepi', tab1,'PCE Deflator','M','YoY')
 
             #TAB 2
             tab2.subheader("PCE Core")
@@ -939,16 +939,16 @@ if option == 'Macroeconomic Data':
 
             # Display the appropriate charts and tables
             #TAB1
-            df_us_cpiaucsl_all, df_us_cpiaucsl_recent = standard_display('cpiaucsl', tab1, 'CPI', 'M')
+            df_us_cpiaucsl_all, df_us_cpiaucsl_recent = standard_display('cpiaucsl', tab1, 'CPI', 'M','YoY')
 
             #TAB2
-            df_us_cpifabsl_all, df_us_cpifabsl_recent = standard_display('cpifabsl', tab2, 'CPI Food & Beverages', 'M')
+            df_us_cpifabsl_all, df_us_cpifabsl_recent = standard_display('cpifabsl', tab2, 'CPI Food & Beverages', 'M','YoY')
 
             #TAB3
-            df_us_cpiengsl_all, df_us_cpiengsl_recent = standard_display('cpiengsl', tab3, 'CPI Energy', 'M')
+            df_us_cpiengsl_all, df_us_cpiengsl_recent = standard_display('cpiengsl', tab3, 'CPI Energy', 'M','YoY')
 
             #TAB4
-            df_us_cpilfesl_all, df_us_cpilfesl_recent = standard_display('cpilfesl', tab4, 'CPI Core', 'M')
+            df_us_cpilfesl_all, df_us_cpilfesl_recent = standard_display('cpilfesl', tab4, 'CPI Core', 'M','YoY')
 
         if option_lagging_indicator_charts == '009 - US Industrial Production':
             tabs_list = ["📈 IP from start", 
@@ -963,37 +963,70 @@ if option == 'Macroeconomic Data':
                         "📈 Utilities"]
             tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs(tabs_list)
             #TAB1
-            df_indpro_all, df_indpro_recent = standard_display('indpro', tab1, 'IP From Start', 'M')
+            df_indpro_all, df_indpro_recent = standard_display('indpro', tab1, 'IP From Start', 'M','YoY')
 
             #TAB2
-            df_us_ipb54100s_all, df_us_ipb54100s_recent = standard_display('ipb54100s', tab2,'Industrial Production','M')
+            df_us_ipb54100s_all, df_us_ipb54100s_recent = standard_display('ipb54100s', tab2,'Industrial Production','M','YoY')
 
             #TAB3
-            df_us_ipbuseq_all, df_us_ipbuseq_recent = standard_display('ipbuseq', tab3,'Capacity Utilization','M')
+            df_us_ipbuseq_all, df_us_ipbuseq_recent = standard_display('ipbuseq', tab3,'Capacity Utilization','M','YoY')
 
             #TAB4
-            df_us_ipcongd_all, df_us_ipcongd_recent = standard_display('ipcongd', tab4,'Materials','M')
+            df_us_ipcongd_all, df_us_ipcongd_recent = standard_display('ipcongd', tab4,'Materials','M','YoY')
 
             #TAB5
-            df_us_ipman_all, df_us_ipman_recent = standard_display('ipman', tab5,'Consumer Goods','M')
+            df_us_ipman_all, df_us_ipman_recent = standard_display('ipman', tab5,'Consumer Goods','M','YoY')
 
             #TAB6
-            df_us_ipmat_all, df_us_ipmat_recent = standard_display('ipmat', tab6,'Business Equipment','M')
+            df_us_ipmat_all, df_us_ipmat_recent = standard_display('ipmat', tab6,'Business Equipment','M','YoY')
 
             #TAB7
-            df_us_ipmine_all, df_us_ipmine_recent = standard_display('ipmine', tab7,'Construction','M')
+            df_us_ipmine_all, df_us_ipmine_recent = standard_display('ipmine', tab7,'Construction','M','YoY')
 
             #TAB8
-            df_us_iputil_all, df_us_iputil_recent = standard_display('iputil', tab8,'Manufacturing','M')
+            df_us_iputil_all, df_us_iputil_recent = standard_display('iputil', tab8,'Manufacturing','M','YoY')
 
             #TAB9
-            df_us_tcu_all, df_us_tcu_recent = standard_display('tcu', tab9,'Mining','M')
+            df_us_tcu_all, df_us_tcu_recent = standard_display('tcu', tab9,'Mining','M','YoY')
 
             #TAB10
-            df_us_wpsfd4131_all, df_us_wpsfd4131_recent = standard_display('wpsfd4131', tab10,'Utilities','M')
+            df_us_wpsfd4131_all, df_us_wpsfd4131_recent = standard_display('wpsfd4131', tab10,'Utilities','M','YoY')
 
         if option_lagging_indicator_charts == '011 - US Durable Goods':
-            pass
+            tabs_list = ["📈 Recap", 
+                        "📈 New Orders", 
+                        "📈 New Orders ex Aircraft (Core Orders)", 
+                        "📈 New Orders ex Transport", 
+                        "📈 Other (Manufacturing)"]
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(tabs_list)
+
+            #TODO: TAB1
+
+            #TAB2
+            df_dgorder_all, df_dgorder_recent = standard_display('dgorder', tab2, 'New Orders', 'M', 'dgorder')
+
+            #TAB3
+            df_neworder_all, df_neworder_recent = standard_display('neworder', tab3, 'New Orders ex Aircraft', 'M', 'neworder')
+
+            #TAB4
+            df_adxtno_all, df_adxtno_recent = standard_display('adxtno', tab4, 'New Orders ex Transport', 'M', 'adxtno')
+
+            #TAB5
+            df_amtuno_all, df_amtuno_recent = standard_display('amtuno', tab5, 'New Orders Manufacturing', 'M', 'amtuno')
+
+            #A31SNO
+            #A32SNO
+            #A33SNO
+            #A34SNO
+            #A35SNO
+            #A36SNO
+            #ADXDNO
+            #ADXTNO
+            #AMTUNO
+            #ANXAVS
+            #DGORDER
+            #NEWORDER
+
         if option_lagging_indicator_charts == '011 - US Retail Sales':
             pass
 
