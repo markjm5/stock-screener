@@ -136,7 +136,7 @@ if option == 'Download Data':
         logger.info(f"Total Time: {total_time}")
 
         executor_count = 1
-        data = {'Executor':[],'Process':[],'Result':[]}
+        data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,7):
@@ -145,7 +145,7 @@ if option == 'Download Data':
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
-        cols_gradient = ['Result']
+        cols_gradient = ['Error']
         cols_drop = []
         disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
 
@@ -247,7 +247,7 @@ if option == 'Download Data':
         logger.info(f"Total Time: {total_time}")
 
         executor_count = 1
-        data = {'Executor':[],'Process':[],'Result':[]}
+        data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,6):
@@ -256,13 +256,13 @@ if option == 'Download Data':
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
-        cols_gradient = ['Result']
+        cols_gradient = ['Error']
         cols_drop = []
         disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         executor_count = 2
-        data = {'Executor':[],'Process':[],'Result':[]}
+        data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,6):
@@ -271,13 +271,13 @@ if option == 'Download Data':
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
-        cols_gradient = ['Result']
+        cols_gradient = ['Error']
         cols_drop = []
         disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         executor_count = 3
-        data = {'Executor':[],'Process':[],'Result':[]}
+        data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,6):
@@ -286,13 +286,13 @@ if option == 'Download Data':
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
-        cols_gradient = ['Result']
+        cols_gradient = ['Error']
         cols_drop = []
         disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         executor_count = 4
-        data = {'Executor':[],'Process':[],'Result':[]}
+        data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,6):
@@ -301,13 +301,13 @@ if option == 'Download Data':
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
-        cols_gradient = ['Result']
+        cols_gradient = ['Error']
         cols_drop = []
         disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         executor_count = 5
-        data = {'Executor':[],'Process':[],'Result':[]}
+        data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,6):
@@ -316,7 +316,7 @@ if option == 'Download Data':
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
-        cols_gradient = ['Result']
+        cols_gradient = ['Error']
         cols_drop = []
         disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
@@ -375,7 +375,7 @@ if option == 'Download Data':
         logger.info(f"Total Time: {total_time}")
 
         executor_count = 1
-        data = {'Executor':[],'Process':[],'Result':[]}
+        data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,6):
@@ -384,7 +384,7 @@ if option == 'Download Data':
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
-        cols_gradient = ['Result']
+        cols_gradient = ['Error']
         cols_drop = []
         disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
@@ -469,7 +469,7 @@ if option == 'Download Data':
         #handle_exceptions_print_result(e1p2, 1, 2, logger)
         #handle_exceptions_print_result(e1p3, 1, 3, logger)
         executor_count = 1
-        data = {'Executor':[],'Process':[],'Result':[]}
+        data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,4):
@@ -478,7 +478,7 @@ if option == 'Download Data':
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
-        cols_gradient = ['Result']
+        cols_gradient = ['Error']
         cols_drop = []
         disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
