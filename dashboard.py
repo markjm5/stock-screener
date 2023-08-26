@@ -324,7 +324,7 @@ if option == 'Download Data':
         st.write(f'Status of Finwiz Stock Data: {finwiz_stock_data_status}')
 
     if(clicked3):
-        debug = True
+        debug = False
 
         logger = get_logger()
         now_start = dt.now()
@@ -339,7 +339,7 @@ if option == 'Download Data':
             #DEBUG CODE
             #df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL','AIMC'])]
             # Write the output of all these functions into the database
-            e1p1 = set_stockrow_stock_data(df_tickers1, logger)
+            e1p4 = set_stockrow_stock_data(df_tickers4, logger)
             import pdb; pdb.set_trace()
 
         with concurrent.futures.ProcessPoolExecutor() as executor:            

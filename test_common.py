@@ -19,8 +19,10 @@ df_tickers4 = df_tickers.loc[df_tickers['Ticker'].isin(['TKAGY'])]
 df_tickers5 = df_tickers.loc[df_tickers['Ticker'].isin(['ACGL'])]
 df_tickers6 = df_tickers.loc[df_tickers['Ticker'].isin(['ADRNY'])]
 df_tickers7 = df_tickers.loc[df_tickers['Ticker'].isin(['ADM'])]
-df_tickers_alternate = get_data(table="company") 
-df_tickers_one_ticker = df_tickers_alternate.loc[df_tickers_alternate['symbol'].isin(['VSAT'])]
+df_tickers8 = df_tickers.loc[df_tickers['Ticker'].isin(['BC'])]
+
+#df_tickers_alternate = get_data(table="company") 
+#df_tickers_one_ticker = df_tickers_alternate.loc[df_tickers_alternate['symbol'].isin(['VSAT'])]
 
 
 class TestCommon(unittest.TestCase):
@@ -28,8 +30,8 @@ class TestCommon(unittest.TestCase):
     #def test_set_yf_price_action(self):
     #    self.assertEqual(set_yf_price_action(df_tickers_alternate, logger),True)
         
-    def test_set_earningswhispers_earnings_calendar(self):
-        self.assertEqual(set_earningswhispers_earnings_calendar(df_tickers_alternate,logger),True)
+    #def test_set_earningswhispers_earnings_calendar(self):
+    #    self.assertEqual(set_earningswhispers_earnings_calendar(df_tickers_alternate,logger),True)
 
     #def test_scrape_insider_trades(self):
     #    self.assertEqual(set_todays_insider_trades(logger),True)
@@ -75,10 +77,8 @@ class TestCommon(unittest.TestCase):
     
 
     #Executor 5
-    #def test_set_stockrow_stock_data(self):
-    #    self.assertEqual(set_stockrow_stock_data(df_tickers1, logger),True)
-        #self.assertEqual(set_stockrow_stock_data(df_tickers6, logger),False)
-        #self.assertEqual(set_stockrow_stock_data(df_tickers7, logger),True)
+    def test_set_stockrow_stock_data(self):
+        self.assertEqual(set_stockrow_stock_data(df_tickers1, logger),True)
 
     
     #Executor 6

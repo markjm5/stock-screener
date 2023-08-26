@@ -21,8 +21,11 @@ import matplotlib.ticker as mtick
 from matplotlib import pyplot as plt
 from selenium.common.exceptions import TimeoutException as ste
 from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+from chromedriver_py import binary_path
+#from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
+#from webdriver_manager.chrome import ChromeDriverManager
 from datetime import date
 from datetime import datetime as dt
 from bs4 import BeautifulSoup
@@ -30,6 +33,7 @@ from dateutil.relativedelta import relativedelta
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
+from zipfile import ZipFile
 
 isWindows = False
 
@@ -53,29 +57,41 @@ def get_page(url):
 
   return page
 
-def get_page_selenium(url,wait_until_element_id=None):
+def get_page_selenium(url,wait_until_element_id=None, no_sandbox=False):
 
   #Selenium Browser Emulation Tool
   chrome_options = Options()
-  chrome_options.add_argument("--headless")
+  chrome_options.add_argument("--headless") 
+
+  if(no_sandbox):
+    chrome_options.add_argument('--no-sandbox')  
+
   chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows Phone 10.0; Android 4.2.1; Microsoft; Lumia 640 XL LTE) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Mobile Safari/537.36 Edge/12.10166")
+  #try:
 
-  driver = webdriver.Chrome(ChromeDriverManager().install(),options=chrome_options)
+  svc = webdriver.ChromeService(executable_path=binary_path)
+  driver = webdriver.Chrome(service=svc, options=chrome_options)
+
+  #TODO: https://stackoverflow.com/questions/22130109/cant-use-chrome-driver-for-selenium
+  #driver = webdriver.Chrome(executable_path=CHROME_EXECUTABLE_PATH,options=chrome_options)
+  #driver = webdriver.Chrome(ChromeDriverManager().install(),options=chrome_options)
+  #driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()),options=chrome_options)
+  #except ZipFile.BadZipFile as e:
+  #TODO: Follow Instructions to Use manually installed driver
+  #TODO: Have a look at chromedrivermanager: https://pypi.org/project/webdriver-manager/
+
   driver.get(url)
-
   driver.implicitly_wait(10)  
 
   if(wait_until_element_id):
     elem = WebDriverWait(driver, 30).until(
     EC.presence_of_element_located((By.ID, wait_until_element_id)))  
 
-  time.sleep(5)
+  time.sleep(15)
   html = driver.page_source
   driver.close()
   
   return html
-
-
 
 
 def get_yf_historical_stock_data(ticker, interval, start, end):
@@ -413,6 +429,7 @@ def set_stockrow_stock_data(df_tickers, logger):
       logger.exception(f'Selenium Timed Out for {ticker} from stockrow')
 
     soup = BeautifulSoup(page, 'html.parser')
+    import pdb; pdb.set_trace()
 
     #Only execute if the stockrow page has a table containing data about the ticker
     if(soup.find_all('table')):
@@ -461,7 +478,7 @@ def set_stockrow_stock_data(df_tickers, logger):
       except IndexError as e:
         failed_tickers.append(ticker)
         logger.exception(f'No YEAR column for {ticker} from stockrow')
-
+    import pdb; pdb.set_trace()
     #Get WSJ Data
     try:
       page = get_page_selenium("https://www.wsj.com/market-data/quotes/%s/financials/annual/income-statement" % (ticker))
