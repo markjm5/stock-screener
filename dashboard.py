@@ -870,6 +870,7 @@ if option == 'Macroeconomic Data':
         if option_lagging_indicator_charts == '006 - PCE':
 
             tab1, tab2, tab3 = st.tabs(["📈 PCE Deflator", "📈 PCE Core", "📈 PCE Core vs Core CPI"])
+            col1, col2 = st.columns(2)
 
             #TODO: Display the appropriate charts and tables
             df_us_pcepilfe_all, df_us_pcepilfe_recent = standard_display('pcepilfe', tab1,'PCE Core', 'M','YoY')
@@ -896,7 +897,7 @@ if option == 'Macroeconomic Data':
                 "ypercentage": True,
             }
 
-            display_chart(chart_settings, df_us_pcepilfe_all, series, tab2, series2)
+            display_chart(chart_settings, df_us_pcepilfe_all, series, tab2, series2,col1)
 
             #TODO: Superimpose df_us_dfedtaru_all into chart as well as table
             cols_drop = ['QoQ_ANNUALIZED','QoQ','YoY','MoM']            
@@ -913,7 +914,7 @@ if option == 'Macroeconomic Data':
                 "ypercentage": True,
             }
 
-            display_chart(chart_settings, deepcopy(df_us_pcepilfe_recent), series, tab2, series2)
+            display_chart(chart_settings, deepcopy(df_us_pcepilfe_recent), series, tab2, series2,col2)
             
             rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'pcepilfe': 'PCE Core', 'target_rate_percent': 'Fed Target', 'dfedtaru': 'Fed Fund Target'}
             cols_gradient = ['YoY']

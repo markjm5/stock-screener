@@ -3171,7 +3171,7 @@ def convert_excelsheet_to_dataframe(excel_file_path,sheet_name,date_exists=False
 
   return df
 
-def display_chart(settings, df,series, tab, series2=None):
+def display_chart(settings, df,series, tab, series2=None, col=None):
   #ax = df['myvar'].plot(kind='bar')
   #ax.yaxis.set_major_formatter(mtick.PercentFormatter())
 
@@ -3204,10 +3204,9 @@ def display_chart(settings, df,series, tab, series2=None):
   plt.rc('ytick', labelsize=8)
   plt.tight_layout()
   plt.grid(True)
-  #plt.figure(figsize=(5,5))
   tab.pyplot(plt)
   plt.clf()
-   
+ 
 
 def return_styled_ism_table1(df):
   df_formatted = df.reset_index(drop=True)
