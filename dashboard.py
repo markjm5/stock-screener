@@ -330,7 +330,7 @@ if option == 'Download Data':
         now_start = dt.now()
         start_time = now_start.strftime("%H:%M:%S")    
 
-        st.write(f'{start_time} - Downloading Macroeconomic Data...')
+        st.write(f'{start_time} - Downloading Stockrow Data...')
 
         df_tickers, success = write_zacks_ticker_data_to_db(df_tickers_all, logger)
         df_tickers1, df_tickers2, df_tickers3, df_tickers4, df_tickers5 = np.array_split(df_tickers, 5)
@@ -963,6 +963,7 @@ if option == 'Macroeconomic Data':
             df_us_cpilfesl_all, df_us_cpilfesl_recent = standard_display('cpilfesl', tab4, 'CPI Core', 'M','YoY',col1=col1,col2=col2)
 
         if option_lagging_indicator_charts == '009 - US Industrial Production':
+
             tabs_list = ["📈 IP from start", 
                         "📈 Industrial Production", 
                         "📈 Capacity Utilization", 
@@ -974,6 +975,7 @@ if option == 'Macroeconomic Data':
                         "📈 Mining", 
                         "📈 Utilities"]
             tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs(tabs_list)
+
             #TAB1
             col1, col2 = tab1.columns(2)
             df_indpro_all, df_indpro_recent = standard_display('indpro', tab1, 'IP From Start', 'M','YoY',col1=col1,col2=col2)
@@ -1040,22 +1042,108 @@ if option == 'Macroeconomic Data':
             col1, col2 = tab5.columns(2)
             df_amtuno_all, df_amtuno_recent = standard_display('amtuno', tab5, 'New Orders Manufacturing', 'M', 'amtuno',col1=col1,col2=col2)
 
-            #A31SNO
-            #A32SNO
-            #A33SNO
-            #A34SNO
-            #A35SNO
-            #A36SNO
-            #ADXDNO
-            #ADXTNO
-            #AMTUNO
-            #ANXAVS
-            #DGORDER
-            #NEWORDER
-
         if option_lagging_indicator_charts == '011 - US Retail Sales':
-            pass
+            tabs_list = ["📈 Recap", 
+                        "📈 Recap 2", 
+                        "📈 Retail Sales ex Auto and Gas", 
+                        "📈 Retail Sales", 
+                        "📈 Retail Sales ex Auto",
+                        "📈 Food and Beverage",
+                        "📈 Non Store Retail",
+                        "📈 Health",
+                        "📈 Sporting Goods",
+                        "📈 General Merchandising",
+                        "📈 Food Servies",
+                        "📈 Gas Station",
+                        "📈 Motor",
+                        "📈 Housing",
+                        "📈 Furniture Home",
+                        "📈 Miscellaneous Stores Retailers",
+                        "📈 Clothing and Clothing Access"]
+            
+            tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10, tab11, tab12, tab13, tab14, tab15, tab16, tab17 = st.tabs(tabs_list)
 
+            #TODO: TAB1
+
+            #TODO: TAB2
+
+            # TAB3 #MARTSSM44W72USS
+            col1, col2 = tab3.columns(2)
+            series = 'MARTSSM44W72USS'.lower()
+            df_MARTSSM44W72USS_all, df_MARTSSM44W72USS_recent = standard_display(series, tab3, 'Retail Sales ex Auto and Gas', 'M', series,col1=col1,col2=col2)
+
+            # TAB4 #RSAFS
+            col1, col2 = tab4.columns(2)
+            series = 'RSAFS'.lower()
+            df_RSAFS_all, df_RSAFS_recent = standard_display(series, tab4, 'Retail Sales', 'M', series,col1=col1,col2=col2)
+
+            # TAB5
+            col1, col2 = tab5.columns(2)
+            series = 'RSFSXMV'.lower()
+            df_RSFSXMV_all, df_RSFSXMV_recent = standard_display(series, tab5, 'Retail Sales ex Auto', 'M', series,col1=col1,col2=col2)
+
+            # TAB6 
+            col1, col2 = tab6.columns(2)
+            series = 'RSDBS'.lower()
+            df_RSDBS_all, df_RSDBS_recent = standard_display(series, tab6, 'Food and Beverage', 'M', series,col1=col1,col2=col2)
+
+            #TODO: TAB7 #RSNSR
+            col1, col2 = tab7.columns(2)
+            series = 'RSNSR'.lower()
+            df_RSNSR_all, df_RSNSR_recent = standard_display(series, tab7, 'Non Store Retail', 'M', series,col1=col1,col2=col2)
+
+            #TODO: TAB8 #RSHPCS
+            col1, col2 = tab8.columns(2)
+            series = 'RSHPCS'.lower()
+            df_RSHPCS_all, df_RSHPCS_recent = standard_display(series, tab8, 'Health', 'M', series,col1=col1,col2=col2)
+
+            #TODO: TAB9 #RSSGHBMS
+            col1, col2 = tab9.columns(2)
+            series = 'RSSGHBMS'.lower()
+            df_RSSGHBMS_all, df_RSSGHBMS_recent = standard_display(series, tab9, 'Sporting Goods', 'M', series,col1=col1,col2=col2)
+
+            #TODO: TAB10 #RSGMS	
+            col1, col2 = tab10.columns(2)
+            series = 'RSGMS'.lower()
+            df_RSGMS_all, df_RSGMS_recent = standard_display(series, tab10, 'General Merchandising', 'M', series,col1=col1,col2=col2)
+
+            #TODO: TAB11 #RSFSDP
+            col1, col2 = tab11.columns(2)
+            series = 'RSFSDP'.lower()
+            df_RSFSDP_all, df_RSFSDP_recent = standard_display(series, tab11, 'Food Services', 'M', series,col1=col1,col2=col2)
+
+            #TODO: TAB12 #RSGASS	
+            col1, col2 = tab12.columns(2)
+            series = 'RSGASS'.lower()
+            df_RSGASS_all, df_RSGASS_recent = standard_display(series, tab12, 'Gas Station', 'M', series,col1=col1,col2=col2)
+
+            #TODO: TAB13 #RSMVPD
+            col1, col2 = tab13.columns(2)
+            series = 'RSMVPD'.lower()
+            df_RSMVPD_all, df_RSMVPD_recent = standard_display(series, tab13, 'Motor', 'M', series,col1=col1,col2=col2)
+
+            #TODO: TAB14 #RSBMGESD
+            col1, col2 = tab14.columns(2)
+            series = 'RSBMGESD'.lower()
+            df_RSBMGESD_all, df_RSBMGESD_recent = standard_display(series, tab14, 'Housing', 'M', series,col1=col1,col2=col2)
+
+            #TODO: TAB15 #RSFHFS
+            col1, col2 = tab15.columns(2)
+            series = 'RSFHFS'.lower()
+            df_RSFHFS_all, df_RSFHFS_recent = standard_display(series, tab15, 'Furniture Home', 'M', series,col1=col1,col2=col2)
+
+            #TODO: TAB16 #RSMSR
+            col1, col2 = tab16.columns(2)
+            series = 'RSMSR'.lower()
+            df_RSMSR_all, df_RSMSR_recent = standard_display(series, tab16, 'Miscellaneous Stores Retailers', 'M', series,col1=col1,col2=col2)
+
+            #TODO: TAB17 #RSCCAS
+            col1, col2 = tab17.columns(2)
+            series = 'RSCCAS'.lower()
+            df_RSCCAS_all, df_RSCCAS_recent = standard_display(series, tab17, 'Clothing and Clothing Accessories', 'M', series,col1=col1,col2=col2)
+                        	
+            #RSEAS	
+            		
     if option_indicator_type == 'Interest Rates/FX':
         st.subheader(f'Interest Rates/FX')
 

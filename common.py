@@ -3232,7 +3232,7 @@ def display_chart(settings, df,series, tab, series2=None, col=None):
   # Set the font size for x tick labels
   plt.rc('xtick', labelsize=8)
   plt.rc('ytick', labelsize=8)
-  plt.tight_layout()
+  #plt.tight_layout()
   plt.grid(True)
 
   if(col):
