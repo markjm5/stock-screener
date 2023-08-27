@@ -554,6 +554,7 @@ if option == 'Macroeconomic Data':
 
             #TAB 1
             tab1.subheader("Overall GDP")
+            col1, col2 = tab1.columns(2)
 
             series = "gdpc1"
             chart_settings = {
@@ -564,7 +565,7 @@ if option == 'Macroeconomic Data':
                 "ypercentage": False,
             }
 
-            display_chart(chart_settings, df_us_gdp_all, series, tab1)
+            display_chart(chart_settings, df_us_gdp_all, series, tab1, col=col1)
 
             chart_settings = {
                 "type": "line",
@@ -575,7 +576,7 @@ if option == 'Macroeconomic Data':
 
             }
 
-            display_chart(chart_settings, df_us_gdp_recent, series, tab1)
+            display_chart(chart_settings, df_us_gdp_recent, series, tab1, col=col2)
             
             rename_cols = {'DATE': 'Date', 'gdpc1': 'GDP'}
             cols_gradient = ['GDP']
@@ -593,6 +594,7 @@ if option == 'Macroeconomic Data':
 
             series = "QoQ"
             tab2.subheader("US GDP - QoQ")
+            col1, col2 = tab2.columns(2)
 
             chart_settings = {
                 "type": "bar",
@@ -603,7 +605,7 @@ if option == 'Macroeconomic Data':
 
             }
 
-            display_chart(chart_settings, df_us_gdp_all, series, tab2)
+            display_chart(chart_settings, df_us_gdp_all, series, tab2,col=col1)
 
             chart_settings = {
                 "type": "bar",
@@ -614,7 +616,7 @@ if option == 'Macroeconomic Data':
 
             }
 
-            display_chart(chart_settings, deepcopy(df_us_gdp_recent), series, tab2)
+            display_chart(chart_settings, deepcopy(df_us_gdp_recent), series, tab2,col=col2)
 
             cols_gradient = ['QoQ']
             rename_cols = {'DATE': 'Date'}
@@ -633,6 +635,7 @@ if option == 'Macroeconomic Data':
             #TAB 3
             series = "YoY"
             tab3.subheader("US GDP - YoY")
+            col1, col2 = tab3.columns(2)
 
             chart_settings = {
                 "type": "bar",
@@ -643,7 +646,7 @@ if option == 'Macroeconomic Data':
 
             }
 
-            display_chart(chart_settings, df_us_gdp_all, series, tab3)
+            display_chart(chart_settings, df_us_gdp_all, series, tab3, col=col1)
 
             chart_settings = {
                 "type": "bar",
@@ -654,7 +657,7 @@ if option == 'Macroeconomic Data':
 
             }
 
-            display_chart(chart_settings, deepcopy(df_us_gdp_recent), series, tab3)
+            display_chart(chart_settings, deepcopy(df_us_gdp_recent), series, tab3, col=col2)
 
             cols_gradient = ['YoY']
             rename_cols = {'DATE': 'Date'}
@@ -670,7 +673,7 @@ if option == 'Macroeconomic Data':
             #TAB 4
             series = "QoQ_ANNUALIZED"
             tab4.subheader("US GDP - QoQ Annualized")
-
+            col1, col2 = tab4.columns(2)
             chart_settings = {
                 "type": "bar",
                 "title": "US GDP QoQ Annualized", 
@@ -680,7 +683,7 @@ if option == 'Macroeconomic Data':
 
             }
 
-            display_chart(chart_settings, df_us_gdp_all, series, tab4)
+            display_chart(chart_settings, df_us_gdp_all, series, tab4, col=col1)
 
             chart_settings = {
                 "type": "bar",
@@ -691,7 +694,7 @@ if option == 'Macroeconomic Data':
 
             }
 
-            display_chart(chart_settings, deepcopy(df_us_gdp_recent), series, tab4)
+            display_chart(chart_settings, deepcopy(df_us_gdp_recent), series, tab4, col=col2)
 
             rename_cols = {'DATE': 'Date','QoQ_ANNUALIZED':'QoQ Annualized'}
             cols_gradient = ['QoQ Annualized']
@@ -709,6 +712,7 @@ if option == 'Macroeconomic Data':
 
             #TAB 1
             tab1.subheader("Non-Farm Payroll")
+            col1, col2 = tab1.columns(2)
 
             # NFP	
             df_us_payems_all, df_us_payems_recent = get_stlouisfed_data('payems', 'M', 10)
@@ -745,7 +749,7 @@ if option == 'Macroeconomic Data':
 
             }
 
-            display_chart(chart_settings, df_us_payems_recent, series, tab1)
+            display_chart(chart_settings, df_us_payems_recent, series, tab1, col=col1)
 
             series = "diff"
 
@@ -758,7 +762,7 @@ if option == 'Macroeconomic Data':
 
             }
 
-            display_chart(chart_settings, df_us_payems_recent, series, tab1)
+            display_chart(chart_settings, df_us_payems_recent, series, tab1, col=col2)
 
             rename_cols = {'DATE': 'Date','diff':'Monthly Change (K)' ,'payems': 'NFP', 'unrate':'Unemployment Rate', 'civpart':'Participation Rate'}
             cols_gradient = ['Monthly Change (K)']
@@ -776,6 +780,7 @@ if option == 'Macroeconomic Data':
             
             #TAB 2
             tab2.subheader("Jobless Claims")
+            col1, col2 = tab2.columns(2)
 
             # Jobless Claims
             df_us_icsa_all, df_us_icsa_recent = get_stlouisfed_data('icsa', 'M', 10)
@@ -802,8 +807,8 @@ if option == 'Macroeconomic Data':
 
             }
 
-            display_chart(chart_settings, df_us_icsa_recent, series, tab2)
-            display_chart(chart_settings, df_us_icsa_100_periods, series, tab2)
+            display_chart(chart_settings, df_us_icsa_recent, series, tab2,col=col1)
+            display_chart(chart_settings, df_us_icsa_100_periods, series, tab2, col=col2)
 
 
             rename_cols = {'DATE': 'Date','icsa':'Initial Claims' ,'ccsa': 'Continued Claims', 'icsa_var':'IC Var', 'ccsa_var':'CC Var'}
@@ -821,6 +826,7 @@ if option == 'Macroeconomic Data':
 
             #TAB 3
             tab3.subheader("Graphs")
+            col1, col2 = tab3.columns(2)
 
             series = "payems"
             chart_settings = {
@@ -832,7 +838,7 @@ if option == 'Macroeconomic Data':
 
             }
 
-            display_chart(chart_settings, df_us_payems_all, series, tab3)
+            display_chart(chart_settings, df_us_payems_all, series, tab3, col=col1)
 
             #df_us_unrate_all
             series = "unrate"
@@ -845,7 +851,7 @@ if option == 'Macroeconomic Data':
 
             }
 
-            display_chart(chart_settings, df_us_unrate_all, series, tab3)
+            display_chart(chart_settings, df_us_unrate_all, series, tab3, col=col2)
 
             #df_us_civpart_all
             series = "civpart"
@@ -858,7 +864,7 @@ if option == 'Macroeconomic Data':
 
             }
 
-            display_chart(chart_settings, df_us_civpart_all, series, tab3)
+            display_chart(chart_settings, df_us_civpart_all, series, tab3, col=col1)
 
             #TAB 4
             tab4.subheader("ADP National Employment Report")
@@ -870,23 +876,23 @@ if option == 'Macroeconomic Data':
         if option_lagging_indicator_charts == '006 - PCE':
 
             tab1, tab2, tab3 = st.tabs(["📈 PCE Deflator", "📈 PCE Core", "📈 PCE Core vs Core CPI"])
-            col1, col2 = st.columns(2)
 
-            #TODO: Display the appropriate charts and tables
-            df_us_pcepilfe_all, df_us_pcepilfe_recent = standard_display('pcepilfe', tab1,'PCE Core', 'M','YoY')
+            # Display the appropriate charts and tables
             df_us_dfedtaru_all, df_us_dfedtaru_recent = get_stlouisfed_data('dfedtaru', 'M',10)
-            #df_us_cpilfesl_all, df_us_cpilfesl_recent = standard_display('cpilfesl', 'M',10,'YoY')
+            df_us_pcepilfe_all, df_us_pcepilfe_recent = get_stlouisfed_data('pcepilfe', 'M',10)           
 
             #TAB 1
-            df_us_pcepi_all, df_us_pcepi_recent = standard_display('pcepi', tab1,'PCE Deflator','M','YoY')
+            col1, col2 = tab1.columns(2)
+            df_us_pcepi_all, df_us_pcepi_recent = standard_display('pcepi', tab1,'PCE Deflator','M','YoY',col1=col1,col2=col2)
 
             #TAB 2
+            col1, col2 = tab1.columns(2)
+
             tab2.subheader("PCE Core")
-            df_us_pcepilfe_all["YoY"] = df_us_pcepilfe_all["YoY"] / 100            
+            col1, col2 = tab2.columns(2)
             df_us_pcepilfe_all["target_rate_percent"] = 2
             df_us_pcepilfe_recent["target_rate_percent"] = 2
             series2 = "target_rate_percent"
-            #import pdb; pdb.set_trace()
 
             series = "YoY"
             chart_settings = {
@@ -897,13 +903,12 @@ if option == 'Macroeconomic Data':
                 "ypercentage": True,
             }
 
-            display_chart(chart_settings, df_us_pcepilfe_all, series, tab2, series2,col1)
+            display_chart(chart_settings, df_us_pcepilfe_all, series, tab2, series2,col=col1)
 
-            #TODO: Superimpose df_us_dfedtaru_all into chart as well as table
+            # Superimpose df_us_dfedtaru_all into chart as well as table
             cols_drop = ['QoQ_ANNUALIZED','QoQ','YoY','MoM']            
             df_us_dfedtaru_recent = df_us_dfedtaru_recent.drop(cols_drop, axis=1)
             df_us_pcepilfe_recent = append_two_df(df_us_pcepilfe_recent,df_us_dfedtaru_recent, 'inner')
-            #import pdb; pdb.set_trace()
             series2 = 'dfedtaru'
 
             chart_settings = {
@@ -914,7 +919,7 @@ if option == 'Macroeconomic Data':
                 "ypercentage": True,
             }
 
-            display_chart(chart_settings, deepcopy(df_us_pcepilfe_recent), series, tab2, series2,col2)
+            display_chart(chart_settings, deepcopy(df_us_pcepilfe_recent), series, tab2, series2,col=col2)
             
             rename_cols = {'DATE': 'Date (MM-DD-YYYY)', 'pcepilfe': 'PCE Core', 'target_rate_percent': 'Fed Target', 'dfedtaru': 'Fed Fund Target'}
             cols_gradient = ['YoY']
@@ -941,16 +946,20 @@ if option == 'Macroeconomic Data':
 
             # Display the appropriate charts and tables
             #TAB1
-            df_us_cpiaucsl_all, df_us_cpiaucsl_recent = standard_display('cpiaucsl', tab1, 'CPI', 'M','YoY')
+            col1, col2 = tab1.columns(2)            
+            df_us_cpiaucsl_all, df_us_cpiaucsl_recent = standard_display('cpiaucsl', tab1, 'CPI', 'M','YoY',col1=col1,col2=col2)
 
             #TAB2
-            df_us_cpifabsl_all, df_us_cpifabsl_recent = standard_display('cpifabsl', tab2, 'CPI Food & Beverages', 'M','YoY')
+            col1, col2 = tab2.columns(2)
+            df_us_cpifabsl_all, df_us_cpifabsl_recent = standard_display('cpifabsl', tab2, 'CPI Food & Beverages', 'M','YoY',col1=col1,col2=col2)
 
             #TAB3
-            df_us_cpiengsl_all, df_us_cpiengsl_recent = standard_display('cpiengsl', tab3, 'CPI Energy', 'M','YoY')
+            col1, col2 = tab3.columns(2)
+            df_us_cpiengsl_all, df_us_cpiengsl_recent = standard_display('cpiengsl', tab3, 'CPI Energy', 'M','YoY',col1=col1,col2=col2)
 
             #TAB4
-            df_us_cpilfesl_all, df_us_cpilfesl_recent = standard_display('cpilfesl', tab4, 'CPI Core', 'M','YoY')
+            col1, col2 = tab4.columns(2)
+            df_us_cpilfesl_all, df_us_cpilfesl_recent = standard_display('cpilfesl', tab4, 'CPI Core', 'M','YoY',col1=col1,col2=col2)
 
         if option_lagging_indicator_charts == '009 - US Industrial Production':
             tabs_list = ["📈 IP from start", 
@@ -965,34 +974,44 @@ if option == 'Macroeconomic Data':
                         "📈 Utilities"]
             tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8, tab9, tab10 = st.tabs(tabs_list)
             #TAB1
-            df_indpro_all, df_indpro_recent = standard_display('indpro', tab1, 'IP From Start', 'M','YoY')
+            col1, col2 = tab1.columns(2)
+            df_indpro_all, df_indpro_recent = standard_display('indpro', tab1, 'IP From Start', 'M','YoY',col1=col1,col2=col2)
 
             #TAB2
-            df_us_ipb54100s_all, df_us_ipb54100s_recent = standard_display('ipb54100s', tab2,'Industrial Production','M','YoY')
+            col1, col2 = tab2.columns(2)            
+            df_us_ipb54100s_all, df_us_ipb54100s_recent = standard_display('ipb54100s', tab2,'Industrial Production','M','YoY',col1=col1,col2=col2)
 
             #TAB3
-            df_us_ipbuseq_all, df_us_ipbuseq_recent = standard_display('ipbuseq', tab3,'Capacity Utilization','M','YoY')
+            col1, col2 = tab3.columns(2)            
+            df_us_ipbuseq_all, df_us_ipbuseq_recent = standard_display('ipbuseq', tab3,'Capacity Utilization','M','YoY',col1=col1,col2=col2)
 
             #TAB4
-            df_us_ipcongd_all, df_us_ipcongd_recent = standard_display('ipcongd', tab4,'Materials','M','YoY')
+            col1, col2 = tab4.columns(2)            
+            df_us_ipcongd_all, df_us_ipcongd_recent = standard_display('ipcongd', tab4,'Materials','M','YoY',col1=col1,col2=col2)
 
             #TAB5
-            df_us_ipman_all, df_us_ipman_recent = standard_display('ipman', tab5,'Consumer Goods','M','YoY')
+            col1, col2 = tab5.columns(2)            
+            df_us_ipman_all, df_us_ipman_recent = standard_display('ipman', tab5,'Consumer Goods','M','YoY',col1=col1,col2=col2)
 
             #TAB6
-            df_us_ipmat_all, df_us_ipmat_recent = standard_display('ipmat', tab6,'Business Equipment','M','YoY')
+            col1, col2 = tab6.columns(2)
+            df_us_ipmat_all, df_us_ipmat_recent = standard_display('ipmat', tab6,'Business Equipment','M','YoY',col1=col1,col2=col2)
 
             #TAB7
-            df_us_ipmine_all, df_us_ipmine_recent = standard_display('ipmine', tab7,'Construction','M','YoY')
+            col1, col2 = tab7.columns(2)
+            df_us_ipmine_all, df_us_ipmine_recent = standard_display('ipmine', tab7,'Construction','M','YoY',col1=col1,col2=col2)
 
             #TAB8
-            df_us_iputil_all, df_us_iputil_recent = standard_display('iputil', tab8,'Manufacturing','M','YoY')
+            col1, col2 = tab8.columns(2)
+            df_us_iputil_all, df_us_iputil_recent = standard_display('iputil', tab8,'Manufacturing','M','YoY',col1=col1,col2=col2)
 
             #TAB9
-            df_us_tcu_all, df_us_tcu_recent = standard_display('tcu', tab9,'Mining','M','YoY')
+            col1, col2 = tab9.columns(2)
+            df_us_tcu_all, df_us_tcu_recent = standard_display('tcu', tab9,'Mining','M','YoY',col1=col1,col2=col2)
 
             #TAB10
-            df_us_wpsfd4131_all, df_us_wpsfd4131_recent = standard_display('wpsfd4131', tab10,'Utilities','M','YoY')
+            col1, col2 = tab10.columns(2)
+            df_us_wpsfd4131_all, df_us_wpsfd4131_recent = standard_display('wpsfd4131', tab10,'Utilities','M','YoY',col1=col1,col2=col2)
 
         if option_lagging_indicator_charts == '011 - US Durable Goods':
             tabs_list = ["📈 Recap", 
@@ -1005,16 +1024,20 @@ if option == 'Macroeconomic Data':
             #TODO: TAB1
 
             #TAB2
-            df_dgorder_all, df_dgorder_recent = standard_display('dgorder', tab2, 'New Orders', 'M', 'dgorder')
+            col1, col2 = tab2.columns(2)
+            df_dgorder_all, df_dgorder_recent = standard_display('dgorder', tab2, 'New Orders', 'M', 'dgorder',col1=col1,col2=col2)
 
             #TAB3
-            df_neworder_all, df_neworder_recent = standard_display('neworder', tab3, 'New Orders ex Aircraft', 'M', 'neworder')
+            col1, col2 = tab3.columns(2)
+            df_neworder_all, df_neworder_recent = standard_display('neworder', tab3, 'New Orders ex Aircraft', 'M', 'neworder',col1=col1,col2=col2)
 
             #TAB4
-            df_adxtno_all, df_adxtno_recent = standard_display('adxtno', tab4, 'New Orders ex Transport', 'M', 'adxtno')
+            col1, col2 = tab4.columns(2)
+            df_adxtno_all, df_adxtno_recent = standard_display('adxtno', tab4, 'New Orders ex Transport', 'M', 'adxtno',col1=col1,col2=col2)
 
             #TAB5
-            df_amtuno_all, df_amtuno_recent = standard_display('amtuno', tab5, 'New Orders Manufacturing', 'M', 'amtuno')
+            col1, col2 = tab5.columns(2)
+            df_amtuno_all, df_amtuno_recent = standard_display('amtuno', tab5, 'New Orders Manufacturing', 'M', 'amtuno',col1=col1,col2=col2)
 
             #A31SNO
             #A32SNO

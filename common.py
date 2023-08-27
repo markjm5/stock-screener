@@ -3204,7 +3204,12 @@ def display_chart(settings, df,series, tab, series2=None, col=None):
   plt.rc('ytick', labelsize=8)
   plt.tight_layout()
   plt.grid(True)
-  tab.pyplot(plt)
+
+  if(col):
+    col.pyplot(plt)
+  else:
+    tab.pyplot(plt)
+
   plt.clf()
  
 
@@ -3232,8 +3237,8 @@ def return_styled_ism_table1(df):
   return style_t3
    
 
-def standard_display(series_name, tab, title, period, series_display):
-   
+def standard_display(series_name, tab, title, period, series_display,col1, col2):
+
   #eval("df_us%s_all" % series), df_us_gdp_recent = get_stlouisfed_data('gdpc1', 'Q', 10)
   #eval('df_us{0}_all'.format(series)), eval('df_us{0}_recent'.format(series)) 
   
@@ -3246,7 +3251,7 @@ def standard_display(series_name, tab, title, period, series_display):
   else:
      ypercentage = False
 
-  tab.subheader(title)
+  #tab.subheader(title)
 
   chart_settings = {
       "type": "line",
@@ -3257,7 +3262,7 @@ def standard_display(series_name, tab, title, period, series_display):
 
   }
 
-  display_chart(chart_settings, df_series_all, series, tab)
+  display_chart(chart_settings, df_series_all, series, tab,col=col1)
 
   chart_settings = {
       "type": "line",
@@ -3267,7 +3272,7 @@ def standard_display(series_name, tab, title, period, series_display):
       "ypercentage": ypercentage,
   }
 
-  display_chart(chart_settings, deepcopy(df_series_recent), series, tab)
+  display_chart(chart_settings, deepcopy(df_series_recent), series, tab,col=col2)
 
   rename_cols = {'DATE': 'Date (MM-DD-YYYY)', series_name: title}
   cols_gradient = ['YoY']
