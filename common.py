@@ -3176,7 +3176,8 @@ def display_chart(settings, df,series, tab, series2=None):
   #ax.yaxis.set_major_formatter(mtick.PercentFormatter())
 
   #import pdb; pdb.set_trace()
-  plt.style.use('ggplot')
+  #plt.style.use('ggplot')
+  plt.style.use('seaborn-v0_8-whitegrid')
   #plt.style.use('bmh')
   
   if(settings['ypercentage']):
@@ -3203,6 +3204,7 @@ def display_chart(settings, df,series, tab, series2=None):
   plt.rc('ytick', labelsize=8)
   plt.tight_layout()
   plt.grid(True)
+  #plt.figure(figsize=(5,5))
   tab.pyplot(plt)
   plt.clf()
    

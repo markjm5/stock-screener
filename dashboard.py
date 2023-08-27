@@ -881,6 +881,7 @@ if option == 'Macroeconomic Data':
 
             #TAB 2
             tab2.subheader("PCE Core")
+            df_us_pcepilfe_all["YoY"] = df_us_pcepilfe_all["YoY"] / 100            
             df_us_pcepilfe_all["target_rate_percent"] = 2
             df_us_pcepilfe_recent["target_rate_percent"] = 2
             series2 = "target_rate_percent"
