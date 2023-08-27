@@ -490,7 +490,7 @@ if option == 'Calendar':
 
     sort_cols = ['dt']
     drop_cols = ['id' ]
-    rename_cols = {'dt': 'Date','dt_time': 'Time', 'ticker':'Ticker', 'company_name':'Company Name', 'market_cap_mil':'Market Cap (M)'}
+    rename_cols = {'dt': 'Date', 'ticker':'Ticker', 'company_name':'Company Name', 'market_cap_mil':'Market Cap (M)'}
     #number_format_cols = ['market_cap_mil']
     format_cols = {'market_cap_mil': 'number', 'dt': 'date' }
 

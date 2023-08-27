@@ -27,10 +27,12 @@ from chromedriver_py import binary_path
 #from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
 #from webdriver_manager.chrome import ChromeDriverManager
-from datetime import date
+from datetime import date, timedelta
 from datetime import datetime as dt
+#from yahoo_earnings_calendar import YahooEarningsCalendar
 from bs4 import BeautifulSoup
 from dateutil.relativedelta import relativedelta
+from dateutil import rrule
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
@@ -430,7 +432,6 @@ def set_stockrow_stock_data(df_tickers, logger):
       logger.exception(f'Selenium Timed Out for {ticker} from stockrow')
 
     soup = BeautifulSoup(page, 'html.parser')
-    import pdb; pdb.set_trace()
 
     #Only execute if the stockrow page has a table containing data about the ticker
     if(soup.find_all('table')):
@@ -479,7 +480,7 @@ def set_stockrow_stock_data(df_tickers, logger):
       except IndexError as e:
         failed_tickers.append(ticker)
         logger.exception(f'No YEAR column for {ticker} from stockrow')
-    import pdb; pdb.set_trace()
+
     #Get WSJ Data
     try:
       page = get_page_selenium("https://www.wsj.com/market-data/quotes/%s/financials/annual/income-statement" % (ticker))
@@ -1048,25 +1049,42 @@ def set_earningswhispers_earnings_calendar(df_us_companies, logger):
   logger.info("Getting data from Earnings Whispers")
 
   df = pd.DataFrame()
+  # Calculate next weekday
+  r = rrule.rrule(rrule.DAILY,
+                  byweekday=[rrule.MO, rrule.TU, rrule.WE, rrule.TH, rrule.FR],
+                  dtstart=date.today())
+
+  # Create a rruleset
+  rs = rrule.rruleset()
+  rs.rrule(r)
+  next_weekday = rs[0].date()
+
+  start_date = next_weekday   # start date
+  end_date = next_weekday + relativedelta(weeks=+2)  # end date
+  dt_index_dates = pd.date_range(start_date,end_date-timedelta(days=1),freq='d')
+  list_dates = dt_index_dates.strftime('%Y-%m-%d').tolist()
+
+  #TODO: Scrape data from yahoo finance
+  df = scrape_yf_earnings_dates(list_dates, start_date, end_date, df_us_companies)
 
   # Get earnings calendar for the next fortnight
-  for x in range(1, 16):
-      print("Day %s" % x)
-      earnings_whispers_day_df = scrape_earningswhispers_day(x, df_us_companies)
-      df = df.append(earnings_whispers_day_df, ignore_index=True)
+  #for x in range(1, 16):
+  #    print("Day %s" % x)
+  #    earnings_whispers_day_df = scrape_earningswhispers_day(x, df_us_companies)
+  #    df = df.append(earnings_whispers_day_df, ignore_index=True)
 
   df = df.drop_duplicates(subset='Ticker', keep="first")
   df['Market Cap (Mil)'] = pd.to_numeric(df['Market Cap (Mil)'])
   df = df.sort_values(by=['Market Cap (Mil)'], ascending=False)
   df = df[:10].reset_index(drop=True)
 
-  df['Date'] = pd.to_datetime(df['Date'],format='%A, %B %d, %Y')
+  df['Date'] = pd.to_datetime(df['Date'],format='%Y-%m-%d')
 
   #Clear out old data
   sql_delete_all_rows('Macro_EarningsCalendar')
 
   #Write new data into table
-  rename_cols = {'Date':'dt','Time':'dt_time','Ticker':'ticker','Company Name':'company_name','Market Cap (Mil)':'market_cap_mil'}
+  rename_cols = {'Date':'dt','Ticker':'ticker','Company Name':'company_name','Market Cap (Mil)':'market_cap_mil'}
   add_col_values = None
   conflict_cols = None
 
@@ -1076,9 +1094,56 @@ def set_earningswhispers_earnings_calendar(df_us_companies, logger):
 
   return success
 
+def scrape_yf_earnings_dates(list_dates, start_date, end_date, df_us_companies):
+
+  df = pd.DataFrame()
+  
+  # Add Date, Time, CompanyName, Ticker headers to dataframe
+  df.insert(0,"Date",[],True)
+  df.insert(1,"Ticker",[],True)
+  df.insert(2,"Company Name",[],True)
+  df.insert(3,"Market Cap (Mil)",[],True)
+
+  for x in list_dates:
+
+    url = "https://finance.yahoo.com/calendar/earnings?from=%s&to=%s&day=%s" % (start_date, end_date, x)
+    page = get_page_selenium(url)
+    soup = BeautifulSoup(page, 'html.parser')
+    try:
+      #TODO: Scrape company data and add to df
+      date_str = x
+      earnings_table = soup.find_all('table')[0]
+      earnings_df = convert_html_table_to_df(earnings_table, contains_th=False)
+      cols_drop = ["Event Name", "Earnings Call Time", "EPS Estimate", "Reported EPS", "Surprise(%)"]
+      earnings_df = earnings_df.drop(cols_drop, axis=1)
+
+      for index, row in earnings_df.iterrows():
+        ticker_str = row['Symbol']
+        #print("%s - %s" % (date_str, ticker_str))
+        df_retrieved_company_data = df_us_companies.loc[df_us_companies['Ticker'] == ticker_str.strip().upper()].reset_index(drop=True)
+        # Only if company exists on US stocks list, we add to df
+        if(df_retrieved_company_data.shape[0] > 0):
+          company_name_str = row['Company']
+
+          temp_row1 = []
+          temp_row1.append(date_str)
+          temp_row1.append(ticker_str)
+          temp_row1.append(company_name_str)
+
+          # Get market cap from US Stocks list
+          temp_row1.append(df_retrieved_company_data['Market Cap (mil)'].iloc[0])
+          df.loc[len(df.index)] = temp_row1
+
+    except IndexError as e:
+      pass
+
+  return df
+
+
+#OBSOLETE
 def scrape_earningswhispers_day(day, df_us_companies):
   url = "https://www.earningswhispers.com/calendar?sb=c&d=%s&t=all" % (day,)
-  import pdb; pdb.set_trace()
+
   page = get_page_selenium(url)
   
   #soup = BeautifulSoup(page.content, 'html.parser')
