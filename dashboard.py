@@ -1235,14 +1235,15 @@ if option == 'Single Stock One Pager':
             except UnboundLocalError as e:
                 st.markdown("Company Not Found")
             else:
-                json_price_action = get_yf_price_action(symbol)
+                json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics = get_yf_price_action(symbol)
 
-                dataSummaryDetail = json_price_action['quoteSummary']['result'][0]['summaryDetail']
-                dataDefaultKeyStatistics = json_price_action['quoteSummary']['result'][0]['defaultKeyStatistics']
-                dataSummaryProfile = json_price_action['quoteSummary']['result'][0]['summaryProfile']
-                dataFinancialData = json_price_action['quoteSummary']['result'][0]['financialData']
-                dataPrice = json_price_action['quoteSummary']['result'][0]['price']
+               # import pdb; pdb.set_trace()
 
+                dataSummaryDetail = json_yf_module_summaryDetail['quoteSummary']['result'][0]['summaryDetail']                             #json_price_action['quoteSummary']['result'][0]['summaryDetail']
+                dataDefaultKeyStatistics = json_yf_module_defaultKeyStatistics['quoteSummary']['result'][0]['defaultKeyStatistics']        #json_price_action['quoteSummary']['result'][0]['defaultKeyStatistics']
+                dataSummaryProfile = json_yf_module_summaryProfile['quoteSummary']['result'][0]['summaryProfile']                          #json_price_action['quoteSummary']['result'][0]['summaryProfile']
+                dataFinancialData = json_yf_module_financialData['quoteSummary']['result'][0]['financialData']                             #json_price_action['quoteSummary']['result'][0]['financialData']
+                dataPrice = json_yf_module_price['quoteSummary']['result'][0]['price']                                                     #json_price_action['quoteSummary']['result'][0]['price']
 
                 # Get High Level Company Details
                 company_name = df_company_details['company_name'][0]

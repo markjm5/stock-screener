@@ -283,10 +283,17 @@ def set_yf_key_stats(df_tickers, logger):
   return success
 
 def get_yf_price_action(ticker):
-    url_yf_modules = "https://query2.finance.yahoo.com/v10/finance/quoteSummary/%s?modules=summaryProfile,financialData,summaryDetail,price,defaultKeyStatistics" % (ticker)
-    json_yf_modules = json.loads(get_page(url_yf_modules).content)
 
-    return json_yf_modules
+  modules = ['summaryProfile','financialData','summaryDetail','price','defaultKeyStatistics']
+  json_yf_module_summaryProfile = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[0])).content)
+  json_yf_module_financialData = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[1])).content)
+  json_yf_module_summaryDetail = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[2])).content)
+  json_yf_module_price = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[3])).content)
+  json_yf_module_defaultKeyStatistics = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[4])).content)
+
+  #url_yf_modules = "https://query2.finance.yahoo.com/v10/finance/quoteSummary/%s?modules=summaryProfile,financialData,summaryDetail,price,defaultKeyStatistics" % (ticker)
+
+  return json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics
 
 def write_zacks_ticker_data_to_db(df_tickers, logger):
   #create new df using columns from old df
@@ -1703,11 +1710,15 @@ def get_peer_details(df):
     cid = sql_get_cid(ticker)    
     #print(cid)
     #print(ticker)
-    json_price_action = get_yf_price_action(ticker)
-    dataSummaryDetail = json_price_action['quoteSummary']['result'][0]['summaryDetail']
-    dataDefaultKeyStatistics = json_price_action['quoteSummary']['result'][0]['defaultKeyStatistics']
+    json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics = get_yf_price_action(ticker)
+    dataSummaryDetail = json_yf_module_summaryDetail['quoteSummary']['result'][0]['summaryDetail']
+
+    try:
+      dataDefaultKeyStatistics = json_yf_module_defaultKeyStatistics['quoteSummary']['result'][0]['defaultKeyStatistics'] 
+    except KeyError as e:
+      defaultKeyStatistics = None
     #dataSummaryProfile = json_price_action['quoteSummary']['result'][0]['summaryProfile']
-    dataFinancialData = json_price_action['quoteSummary']['result'][0]['financialData']
+    dataFinancialData = json_yf_module_financialData['quoteSummary']['result'][0]['financialData']
     #dataPrice = json_price_action['quoteSummary']['result'][0]['price']
 
     try:
