@@ -485,8 +485,9 @@ if option == 'Download Data':
 
 if option == 'Calendar':
     #st.subheader(f'Calendar')
+    col1, col2 = st.columns(2)
     df1 = get_data(table="macro_earningscalendar")
-    st.markdown("Earnings Calendar")
+    col1.markdown("Earnings Calendar")
 
     sort_cols = ['dt']
     drop_cols = ['id' ]
@@ -495,10 +496,10 @@ if option == 'Calendar':
     format_cols = {'market_cap_mil': 'number', 'dt': 'date' }
 
     style_t1 = format_df_for_dashboard(df1, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
-    st.write(style_t1)
+    col1.write(style_t1)
 
     df2 = get_data(table="macro_economiccalendar")
-    st.markdown("Economic Calendar")
+    col2.markdown("Economic Calendar")
 
     sort_cols = ['dt']
     drop_cols = ['id']
@@ -508,9 +509,9 @@ if option == 'Calendar':
     #import pdb; pdb.set_trace()
     if(len(df2) > 0):
         style_t2 = format_df_for_dashboard(df2, sort_cols, drop_cols, rename_cols,format_cols=format_cols)
-        st.write(style_t2)
+        col2.write(style_t2)
     else:
-        st.write("Could not retrieve economic calendar")
+        col2.write("Could not retrieve economic calendar")
 
     df3 = get_data(table="macro_whitehouseannouncement")
     st.markdown("Whitehouse News")

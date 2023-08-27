@@ -283,13 +283,36 @@ def set_yf_key_stats(df_tickers, logger):
   return success
 
 def get_yf_price_action(ticker):
+  json_yf_module_summaryProfile = {}
+  json_yf_module_financialData = {}
+  json_yf_module_summaryDetail = {}
+  json_yf_module_price = {}
+  json_yf_module_defaultKeyStatistics = {}
 
   modules = ['summaryProfile','financialData','summaryDetail','price','defaultKeyStatistics']
-  json_yf_module_summaryProfile = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[0])).content)
-  json_yf_module_financialData = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[1])).content)
-  json_yf_module_summaryDetail = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[2])).content)
-  json_yf_module_price = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[3])).content)
-  json_yf_module_defaultKeyStatistics = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[4])).content)
+  try:
+    json_yf_module_summaryProfile = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[0])).content)
+  except Exception as e:
+    pass
+
+  try:
+    json_yf_module_financialData = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[1])).content)
+  except Exception as e:
+    pass
+
+  try:
+    json_yf_module_summaryDetail = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[2])).content)
+  except Exception as e:
+    pass
+
+  try:
+    json_yf_module_price = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[3])).content)
+  except Exception as e:
+    pass
+  try:
+    json_yf_module_defaultKeyStatistics = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[4])).content)
+  except Exception as e:
+    pass
 
   #url_yf_modules = "https://query2.finance.yahoo.com/v10/finance/quoteSummary/%s?modules=summaryProfile,financialData,summaryDetail,price,defaultKeyStatistics" % (ticker)
 
@@ -1711,79 +1734,86 @@ def get_peer_details(df):
     #print(cid)
     #print(ticker)
     json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics = get_yf_price_action(ticker)
-    dataSummaryDetail = json_yf_module_summaryDetail['quoteSummary']['result'][0]['summaryDetail']
+    try:
+      dataSummaryDetail = json_yf_module_summaryDetail['quoteSummary']['result'][0]['summaryDetail']
+    except (KeyError,TypeError) as e:
+      dataSummaryDetail = None
 
     try:
       dataDefaultKeyStatistics = json_yf_module_defaultKeyStatistics['quoteSummary']['result'][0]['defaultKeyStatistics'] 
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
       defaultKeyStatistics = None
     #dataSummaryProfile = json_price_action['quoteSummary']['result'][0]['summaryProfile']
-    dataFinancialData = json_yf_module_financialData['quoteSummary']['result'][0]['financialData']
+    try:
+      dataFinancialData = json_yf_module_financialData['quoteSummary']['result'][0]['financialData']
+    except (KeyError,TypeError) as e:      
+      dataFinancialData = None
     #dataPrice = json_price_action['quoteSummary']['result'][0]['price']
 
     try:
         div_yield = dataSummaryDetail['dividendYield']['fmt'] 
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
         div_yield = None
-
+    
     try:
       ebitda_margin = dataFinancialData['ebitdaMargins']['fmt']
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
       ebitda_margin = None
 
     try:
       net_margin = dataFinancialData['profitMargins']['fmt']
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
       net_margin = None
 
     try:
       dividend_yield = dataSummaryDetail['dividendYield']['fmt'] 
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
       dividend_yield = None
 
     df_moving_average = get_data(table="CompanyMovingAverage", cid=cid)
     df_company_ratio = get_data(table="CompanyRatio", cid=cid)
     try:
       pb = df_company_ratio['price_book'][0]
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
       pb = None
     try:
       roe = df_company_ratio['roe'][0]
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
       roe = None
     try:
       market_cap = df_moving_average['market_cap'][0]
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
       market_cap = None
     try:
       ev = df_moving_average['ev'][0]
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
       ev = None
 
     try:
       pe = dataSummaryDetail['trailingPE']['fmt'] 
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
       pe = None
+
     try:
       ev_ebitda = dataDefaultKeyStatistics['enterpriseToEbitda']['fmt']
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
       ev_ebitda = None
 
     try:
       ev_revenue = dataDefaultKeyStatistics['enterpriseToRevenue']['fmt']
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
       ev_revenue = None
 
     #TODO: Need to retrieve EV/EBIT
     try:
       ev_ebit = None
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
       ev_ebit = None
 
     #TODO: Need to retrieve EBIT MARGIN
     try:
       ebit_margin = None
-    except KeyError as e:
+    except (KeyError,TypeError) as e:
       ebit_margin = None
 
     temp_row.append(ticker)
