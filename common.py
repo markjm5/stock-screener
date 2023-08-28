@@ -3304,6 +3304,26 @@ def standard_display(series_name, tab, title, period, series_display,col1, col2)
 
   display_chart(chart_settings, deepcopy(df_series_recent), series, tab,col=col2)
 
+  chart_settings = {
+      "type": "bar",
+      "title": '{0} - MoM'.format(title), 
+      "xlabel": "Year", 
+      "ylabel": "MoM", 
+      "ypercentage": ypercentage,
+  }
+
+  display_chart(chart_settings, df_series_all, 'MoM', tab,col=col1)
+
+  chart_settings = {
+      "type": "bar",
+      "title": '{0} - MoM - Last 10 Years'.format(title), 
+      "xlabel": "Year", 
+      "ylabel": "MoM", 
+      "ypercentage": ypercentage,
+  }
+
+  display_chart(chart_settings, deepcopy(df_series_recent), 'MoM', tab,col=col2)
+
   rename_cols = {'DATE': 'Date (MM-DD-YYYY)', series_name: title}
   cols_gradient = ['YoY']
   cols_drop = ['QoQ','QoQ_ANNUALIZED']
