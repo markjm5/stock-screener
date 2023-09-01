@@ -1190,27 +1190,25 @@ if option == 'Macroeconomic Data':
             tab1.markdown(disp.to_html(), unsafe_allow_html=True)           
 
             #TODO: Subplotting all the sectors: https://www.geeksforgeeks.org/plot-multiple-plots-in-matplotlib/
-            col1, col2 = tab1.columns(2)
+            col1, col2, col3, col4 = tab1.columns(4)
 
             index = 1
             for x, y in rename_cols.items():
                 series = y
                 if(y != 'DATE'):
                     chart_settings = {
-                        "type": "bar",
                         "title": y, 
                         "xlabel": "Period", 
-                        "ylabel": "Number", 
+                        "ylabel": "Index", 
                         "ypercentage": False,
                     }
 
                     display_chart_ism(chart_settings, df_sectors_last_6_months, series, tab1,col=eval("col" + str(index)))
 
-                    if(index == 1):
-                        index = 2
-                    else:
+                    if(index == 4):
                         index = 1
-
+                    else:
+                        index = index + 1
 
             #TAB 2
             tab2.subheader(tabs[1])
@@ -1221,8 +1219,28 @@ if option == 'Macroeconomic Data':
                 'DATE': lambda t: t.strftime("%m-%Y")
             }
 
-            disp, df = style_df_for_display(df_new_orders_last_6_months,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=True)
+            disp, df_new_orders_last_6_months = style_df_for_display(df_new_orders_last_6_months,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=True)
             tab2.markdown(disp.to_html(), unsafe_allow_html=True)           
+
+            col1, col2, col3, col4 = tab2.columns(4)
+
+            index = 1
+            for x, y in rename_cols.items():
+                series = y
+                if(y != 'DATE'):
+                    chart_settings = {
+                        "title": y, 
+                        "xlabel": "Period", 
+                        "ylabel": "Index", 
+                        "ypercentage": False,
+                    }
+
+                    display_chart_ism(chart_settings, df_new_orders_last_6_months, series, tab2,col=eval("col" + str(index)))
+
+                    if(index == 4):
+                        index = 1
+                    else:
+                        index = index + 1
 
             #TAB 3
             tab3.subheader(tabs[2])
@@ -1233,8 +1251,29 @@ if option == 'Macroeconomic Data':
                 'DATE': lambda t: t.strftime("%m-%Y")
             }
 
-            disp,df = style_df_for_display(df_production_last_6_months,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=True)
+            disp,df_production_last_6_months = style_df_for_display(df_production_last_6_months,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=True)
             tab3.markdown(disp.to_html(), unsafe_allow_html=True)           
+
+            col1, col2, col3, col4 = tab3.columns(4)
+
+            index = 1
+            for x, y in rename_cols.items():
+                series = y
+                if(y != 'DATE'):
+                    chart_settings = {
+                        "title": y, 
+                        "xlabel": "Period", 
+                        "ylabel": "Index", 
+                        "ypercentage": False,
+                    }
+
+                    display_chart_ism(chart_settings, df_production_last_6_months, series, tab3,col=eval("col" + str(index)))
+
+                    if(index == 4):
+                        index = 1
+                    else:
+                        index = index + 1
+
 
             #TAB 4
             tab4.subheader(tabs[3])

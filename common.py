@@ -18,6 +18,7 @@ import psycopg2, psycopg2.extras
 import config
 import logging
 import matplotlib.ticker as mtick
+import numpy as np
 from copy import deepcopy
 from matplotlib import pyplot as plt
 from selenium.common.exceptions import TimeoutException as ste
@@ -3248,40 +3249,39 @@ def display_chart(settings, df,series, tab, series2=None, col=None):
   plt.clf()
  
 
-def display_chart_ism(settings, df,series, tab, series2=None, col=None):
+def display_chart_ism(settings, df,series, tab, col=None):
 
+  #import pdb; pdb.set_trace()
+
+  #TODO: Need to fix the following:
+  # 1) Ticks on the x axis needs to reflect df values
+  # 2) Keeping the same y axis range fixed
+  # 3) Lines around each bar
+  data = {}
   plt.style.use('seaborn-v0_8-whitegrid')
-  
-  if(settings['ypercentage']):
-    df[series] = df[series] * 100
-    plt.gca().yaxis.set_major_formatter(mtick.PercentFormatter())            
+  df['DATE'] = df['DATE'].astype(str) 
+  df_temp = df[['DATE',series]]
 
-  #Add the appropriate dataframes to the 2 histogram vars
-  if(settings['type'] == 'line'):
-    plt.plot(df["DATE"], df[series])
-    if(series2):
-      plt.plot(df["DATE"], df[series2])
-      # Insert legend because we now have multiple values
-      plt.legend([series, series2], fontsize="x-small", loc="upper left")
+  for index, row in df_temp.iterrows():
+    data[row[0]] = row[1]
 
-  elif(settings['type'] == 'bar'):
-    plt.bar(df["DATE"], df[series], width=50)       
+  plt.ylim(-15, 15)
 
+  names = list(data.keys())
+  values = list(data.values())
+
+  # https://matplotlib.org/stable/gallery/lines_bars_and_markers/categorical_variables.html
+  #fig, axs = plt.subplots(1, 3, figsize=(9, 3), sharey=True)
+  plt.bar(names, values)
   plt.title(settings['title'])
   plt.xlabel(settings['xlabel'])
   plt.ylabel(settings['ylabel'])
   plt.xticks(rotation='vertical')
-
   # Set the font size for x tick labels
   plt.rc('xtick', labelsize=8)
   plt.rc('ytick', labelsize=8)
-
-  plt.grid(True)
-
-  if(col):
-    col.pyplot(plt)
-  else:
-    tab.pyplot(plt)
+  plt.set_loglevel('WARNING')
+  col.pyplot(plt)
 
   plt.clf()
 
