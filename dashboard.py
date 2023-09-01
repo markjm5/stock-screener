@@ -27,7 +27,7 @@ from common import set_price_action_ta, set_todays_insider_trades, combine_df_on
 from common import style_df_for_display, style_df_for_display_date, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
-from common import display_chart, return_styled_ism_table1, append_two_df, standard_display
+from common import display_chart, display_chart_ism, append_two_df, standard_display
 import seaborn as sns
 from copy import deepcopy
 
@@ -147,7 +147,7 @@ if option == 'Download Data':
         rename_cols = {}
         cols_gradient = ['Error']
         cols_drop = []
-        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        disp, df = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
 
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
@@ -258,7 +258,7 @@ if option == 'Download Data':
         rename_cols = {}
         cols_gradient = ['Error']
         cols_drop = []
-        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        disp,df = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         executor_count = 2
@@ -273,7 +273,7 @@ if option == 'Download Data':
         rename_cols = {}
         cols_gradient = ['Error']
         cols_drop = []
-        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        disp,df = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         executor_count = 3
@@ -288,7 +288,7 @@ if option == 'Download Data':
         rename_cols = {}
         cols_gradient = ['Error']
         cols_drop = []
-        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        disp,df = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         executor_count = 4
@@ -303,7 +303,7 @@ if option == 'Download Data':
         rename_cols = {}
         cols_gradient = ['Error']
         cols_drop = []
-        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        disp,df = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         executor_count = 5
@@ -318,7 +318,7 @@ if option == 'Download Data':
         rename_cols = {}
         cols_gradient = ['Error']
         cols_drop = []
-        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        disp,df = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         st.write(f'Status of Finwiz Stock Data: {finwiz_stock_data_status}')
@@ -386,7 +386,7 @@ if option == 'Download Data':
         rename_cols = {}
         cols_gradient = ['Error']
         cols_drop = []
-        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        disp,df = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
     if(clicked4):
@@ -480,7 +480,7 @@ if option == 'Download Data':
         rename_cols = {}
         cols_gradient = ['Error']
         cols_drop = []
-        disp = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        disp,df = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
 if option == 'Calendar':
@@ -588,7 +588,7 @@ if option == 'Macroeconomic Data':
             }
             format_date = True
 
-            disp = style_df_for_display_date(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp,df = style_df_for_display_date(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab1.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 2
@@ -630,7 +630,7 @@ if option == 'Macroeconomic Data':
             #import pdb; pdb.set_trace()
             #disp = df_us_gdp_recent.style.format(format_cols)
 
-            disp = style_df_for_display_date(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp,df = style_df_for_display_date(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab2.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 3
@@ -668,7 +668,7 @@ if option == 'Macroeconomic Data':
                 'Date': lambda t: t.strftime("%m-%d-%Y"),
             }
 
-            disp = style_df_for_display_date(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp,df = style_df_for_display_date(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab3.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 4
@@ -704,7 +704,7 @@ if option == 'Macroeconomic Data':
                 'QoQ Annualized': '{:,.2%}'.format,
                 'Date': lambda t: t.strftime("%m-%d-%Y"),
             }
-            disp = style_df_for_display_date(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp,df = style_df_for_display_date(df_us_gdp_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab4.markdown(disp.to_html(), unsafe_allow_html=True)
 
 
@@ -775,7 +775,7 @@ if option == 'Macroeconomic Data':
                 'Date': lambda t: t.strftime("%m-%d-%Y"),
                 'Monthly Change (K)': '{:,.0f}'.format,
             }
-            disp = style_df_for_display_date(df_us_payems_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp,df = style_df_for_display_date(df_us_payems_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab1.markdown(disp.to_html(), unsafe_allow_html=True)
 
             
@@ -822,7 +822,7 @@ if option == 'Macroeconomic Data':
                 'CC Var': '{:,.0f}'.format,
                 'Date': lambda t: t.strftime("%m-%d-%Y"),
             }
-            disp = style_df_for_display_date(df_us_icsa_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp,df = style_df_for_display_date(df_us_icsa_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab2.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 3
@@ -934,7 +934,7 @@ if option == 'Macroeconomic Data':
                 'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
             }
 
-            disp = style_df_for_display_date(df_us_pcepilfe_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp,df = style_df_for_display_date(df_us_pcepilfe_recent,cols_gradient,rename_cols,cols_drop,format_cols)
             tab2.markdown(disp.to_html(), unsafe_allow_html=True)           
 
             #TAB 3
@@ -1164,7 +1164,7 @@ if option == 'Macroeconomic Data':
                     "📈 Charts", 
                     "📈 Vs GDP"
                     ]
-            # gdpc1
+
             tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs(tabs)
 
             df_sectors = get_data(table="macro_us_ism_manufacturing_sectors").tail(6).reset_index(drop=True)           
@@ -1172,64 +1172,69 @@ if option == 'Macroeconomic Data':
             df_production = get_data(table="macro_us_ism_manufacturing_production").tail(6).reset_index(drop=True)            
             df_headline = get_data(table="macro_us_ism_manufacturing_headline")            
 
-            df_sectors_last_6_months = df_sectors.tail(3).reset_index(drop=True)
-            df_new_orders_last_6_months = df_new_orders.tail(3).reset_index(drop=True)
-            df_production_last_6_months = df_production.tail(3).reset_index(drop=True)
+            df_sectors_last_6_months = df_sectors.sort_values('ism_date').tail(3).reset_index(drop=True)
+            df_new_orders_last_6_months = df_new_orders.sort_values('ism_date').tail(3).reset_index(drop=True)
+            df_production_last_6_months = df_production.sort_values('ism_date').tail(3).reset_index(drop=True)
 
             #TAB 1
             tab1.subheader(tabs[0])
-            style_t1 = return_styled_ism_table1(df_sectors_last_6_months)
-            tab1.write(style_t1)
 
-            #TODO: Subplotting all the sectors: https://www.geeksforgeeks.org/plot-multiple-plots-in-matplotlib/
-
-            #Table containing sector values for last 6 months across all sectors
-            #Chart showing sector values across all sectors for last 6 months
-            series = "gdpc1"
-            chart_settings = {
-                "type": "line",
-                "title": "Total US GDP", 
-                "xlabel": "Year", 
-                "ylabel": "GDP", 
-                "ypercentage": False,
-
+            rename_cols = {'ism_date': 'DATE','apparel_leather_allied_products':'Apparel Leather Allied Products','chemical_products':'Chemical Products','computer_electronic_products':'Computer & Electronic Products','electrical_equipment_appliances_components':'Electrical Equipment Appliances Components','fabricated_metal_products':'Fabricated Metal Products','food_beverage_tobacco_products':'Food Beverage & Tobacco Products','furniture_related_products':'Furniture Related Products','machinery':'Machinery','miscellaneous_manufacturing':'Miscellaneous Manufacturing','nonmetallic_mineral_products':'Nonmetallic Mineral Products','paper_products':'Paper Products','petroleum_coal_products':'Petroleum Coal Products','plastics_rubber_products':'Plastics & Rubber Products','primary_metals':'Primary Metails','printing_related_support_activities':'Printing Related Support Activities','textile_mills':'Textile Mills','transportation_equipment':'Transportation Equipment','wood_products':'Wood Products'}
+            cols_gradient = []
+            cols_drop = []
+            format_cols = {
+                'DATE': lambda t: t.strftime("%m-%Y")
             }
 
-            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+            disp, df_sectors_last_6_months = style_df_for_display(df_sectors_last_6_months,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=True)
+            tab1.markdown(disp.to_html(), unsafe_allow_html=True)           
+
+            #TODO: Subplotting all the sectors: https://www.geeksforgeeks.org/plot-multiple-plots-in-matplotlib/
+            col1, col2 = tab1.columns(2)
+
+            index = 1
+            for x, y in rename_cols.items():
+                series = y
+                if(y != 'DATE'):
+                    chart_settings = {
+                        "type": "bar",
+                        "title": y, 
+                        "xlabel": "Period", 
+                        "ylabel": "Number", 
+                        "ypercentage": False,
+                    }
+
+                    display_chart_ism(chart_settings, df_sectors_last_6_months, series, tab1,col=eval("col" + str(index)))
+
+                    if(index == 1):
+                        index = 2
+                    else:
+                        index = 1
+
 
             #TAB 2
             tab2.subheader(tabs[1])
-            style_t2 = return_styled_ism_table1(df_new_orders_last_6_months)
-            tab2.write(style_t2)
-
-            series = "gdpc1"
-            chart_settings = {
-                "type": "line",
-                "title": "Total US GDP", 
-                "xlabel": "Year", 
-                "ylabel": "GDP", 
-                "ypercentage": False,
-
+            rename_cols = {'ism_date': 'DATE','apparel_leather_allied_products':'Apparel Leather Allied Products','chemical_products':'Chemical Products','computer_electronic_products':'Computer & Electronic Products','electrical_equipment_appliances_components':'Electrical Equipment Appliances Components','fabricated_metal_products':'Fabricated Metal Products','food_beverage_tobacco_products':'Food Beverage & Tobacco Products','furniture_related_products':'Furniture Related Products','machinery':'Machinery','miscellaneous_manufacturing':'Miscellaneous Manufacturing','nonmetallic_mineral_products':'Nonmetallic Mineral Products','paper_products':'Paper Products','petroleum_coal_products':'Petroleum Coal Products','plastics_rubber_products':'Plastics & Rubber Products','primary_metals':'Primary Metails','printing_related_support_activities':'Printing Related Support Activities','textile_mills':'Textile Mills','transportation_equipment':'Transportation Equipment','wood_products':'Wood Products'}
+            cols_gradient = []
+            cols_drop = []
+            format_cols = {
+                'DATE': lambda t: t.strftime("%m-%Y")
             }
 
-            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+            disp, df = style_df_for_display(df_new_orders_last_6_months,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=True)
+            tab2.markdown(disp.to_html(), unsafe_allow_html=True)           
 
             #TAB 3
             tab3.subheader(tabs[2])
-            style_t3 = return_styled_ism_table1(df_production_last_6_months)
-            tab3.write(style_t3)
-
-            series = "gdpc1"
-            chart_settings = {
-                "type": "line",
-                "title": "Total US GDP", 
-                "xlabel": "Year", 
-                "ylabel": "GDP", 
-                "ypercentage": False,
-
+            rename_cols = {'ism_date': 'DATE','apparel_leather_allied_products':'Apparel Leather Allied Products','chemical_products':'Chemical Products','computer_electronic_products':'Computer & Electronic Products','electrical_equipment_appliances_components':'Electrical Equipment Appliances Components','fabricated_metal_products':'Fabricated Metal Products','food_beverage_tobacco_products':'Food Beverage & Tobacco Products','furniture_related_products':'Furniture Related Products','machinery':'Machinery','miscellaneous_manufacturing':'Miscellaneous Manufacturing','nonmetallic_mineral_products':'Nonmetallic Mineral Products','paper_products':'Paper Products','petroleum_coal_products':'Petroleum Coal Products','plastics_rubber_products':'Plastics & Rubber Products','primary_metals':'Primary Metails','printing_related_support_activities':'Printing Related Support Activities','textile_mills':'Textile Mills','transportation_equipment':'Transportation Equipment','wood_products':'Wood Products'}
+            cols_gradient = []
+            cols_drop = []
+            format_cols = {
+                'DATE': lambda t: t.strftime("%m-%Y")
             }
 
-            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+            disp,df = style_df_for_display(df_production_last_6_months,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=True)
+            tab3.markdown(disp.to_html(), unsafe_allow_html=True)           
 
             #TAB 4
             tab4.subheader(tabs[3])

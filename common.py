@@ -1900,7 +1900,7 @@ def style_df_for_display_date(df, cols_gradient, cols_rename, cols_drop, cols_fo
   #    'props': 'background-color: yellow; font-size: 1em;'}]
   #cmap = plt.cm.get_cmap('YIOrRd')
   #import pdb; pdb.set_trace()
-  df = df.style.background_gradient(cmap='Oranges',subset=cols_gradient).format(cols_format).hide(axis=0)
+  df_style = df.style.background_gradient(cmap='Oranges',subset=cols_gradient).format(cols_format).hide(axis=0)
 
   #import pdb; pdb.set_trace()
   #import pdb; pdb.set_trace()
@@ -1908,14 +1908,19 @@ def style_df_for_display_date(df, cols_gradient, cols_rename, cols_drop, cols_fo
   #df = df.hide(axis=0)
   #df = df.set_table_styles(table_styles)
   #df.hide_columns_ = True 
-  return df
+  return df_style,df
 
-def style_df_for_display(df, cols_gradient, cols_rename, cols_drop, cols_format=None):
+def style_df_for_display(df, cols_gradient, cols_rename, cols_drop, cols_format=None,format_rows=False):
 
   df = df.drop(cols_drop, axis=1)
   df = df.rename(columns=cols_rename)
-  df = df.style.background_gradient(cmap='Oranges',subset=cols_gradient).format(cols_format).hide(axis=0)
-  return df
+
+  if(format_rows):
+    df_style = df.style.background_gradient(cmap='Oranges',axis=1).format(cols_format).hide(axis=0)
+  else:
+    df_style = df.style.background_gradient(cmap='Oranges',subset=cols_gradient).format(cols_format).hide(axis=0)
+
+  return df_style, df
 
 def format_fields_for_dashboard(col_names, data):
   index = 0
@@ -3243,28 +3248,65 @@ def display_chart(settings, df,series, tab, series2=None, col=None):
   plt.clf()
  
 
-def return_styled_ism_table1(df):
-  df_formatted = df.reset_index(drop=True)
-  df_formatted = df_formatted.T
+def display_chart_ism(settings, df,series, tab, series2=None, col=None):
 
-  col1 = str(df_formatted[:1][0]['ism_date']) 
-  col2 = str(df_formatted[:1][1]['ism_date']) 
-  col3 = str(df_formatted[:1][2]['ism_date'])
-  rename_cols = {0: col1,1:col2,2:col3}
+  plt.style.use('seaborn-v0_8-whitegrid')
+  
+  if(settings['ypercentage']):
+    df[series] = df[series] * 100
+    plt.gca().yaxis.set_major_formatter(mtick.PercentFormatter())            
 
-  df_formatted = df_formatted.rename(columns=rename_cols)
-  df_formatted = df_formatted.drop('ism_date')
+  #Add the appropriate dataframes to the 2 histogram vars
+  if(settings['type'] == 'line'):
+    plt.plot(df["DATE"], df[series])
+    if(series2):
+      plt.plot(df["DATE"], df[series2])
+      # Insert legend because we now have multiple values
+      plt.legend([series, series2], fontsize="x-small", loc="upper left")
+
+  elif(settings['type'] == 'bar'):
+    plt.bar(df["DATE"], df[series], width=50)       
+
+  plt.title(settings['title'])
+  plt.xlabel(settings['xlabel'])
+  plt.ylabel(settings['ylabel'])
+  plt.xticks(rotation='vertical')
+
+  # Set the font size for x tick labels
+  plt.rc('xtick', labelsize=8)
+  plt.rc('ytick', labelsize=8)
+
+  plt.grid(True)
+
+  if(col):
+    col.pyplot(plt)
+  else:
+    tab.pyplot(plt)
+
+  plt.clf()
+
+#def return_styled_ism_table1(df):
+#  df_formatted = df.reset_index(drop=True)
+#  df_formatted = df_formatted.T
+
+#  col1 = str(df_formatted[:1][0]['ism_date']) 
+#  col2 = str(df_formatted[:1][1]['ism_date']) 
+#  col3 = str(df_formatted[:1][2]['ism_date'])
+#  rename_cols = {0: col1,1:col2,2:col3}
+
+#  df_formatted = df_formatted.rename(columns=rename_cols)
+#  df_formatted = df_formatted.drop('ism_date')
 
   #TODO Format columns to integers. 
-  df_formatted[col1] = pd.to_numeric(df_formatted[col1])
-  df_formatted[col2] = pd.to_numeric(df_formatted[col2])
-  df_formatted[col3] = pd.to_numeric(df_formatted[col3])
+#  df_formatted[col1] = pd.to_numeric(df_formatted[col1])
+#  df_formatted[col2] = pd.to_numeric(df_formatted[col2])
+#  df_formatted[col3] = pd.to_numeric(df_formatted[col3])
 
   #TODO: Apply gradient to last column
-  gradient_cols = [col3]
-  style_t3 = format_columns(df_formatted, gradient_cols)
+#  gradient_cols = [col3]
+#  style_t3 = format_columns(df_formatted, gradient_cols)
 
-  return style_t3
+#  return style_t3
    
 
 def standard_display(series_name, tab, title, period, series_display,col1, col2):
@@ -3334,7 +3376,7 @@ def standard_display(series_name, tab, title, period, series_display,col1, col2)
       'Date (MM-DD-YYYY)': lambda t: t.strftime("%m-%d-%Y"),
   }
 
-  disp = style_df_for_display_date(df_series_recent,cols_gradient,rename_cols,cols_drop,format_cols)
+  disp,df = style_df_for_display_date(df_series_recent,cols_gradient,rename_cols,cols_drop,format_cols)
 
   tab.markdown(disp.to_html(), unsafe_allow_html=True)
 
