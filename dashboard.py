@@ -811,7 +811,6 @@ if option == 'Macroeconomic Data':
             display_chart(chart_settings, df_us_icsa_recent, series, tab2,col=col1)
             display_chart(chart_settings, df_us_icsa_100_periods, series, tab2, col=col2)
 
-
             rename_cols = {'DATE': 'Date','icsa':'Initial Claims' ,'ccsa': 'Continued Claims', 'icsa_var':'IC Var', 'ccsa_var':'CC Var'}
             cols_gradient = ['Initial Claims']
             cols_drop = []
@@ -1170,7 +1169,7 @@ if option == 'Macroeconomic Data':
             df_sectors = get_data(table="macro_us_ism_manufacturing_sectors").tail(6).reset_index(drop=True)           
             df_new_orders = get_data(table="macro_us_ism_manufacturing_new_orders").tail(6).reset_index(drop=True)            
             df_production = get_data(table="macro_us_ism_manufacturing_production").tail(6).reset_index(drop=True)            
-            df_headline = get_data(table="macro_us_ism_manufacturing_headline")            
+            df_headline = get_data(table="macro_us_ism_manufacturing_headline").tail(24).reset_index(drop=True).sort_values(by=['ism_date'], ascending=False)            
 
             df_sectors_last_6_months = df_sectors.sort_values('ism_date').tail(3).reset_index(drop=True)
             df_new_orders_last_6_months = df_new_orders.sort_values('ism_date').tail(3).reset_index(drop=True)
@@ -1190,7 +1189,7 @@ if option == 'Macroeconomic Data':
             tab1.markdown(disp.to_html(), unsafe_allow_html=True)           
 
             #TODO: Subplotting all the sectors: https://www.geeksforgeeks.org/plot-multiple-plots-in-matplotlib/
-            col1, col2, col3, col4 = tab1.columns(4)
+            col1, col2, col3 = tab1.columns(3)
 
             index = 1
             for x, y in rename_cols.items():
@@ -1205,7 +1204,7 @@ if option == 'Macroeconomic Data':
 
                     display_chart_ism(chart_settings, df_sectors_last_6_months, series, tab1,col=eval("col" + str(index)))
 
-                    if(index == 4):
+                    if(index == 3):
                         index = 1
                     else:
                         index = index + 1
@@ -1222,7 +1221,7 @@ if option == 'Macroeconomic Data':
             disp, df_new_orders_last_6_months = style_df_for_display(df_new_orders_last_6_months,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=True)
             tab2.markdown(disp.to_html(), unsafe_allow_html=True)           
 
-            col1, col2, col3, col4 = tab2.columns(4)
+            col1, col2, col3 = tab2.columns(3)
 
             index = 1
             for x, y in rename_cols.items():
@@ -1237,7 +1236,7 @@ if option == 'Macroeconomic Data':
 
                     display_chart_ism(chart_settings, df_new_orders_last_6_months, series, tab2,col=eval("col" + str(index)))
 
-                    if(index == 4):
+                    if(index == 3):
                         index = 1
                     else:
                         index = index + 1
@@ -1254,7 +1253,7 @@ if option == 'Macroeconomic Data':
             disp,df_production_last_6_months = style_df_for_display(df_production_last_6_months,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=True)
             tab3.markdown(disp.to_html(), unsafe_allow_html=True)           
 
-            col1, col2, col3, col4 = tab3.columns(4)
+            col1, col2, col3 = tab3.columns(3)
 
             index = 1
             for x, y in rename_cols.items():
@@ -1269,7 +1268,7 @@ if option == 'Macroeconomic Data':
 
                     display_chart_ism(chart_settings, df_production_last_6_months, series, tab3,col=eval("col" + str(index)))
 
-                    if(index == 4):
+                    if(index == 3):
                         index = 1
                     else:
                         index = index + 1
@@ -1278,32 +1277,18 @@ if option == 'Macroeconomic Data':
             #TAB 4
             tab4.subheader(tabs[3])
 
-            series = "gdpc1"
-            chart_settings = {
-                "type": "line",
-                "title": "Total US GDP", 
-                "xlabel": "Year", 
-                "ylabel": "GDP", 
-                "ypercentage": False,
-
-            }
-
-            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
-
             #TAB 5
             tab5.subheader(tabs[4])
+            
+            rename_cols = {'ism_date': 'Date','new_orders':'New Orders' ,'imports': 'Imports', 'backlog_of_orders':'Backlog of Orders', 'prices':'Prices', 'production':'Production', 'customers_inventories':'Customer Inventories', 'inventories':'Inventories', 'deliveries':'Deliveries', 'employment':'Employment', 'exports':'Exports', 'ism':'ISM'}
 
-            series = "gdpc1"
-            chart_settings = {
-                "type": "line",
-                "title": "Total US GDP", 
-                "xlabel": "Year", 
-                "ylabel": "GDP", 
-                "ypercentage": False,
-
+            cols_gradient = ['New Orders' , 'Imports', 'Backlog of Orders', 'Prices', 'Production','Customer Inventories','Inventories', 'Deliveries', 'Employment', 'Exports', 'ISM']
+            cols_drop = []
+            format_cols = {
+                'Date': lambda t: t.strftime("%m-%Y")
             }
-
-            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+            disp,df = style_df_for_display(df_headline,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab5.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 6
             tab6.subheader(tabs[5])
