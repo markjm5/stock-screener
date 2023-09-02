@@ -1276,6 +1276,24 @@ if option == 'Macroeconomic Data':
             tab4.subheader(tabs[3])
 
             #TODO
+            rename_cols = {'ism_date': 'DATE','apparel_leather_allied_products':'Apparel Leather Allied Products','chemical_products':'Chemical Products','computer_electronic_products':'Computer & Electronic Products','electrical_equipment_appliances_components':'Electrical Equipment Appliances Components','fabricated_metal_products':'Fabricated Metal Products','food_beverage_tobacco_products':'Food Beverage & Tobacco Products','furniture_related_products':'Furniture Related Products','machinery':'Machinery','miscellaneous_manufacturing':'Miscellaneous Manufacturing','nonmetallic_mineral_products':'Nonmetallic Mineral Products','paper_products':'Paper Products','petroleum_coal_products':'Petroleum Coal Products','plastics_rubber_products':'Plastics & Rubber Products','primary_metals':'Primary Metails','printing_related_support_activities':'Printing Related Support Activities','textile_mills':'Textile Mills','transportation_equipment':'Transportation Equipment','wood_products':'Wood Products'}
+            df_sectors = df_sectors.rename(columns=rename_cols)
+
+            df_sectors_trend = df_sectors.sort_values(by=['DATE'], ascending=True).T
+
+            df_sectors_trend.columns = df_sectors_trend.iloc[0]
+            df_sectors_trend = df_sectors_trend[1:]
+            df_sectors_trend = df_sectors_trend.reset_index(drop=False)
+
+            rename_cols = {'index': 'Index'}
+
+            #TODO: Get column names dynamically so that we can apply gradient
+            cols_gradient = []
+            cols_drop = []
+            format_cols = {}
+
+            disp,df = style_df_for_display(df_sectors_trend,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab4.markdown(disp.to_html(), unsafe_allow_html=True)
 
             #TAB 5
             tab5.subheader(tabs[4])
