@@ -1201,7 +1201,7 @@ if option == 'Macroeconomic Data':
                         "ypercentage": False,
                     }
 
-                    display_chart_ism(chart_settings, df_sectors_last_6_months, series, tab1,col=eval("col" + str(index)))
+                    display_chart_ism(chart_settings, df_sectors_last_6_months, series, col=eval("col" + str(index)))
 
                     if(index == 3):
                         index = 1
@@ -1233,7 +1233,7 @@ if option == 'Macroeconomic Data':
                         "ypercentage": False,
                     }
 
-                    display_chart_ism(chart_settings, df_new_orders_last_6_months, series, tab2,col=eval("col" + str(index)))
+                    display_chart_ism(chart_settings, df_new_orders_last_6_months, series, col=eval("col" + str(index)))
 
                     if(index == 3):
                         index = 1
@@ -1265,7 +1265,7 @@ if option == 'Macroeconomic Data':
                         "ypercentage": False,
                     }
 
-                    display_chart_ism(chart_settings, df_production_last_6_months, series, tab3,col=eval("col" + str(index)))
+                    display_chart_ism(chart_settings, df_production_last_6_months, series, col=eval("col" + str(index)))
 
                     if(index == 3):
                         index = 1

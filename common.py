@@ -3249,7 +3249,7 @@ def display_chart(settings, df,series, tab, series2=None, col=None):
   plt.clf()
  
 
-def display_chart_ism(settings, df,series, tab, col=None):
+def display_chart_ism(settings, df,series, col=None):
 
   #import pdb; pdb.set_trace()
 
