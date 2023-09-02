@@ -1285,12 +1285,23 @@ if option == 'Macroeconomic Data':
             df_sectors_trend = df_sectors_trend[1:]
             df_sectors_trend = df_sectors_trend.reset_index(drop=False)
 
+            df_sectors_trend['MoM'] = df_sectors_trend.iloc[:, 6] -  df_sectors_trend.iloc[:, 5]
+            df_sectors_trend['3 Months'] = df_sectors_trend[[df_sectors_trend.columns[6], df_sectors_trend.columns[5], df_sectors_trend.columns[4]]].mean(axis=1)
+            df_sectors_trend['6 Months'] = df_sectors_trend[[df_sectors_trend.columns[6], df_sectors_trend.columns[5], df_sectors_trend.columns[4], df_sectors_trend.columns[3], df_sectors_trend.columns[2], df_sectors_trend.columns[1]]].mean(axis=1)
+            df_sectors_trend.columns = df_sectors_trend.columns.astype(str)
+
             rename_cols = {'index': 'Index'}
 
             #TODO: Get column names dynamically so that we can apply gradient
-            cols_gradient = []
+            #cols_gradient = ['MoM','3 Months', '6 Months',df_sectors_trend.columns.astype(str)[1],df_sectors_trend.columns.astype(str)[2],df_sectors_trend.columns.astype(str)[3],df_sectors_trend.columns.astype(str)[4],df_sectors_trend.columns.astype(str)[4]]
+            cols_gradient = ['MoM','3 Months', '6 Months',df_sectors_trend.columns[1],df_sectors_trend.columns[2],df_sectors_trend.columns[3],df_sectors_trend.columns[4],df_sectors_trend.columns[5],df_sectors_trend.columns[6]]
+
             cols_drop = []
-            format_cols = {}
+            format_cols = {
+                'MoM': '{:,.1f}'.format,
+                '3 Months': '{:,.1f}'.format,
+                '6 Months': '{:,.1f}'.format,
+            }
 
             disp,df = style_df_for_display(df_sectors_trend,cols_gradient,rename_cols,cols_drop,format_cols)
             tab4.markdown(disp.to_html(), unsafe_allow_html=True)
