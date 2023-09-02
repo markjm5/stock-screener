@@ -1086,57 +1086,57 @@ if option == 'Macroeconomic Data':
             series = 'RSDBS'.lower()
             df_RSDBS_all, df_RSDBS_recent = standard_display(series, tab6, 'Food and Beverage', 'M', series,col1=col1,col2=col2)
 
-            #TODO: TAB7 #RSNSR
+            # TAB7 #RSNSR
             col1, col2 = tab7.columns(2)
             series = 'RSNSR'.lower()
             df_RSNSR_all, df_RSNSR_recent = standard_display(series, tab7, 'Non Store Retail', 'M', series,col1=col1,col2=col2)
 
-            #TODO: TAB8 #RSHPCS
+            # TAB8 #RSHPCS
             col1, col2 = tab8.columns(2)
             series = 'RSHPCS'.lower()
             df_RSHPCS_all, df_RSHPCS_recent = standard_display(series, tab8, 'Health', 'M', series,col1=col1,col2=col2)
 
-            #TODO: TAB9 #RSSGHBMS
+            # TAB9 #RSSGHBMS
             col1, col2 = tab9.columns(2)
             series = 'RSSGHBMS'.lower()
             df_RSSGHBMS_all, df_RSSGHBMS_recent = standard_display(series, tab9, 'Sporting Goods', 'M', series,col1=col1,col2=col2)
 
-            #TODO: TAB10 #RSGMS	
+            # TAB10 #RSGMS	
             col1, col2 = tab10.columns(2)
             series = 'RSGMS'.lower()
             df_RSGMS_all, df_RSGMS_recent = standard_display(series, tab10, 'General Merchandising', 'M', series,col1=col1,col2=col2)
 
-            #TODO: TAB11 #RSFSDP
+            # TAB11 #RSFSDP
             col1, col2 = tab11.columns(2)
             series = 'RSFSDP'.lower()
             df_RSFSDP_all, df_RSFSDP_recent = standard_display(series, tab11, 'Food Services', 'M', series,col1=col1,col2=col2)
 
-            #TODO: TAB12 #RSGASS	
+            # TAB12 #RSGASS	
             col1, col2 = tab12.columns(2)
             series = 'RSGASS'.lower()
             df_RSGASS_all, df_RSGASS_recent = standard_display(series, tab12, 'Gas Station', 'M', series,col1=col1,col2=col2)
 
-            #TODO: TAB13 #RSMVPD
+            # TAB13 #RSMVPD
             col1, col2 = tab13.columns(2)
             series = 'RSMVPD'.lower()
             df_RSMVPD_all, df_RSMVPD_recent = standard_display(series, tab13, 'Motor', 'M', series,col1=col1,col2=col2)
 
-            #TODO: TAB14 #RSBMGESD
+            # TAB14 #RSBMGESD
             col1, col2 = tab14.columns(2)
             series = 'RSBMGESD'.lower()
             df_RSBMGESD_all, df_RSBMGESD_recent = standard_display(series, tab14, 'Housing', 'M', series,col1=col1,col2=col2)
 
-            #TODO: TAB15 #RSFHFS
+            # TAB15 #RSFHFS
             col1, col2 = tab15.columns(2)
             series = 'RSFHFS'.lower()
             df_RSFHFS_all, df_RSFHFS_recent = standard_display(series, tab15, 'Furniture Home', 'M', series,col1=col1,col2=col2)
 
-            #TODO: TAB16 #RSMSR
+            # TAB16 #RSMSR
             col1, col2 = tab16.columns(2)
             series = 'RSMSR'.lower()
             df_RSMSR_all, df_RSMSR_recent = standard_display(series, tab16, 'Miscellaneous Stores Retailers', 'M', series,col1=col1,col2=col2)
 
-            #TODO: TAB17 #RSCCAS
+            # TAB17 #RSCCAS
             col1, col2 = tab17.columns(2)
             series = 'RSCCAS'.lower()
             df_RSCCAS_all, df_RSCCAS_recent = standard_display(series, tab17, 'Clothing and Clothing Accessories', 'M', series,col1=col1,col2=col2)
@@ -1188,7 +1188,6 @@ if option == 'Macroeconomic Data':
             disp, df_sectors_last_6_months = style_df_for_display(df_sectors_last_6_months,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=True)
             tab1.markdown(disp.to_html(), unsafe_allow_html=True)           
 
-            #TODO: Subplotting all the sectors: https://www.geeksforgeeks.org/plot-multiple-plots-in-matplotlib/
             col1, col2, col3 = tab1.columns(3)
 
             index = 1
@@ -1273,9 +1272,10 @@ if option == 'Macroeconomic Data':
                     else:
                         index = index + 1
 
-
             #TAB 4
             tab4.subheader(tabs[3])
+
+            #TODO
 
             #TAB 5
             tab5.subheader(tabs[4])
@@ -1293,32 +1293,12 @@ if option == 'Macroeconomic Data':
             #TAB 6
             tab6.subheader(tabs[5])
 
-            series = "gdpc1"
-            chart_settings = {
-                "type": "line",
-                "title": "Total US GDP", 
-                "xlabel": "Year", 
-                "ylabel": "GDP", 
-                "ypercentage": False,
-
-            }
-
-            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+            #TODO
 
             #TAB 7
             tab7.subheader(tabs[6])
 
-            series = "gdpc1"
-            chart_settings = {
-                "type": "line",
-                "title": "Total US GDP", 
-                "xlabel": "Year", 
-                "ylabel": "GDP", 
-                "ypercentage": False,
-
-            }
-
-            #display_chart(chart_settings, df_us_gdp_all, series, tab1)
+            #TODO
 
         if option_leading_indicator_charts == '017 - US ISM Services':    
 
