@@ -22,7 +22,7 @@ from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_p
 from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager,atr_to_excel
 from common import set_earningswhispers_earnings_calendar, get_atr_prices, get_stlouisfed_data
 from common import set_marketscreener_economic_calendar, get_peer_details, dataframe_convert_to_numeric
-from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql_get_volume
+from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql_get_volume, set_yf_historical_data
 from common import set_price_action_ta, set_todays_insider_trades, combine_df_on_index
 from common import style_df_for_display, style_df_for_display_date, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
@@ -397,10 +397,11 @@ if option == 'Download Data':
         st.write(f'{start_time} - Downloading Macroeconomic Data...')
 
         # Update all St Louis FED Data
-        success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
+        #success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
 
         # Update ISM Manufacturing
-        #success = set_ism_manufacturing(logger)
+        #success = set_ism_manufacturing(logger)        
+        success = set_yf_historical_data(config.YF_ETF_SERIES, logger)
 
         # Update ISM Services
         #success = set_ism_services(logger)
@@ -408,6 +409,7 @@ if option == 'Download Data':
             e1p1 = executor.submit(set_stlouisfed_data, config.STLOUISFED_SERIES, logger)
             e1p2 = executor.submit(set_ism_manufacturing, logger)
             e1p3 = executor.submit(set_ism_services, logger)
+            e1p4 = executor.submit(set_yf_historical_data, logger)
 
         #TODO: Download ADP report and store in database
 
@@ -472,7 +474,7 @@ if option == 'Download Data':
         data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
-        for x in range(1,4):
+        for x in range(1,5):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
             temp_row = [executor_count,x,result]
             df_result.loc[len(df_result.index)] = temp_row

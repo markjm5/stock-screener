@@ -283,6 +283,46 @@ def set_yf_key_stats(df_tickers, logger):
 
   return success
 
+
+def set_yf_historical_data(etfs, logger):
+  data = {'DATE': []}
+
+  # Convert the dictionary into DataFrame
+  df_etf_data = pd.DataFrame(data)
+
+  #get date range
+  todays_date = date.today()
+  date_str = "%s-%s-%s" % (todays_date.year, todays_date.month, todays_date.day)
+
+  for etf in etfs:
+    logger.info(f'Getting YF Histofical Data for {etf}')
+
+    df_etf = get_yf_historical_stock_data(etf, "1d", "2007-01-01", date_str)
+
+    #Remove unnecessary columns and rename columns
+    df_etf = df_etf.drop(['Open', 'High', 'Low', 'Volume'], axis=1)
+    df_etf = df_etf.rename(columns={"Close": etf})
+
+    df_etf_data = combine_df_on_index(df_etf_data, df_etf, 'DATE')
+
+  # Fill NA values by propegating values before
+  df_etf_data = df_etf_data.fillna(method='ffill')
+
+  #df_original = convert_excelsheet_to_dataframe(excel_file_path, sheet_name, True)
+  #TODO: Write to database
+  #TODO: Will need to rename some of the columns before writing to database (ie. Prefix with YF_)
+  import pdb; pdb.set_trace()
+  # write records to database
+  rename_cols = {"50_DAY_MOVING_AVG": "MOVING_AVG_50D", "200_DAY_MOVING_AVG": "MOVING_AVG_200D"}
+  #add_col_values = {}
+  #conflict_cols = "DATE"
+
+  success = sql_write_df_to_db(df_etf_data, "CompanyMovingAverage", rename_cols=rename_cols)
+  logger.info(f'Successfully Saved YF Historical Data')     
+
+  return success
+
+
 def get_yf_price_action(ticker):
   json_yf_module_summaryProfile = {}
   json_yf_module_financialData = {}
