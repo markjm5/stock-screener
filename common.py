@@ -311,13 +311,58 @@ def set_yf_historical_data(etfs, logger):
   #df_original = convert_excelsheet_to_dataframe(excel_file_path, sheet_name, True)
   #TODO: Write to database
   #TODO: Will need to rename some of the columns before writing to database (ie. Prefix with YF_)
-  import pdb; pdb.set_trace()
+  #import pdb; pdb.set_trace()
   # write records to database
-  rename_cols = {"50_DAY_MOVING_AVG": "MOVING_AVG_50D", "200_DAY_MOVING_AVG": "MOVING_AVG_200D"}
-  #add_col_values = {}
-  #conflict_cols = "DATE"
+  #rename_cols = {"50_DAY_MOVING_AVG": "MOVING_AVG_50D", "200_DAY_MOVING_AVG": "MOVING_AVG_200D"}
 
-  success = sql_write_df_to_db(df_etf_data, "CompanyMovingAverage", rename_cols=rename_cols)
+  rename_cols = {
+    "DATE":"series_date",    
+    "DX-Y.NYB":"DX_Y_NYB",
+    "GC=F":"GC_F",
+    "EXH1.DE":"EXH1_DE",
+    "EXH2.DE":"EXH2_DE",
+    "EXH3.DE":"EXH3_DE",
+    "EXH4.DE":"EXH4_DE",
+    "EXH5.DE":"EXH5_DE",
+    "EXH6.DE":"EXH6_DE",
+    "EXH7.DE":"EXH7_DE",
+    "EXH8.DE":"EXH8_DE",
+    "EXH9.DE":"EXH9_DE",
+    "EXI5.DE":"EXI5_DE",
+    "EXSA.DE":"EXSA_DE",
+    "EXV1.DE":"EXV1_DE",
+    "EXV2.DE":"EXV2_DE",
+    "EXV3.DE":"EXV3_DE",
+    "EXV4.DE":"EXV4_DE",
+    "EXV5.DE":"EXV5_DE",
+    "EXV6.DE":"EXV6_DE",
+    "EXV7.DE":"EXV7_DE",
+    "EXV8.DE":"EXV8_DE",
+    "EXV9.DE":"EXV9_DE",
+    "000300.SS":"YF_000300_SS",
+    "0P0001GY56.F":"YF_0P0001GY56_F",
+    "^AXJO":"_AXJO",
+    "^BSESN":"_BSESN",
+    "^DJI":"_DJI",
+    "^FCHI":"_FCHI",
+    "^FTSE":"_FTSE",
+    "^GDAXI":"_GDAXI",
+    "^GSPC":"_GSPC",
+    "^GSPTSE":"_GSPTSE",
+    "^HSI":"_HSI",
+    "^IBEX":"_IBEX",
+    "^IXIC":"_IXIC",
+    "^MXX":"_MXX",
+    "^N225":"_N225",
+    "^NSEI":"_NSEI",
+    "^NYA":"_NYA",
+    "^STOXX50E":"_STOXX50E"
+  }
+
+  #add_col_values = {}
+  conflict_cols = "series_date"
+
+  success = sql_write_df_to_db(df_etf_data, "Macro_YFHistoricalETFData", rename_cols=rename_cols, conflict_cols=conflict_cols)
   logger.info(f'Successfully Saved YF Historical Data')     
 
   return success

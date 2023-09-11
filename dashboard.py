@@ -400,8 +400,9 @@ if option == 'Download Data':
         #success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
 
         # Update ISM Manufacturing
-        #success = set_ism_manufacturing(logger)        
-        success = set_yf_historical_data(config.YF_ETF_SERIES, logger)
+        #success = set_ism_manufacturing(logger)  
+
+        #success = set_yf_historical_data(config.YF_ETF_SERIES, logger)
 
         # Update ISM Services
         #success = set_ism_services(logger)
@@ -409,7 +410,7 @@ if option == 'Download Data':
             e1p1 = executor.submit(set_stlouisfed_data, config.STLOUISFED_SERIES, logger)
             e1p2 = executor.submit(set_ism_manufacturing, logger)
             e1p3 = executor.submit(set_ism_services, logger)
-            e1p4 = executor.submit(set_yf_historical_data, logger)
+            e1p4 = executor.submit(set_yf_historical_data, config.YF_ETF_SERIES,logger)
 
         #TODO: Download ADP report and store in database
 
