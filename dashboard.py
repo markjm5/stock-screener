@@ -76,7 +76,7 @@ st.markdown(f'''
     </style>
 ''',unsafe_allow_html=True)
 
-option = st.sidebar.selectbox("Which Option?", ('Download Data','Macroeconomic Data','Calendar', 'Single Stock One Pager','ATR Calculator', 'Bottom Up Ideas'), 2)
+option = st.sidebar.selectbox("Which Option?", ('Download Data','Market Data','Macroeconomic Data','Calendar', 'Single Stock One Pager','ATR Calculator', 'Bottom Up Ideas'), 2)
 
 st.header(option)
 
@@ -540,6 +540,22 @@ if option == 'Calendar':
 
     style_t4 = format_df_for_dashboard(df4, sort_cols, drop_cols, rename_cols, number_format_cols)
     st.write(style_t4)
+
+if option == 'Market Data':
+    option_indicator_type = st.sidebar.selectbox("Market Data", ('Market Levels','Asset Class Performance'), 0)
+    if option_indicator_type == 'Market Levels':
+        st.subheader(f'Market Levels')
+        #option_lagging_indicator_charts = st.sidebar.selectbox("Charts", ('002 - US GDP','005 - US Job Market','006 - PCE','007 - US Inflation','009 - US Industrial Production','011 - US Durable Goods', '011 - US Retail Sales'), 0)
+
+    if option_indicator_type == 'Asset Class Performance':
+        st.subheader(f'Asset Class Performance')
+        option_market_indicator_charts = st.sidebar.selectbox("Charts", ('Economic Cycle','Sectors','ETF Performance'), 0)
+        if option_market_indicator_charts == 'Economic Cycle':    
+            pass
+        if option_market_indicator_charts == 'Sectors':    
+            pass
+        if option_market_indicator_charts == 'ETF Performance':
+            pass
 
 if option == 'Macroeconomic Data':
     #st.subheader(f'Macro Economic Data')
@@ -1381,7 +1397,7 @@ if option == 'Single Stock One Pager':
         if('single_stock_one_pager_clicked' not in st.session_state):
             st.session_state['single_stock_one_pager_clicked'] = True
 
-        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Quantitative Data', 'Chart', 'Stock Twits'), 0)
+        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Quantitative Data', 'Chart'), 0)
 
         if option_one_pager == 'Quantitative Data':
             #Get all the data for this stock from the database
@@ -1392,7 +1408,7 @@ if option == 'Single Stock One Pager':
             else:
                 json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics = get_yf_price_action(symbol)
 
-               # import pdb; pdb.set_trace()
+                #import pdb; pdb.set_trace()
 
                 dataSummaryDetail = json_yf_module_summaryDetail['quoteSummary']['result'][0]['summaryDetail']                             #json_price_action['quoteSummary']['result'][0]['summaryDetail']
                 dataDefaultKeyStatistics = json_yf_module_defaultKeyStatistics['quoteSummary']['result'][0]['defaultKeyStatistics']        #json_price_action['quoteSummary']['result'][0]['defaultKeyStatistics']
@@ -1565,19 +1581,19 @@ if option == 'Single Stock One Pager':
             st.subheader(f'Chart For: {symbol}')
             st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
 
-        if option_one_pager == 'Stock Twits':
+        #if option_one_pager == 'Stock Twits':
 
-            st.subheader(f'Stock Twit News For: {symbol}')
+        #    st.subheader(f'Stock Twit News For: {symbol}')
 
-            r = requests.get(f"https://api.stocktwits.com/api/2/streams/symbol/{symbol}.json")
+        #    r = requests.get(f"https://api.stocktwits.com/api/2/streams/symbol/{symbol}.json")
 
-            data = r.json()
+        #    data = r.json()
 
-            for message in data['messages']:
-                st.image(message['user']['avatar_url'])
-                st.write(message['user']['username'])
-                st.write(message['created_at'])
-                st.write(message['body'])
+        #    for message in data['messages']:
+        #        st.image(message['user']['avatar_url'])
+        #        st.write(message['user']['username'])
+        #        st.write(message['created_at'])
+        #        st.write(message['body'])
 
 if option == 'ATR Calculator':
 
@@ -1661,7 +1677,7 @@ if option == 'ATR Calculator':
             st.write("Please enter 2 ticker symbols")
 
 if option == 'Bottom Up Ideas':
-        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','TA Patterns','Insider Trading', 'Country Exposure', 'Twitter'), 0)
+        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','TA Patterns','Insider Trading', 'Country Exposure'), 0)
         if option_one_pager == 'Volume':        
             df_stock_volume = sql_get_volume()
 
@@ -1809,21 +1825,21 @@ if option == 'Bottom Up Ideas':
         if option_one_pager == 'Country Exposure':
             st.subheader(f'Country Exposure')
 
-        if option_one_pager == 'Twitter':        
-            st.subheader(f'Twitter')
+        #if option_one_pager == 'Twitter':        
+        #    st.subheader(f'Twitter')
 
-            for username in config.TWITTER_USERNAMES:
-                st.subheader(username)
-                user = api.get_user(screen_name=username)
-                tweets = api.user_timeline(screen_name=username)
-                st.image(user.profile_image_url)
-                for tweet in tweets:
-                    if('$' in tweet.text):
-                        words = tweet.text.split(' ')
-                        for word in words:
-                            if word.startswith('$') and word[1:].isalpha():
-                                symbol = word[1:]
-                                st.write(symbol)
-                                st.write(tweet.text)
+        #    for username in config.TWITTER_USERNAMES:
+        #        st.subheader(username)
+        #        user = api.get_user(screen_name=username)
+        #        tweets = api.user_timeline(screen_name=username)
+        #        st.image(user.profile_image_url)
+        #        for tweet in tweets:
+        #            if('$' in tweet.text):
+        #                words = tweet.text.split(' ')
+        #                for word in words:
+        #                    if word.startswith('$') and word[1:].isalpha():
+        #                        symbol = word[1:]
+        #                        st.write(symbol)
+        #                        st.write(tweet.text)
 
-                                st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
+        #                        st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')

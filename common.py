@@ -362,13 +362,54 @@ def set_yf_historical_data(etfs, logger):
   #add_col_values = {}
   conflict_cols = "series_date"
 
-  success = sql_write_df_to_db(df_etf_data, "Macro_YFHistoricalETFData", rename_cols=rename_cols, conflict_cols=conflict_cols)
+  success1 = sql_write_df_to_db(df_etf_data, "Macro_YFHistoricalETFData", rename_cols=rename_cols, conflict_cols=conflict_cols)
   logger.info(f'Successfully Saved YF Historical Data')     
+
+  success2 = calculate_annual_etf_performance(df_etf_data,logger)
+
+  success = False
+  if(success1 and success2):
+    success = True
 
   return success
 
+def calculate_annual_etf_performance(df_etf_data,logger):
+
+  data = {'DATE': []}
+  etfs = [ 'RXI','XLP','XLY','XLE','XLF','XLV','XLI','XLK','XLB','XLRE','XLC','XLU','SPY','USO','QQQ','IWM','IBB','EEM','HYG','VNQ','MDY','SLY','EFA','TIP','AGG','DJP','BIL','GC=F','DX-Y.NYB']
+
+  # Convert the dictionary into DataFrame
+  df_percentage_change = pd.DataFrame(data)
+
+  for etf in etfs:
+    logger.info(f'Calculating Yearly Performance for {etf}')
+
+    #groupby year and determine the daily percent change by year, and add it as a column to df
+    df_etf_data['%s_pct_ch' % (etf,)] = df_etf_data.groupby(df_etf_data.DATE.dt.year, group_keys=False)[etf].apply(pd.Series.pct_change)
+
+    #Drop unnecessary columns
+    df_etf_data = df_etf_data.drop(columns=etf, axis=1)
+
+    # groupby year and aggregate sum of pct_ch to get the yearly return
+    #df_yearly_pct_ch = df_etf_data.groupby(df_etf_data.DATE.dt.year)['%s_pct_ch' % (etf,)].sum().mul(100).reset_index().rename(columns={'%s_pct_ch' % (etf,): etf})
+    df_yearly_pct_ch = df_etf_data.groupby(df_etf_data.DATE.dt.year, group_keys=False)['%s_pct_ch' % (etf,)].sum().reset_index().rename(columns={'%s_pct_ch' % (etf,): etf})
+
+    df_percentage_change = combine_df_on_index(df_percentage_change, df_yearly_pct_ch, 'DATE')
+
+  # Write to database
+  rename_cols = {
+    "DATE":"series_date",    
+    "DX-Y.NYB":"DX_Y_NYB",
+    "GC=F":"GC_F",
+  }
+
+  success = sql_write_df_to_db(df_percentage_change, "Macro_ETFAnnualData",rename_cols=rename_cols)
+  logger.info(f'Successfully Calculated Annual Asset Class Performance Data')     
+
+  return success
 
 def get_yf_price_action(ticker):
+  
   json_yf_module_summaryProfile = {}
   json_yf_module_financialData = {}
   json_yf_module_summaryDetail = {}
@@ -376,6 +417,8 @@ def get_yf_price_action(ticker):
   json_yf_module_defaultKeyStatistics = {}
 
   modules = ['summaryProfile','financialData','summaryDetail','price','defaultKeyStatistics']
+  #import pdb; pdb.set_trace()
+
   try:
     json_yf_module_summaryProfile = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[0])).content)
   except Exception as e:
@@ -1330,7 +1373,8 @@ def set_marketscreener_economic_calendar(logger):
 
   tables = soup.find_all('table', recursive=True)
 
-  table = tables[0]
+  #table = tables[0]
+  table = tables[1]
 
   table_rows = table.find_all('tr')
 
