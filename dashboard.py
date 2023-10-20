@@ -551,7 +551,35 @@ if option == 'Market Data':
         st.subheader(f'Asset Class Performance')
         option_market_indicator_charts = st.sidebar.selectbox("Charts", ('Economic Cycle','Sectors','ETF Performance'), 0)
         if option_market_indicator_charts == 'Economic Cycle':    
-            pass
+            df_annual_performance = get_data(table="macro_etfannualdata").tail(15).reset_index(drop=True)           
+            df_annual_performance['series_date'] = df_annual_performance['series_date'].astype('int64')
+
+            #TODO: Rename all the columns
+            #TODO: Provide definition of different business cycles
+            rename_cols = {'agg': 'Bonds (AGG)','bil':'Treasury Bills (BIL)','eem':'Emerging Markets (EEM)'}
+            df_annual_performance.rename(columns=rename_cols, inplace=True)
+
+            df_annual_performance_T = df_annual_performance.T
+            df_annual_performance_T.columns = df_annual_performance_T.iloc[0]
+
+            #remove first row from DataFrame
+            df_annual_performance_T = df_annual_performance_T[1:]
+
+            format_cols = {}
+            cols_gradient = []
+
+            for column in df_annual_performance_T.columns:
+                format_cols[column] = '{:,.2%}'.format
+                cols_gradient.append(column)
+
+            rename_cols = {'index': 'Asset Class'}
+            cols_drop = []
+
+            df_annual_performance_T = df_annual_performance_T.reset_index()
+
+            disp, df_sectors_annual_performance = style_df_for_display(df_annual_performance_T,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=False)
+            st.markdown(disp.to_html(), unsafe_allow_html=True)           
+
         if option_market_indicator_charts == 'Sectors':    
             pass
         if option_market_indicator_charts == 'ETF Performance':
