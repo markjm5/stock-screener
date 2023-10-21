@@ -551,12 +551,28 @@ if option == 'Market Data':
         st.subheader(f'Asset Class Performance')
         option_market_indicator_charts = st.sidebar.selectbox("Charts", ('Economic Cycle','Sectors','ETF Performance'), 0)
         if option_market_indicator_charts == 'Economic Cycle':    
+            tab1, tab2 = st.tabs(["📈 Annual Returns (Last 15 Years)", "📈 Current Calendar Year"])
+
             df_annual_performance = get_data(table="macro_etfannualdata").tail(15).reset_index(drop=True)           
             df_annual_performance['series_date'] = df_annual_performance['series_date'].astype('int64')
 
+            #TAB 1
+            tab1.subheader("Annual Returns (Last 15 Years)")
+
             #TODO: Rename all the columns
             #TODO: Provide definition of different business cycles
-            rename_cols = {'agg': 'Bonds (AGG)','bil':'Treasury Bills (BIL)','eem':'Emerging Markets (EEM)'}
+            rename_cols = {
+                'spy':'Large Cap (SPY)',
+                'eem':'Emerging Market (EEM)',
+                'vnq':'REITS (VNQ)',
+                'mdy':'Mid Cap (MDY)',
+                'sly':'Small cap (SLY)',
+                'efa':'International Stocks (EFA)',
+                'tip':'TIPS (TIP)',
+                'agg':'Bonds (AGG)',
+                'djp':'Commo (DJP)',
+                'bil':'Cash (BIL)',
+            }
             df_annual_performance.rename(columns=rename_cols, inplace=True)
 
             df_annual_performance_T = df_annual_performance.T
@@ -564,7 +580,7 @@ if option == 'Market Data':
 
             #remove first row from DataFrame
             df_annual_performance_T = df_annual_performance_T[1:]
-
+            
             format_cols = {}
             cols_gradient = []
 
@@ -573,14 +589,34 @@ if option == 'Market Data':
                 cols_gradient.append(column)
 
             rename_cols = {'index': 'Asset Class'}
-            cols_drop = []
+            cols_drop = ['level_0']
 
             df_annual_performance_T = df_annual_performance_T.reset_index()
 
+            etf_subset = [
+                'Large Cap (SPY)',
+                'Emerging Market (EEM)',
+                'REITS (VNQ)',
+                'Mid Cap (MDY)',
+                'Small cap (SLY)',
+                'International Stocks (EFA)',
+                'TIPS (TIP)',
+                'Bonds (AGG)',
+                'Commo (DJP)',
+                'Cash (BIL)'
+            ]
+
+            df_annual_performance_T = df_annual_performance_T[df_annual_performance_T['index'].isin(etf_subset)].reset_index()
             disp, df_sectors_annual_performance = style_df_for_display(df_annual_performance_T,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=False)
-            st.markdown(disp.to_html(), unsafe_allow_html=True)           
+            tab1.markdown(disp.to_html(), unsafe_allow_html=True)           
+
+            #TAB 2
+            tab2.subheader("Current Calendar Year")
+            #TODO: Display Chart
 
         if option_market_indicator_charts == 'Sectors':    
+
+
             pass
         if option_market_indicator_charts == 'ETF Performance':
             pass
