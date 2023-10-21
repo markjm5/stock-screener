@@ -27,7 +27,7 @@ from common import set_price_action_ta, set_todays_insider_trades, combine_df_on
 from common import style_df_for_display, style_df_for_display_date, format_fields_for_dashboard, get_yf_price_action
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
-from common import display_chart, display_chart_ism, append_two_df, standard_display
+from common import display_chart, display_chart_ism, append_two_df, standard_display, display_chart_assets
 import seaborn as sns
 from copy import deepcopy
 
@@ -612,7 +612,26 @@ if option == 'Market Data':
 
             #TAB 2
             tab2.subheader("Current Calendar Year")
+            # Get last column dynamically
+            last_col = df_annual_performance_T.columns.to_list()[len(df_annual_performance_T.columns.to_list())-1]
+            df_annual_performance_current_year = df_annual_performance_T[['index', last_col]]
+            df_annual_performance_current_year = df_annual_performance_current_year.sort_values(by=[last_col]).reset_index()
+
             #TODO: Display Chart
+            #RENAME column to DATE
+            #df_annual_performance_current_year = df_annual_performance_current_year.rename(columns={last_col: "DATE"})
+            x_axis = 'index'
+            y_axis = last_col
+            chart_settings = {
+                "type": "bar",
+                "title": "Annual Returns - %s" % last_col, 
+                "xlabel": "Asset Classes", 
+                "ylabel": "Percentage Return", 
+                "ypercentage": True,
+            }
+
+            display_chart_assets(chart_settings, df_annual_performance_current_year, x_axis, y_axis, tab2)
+
 
         if option_market_indicator_charts == 'Sectors':    
 

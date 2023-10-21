@@ -3377,6 +3377,38 @@ def display_chart(settings, df,series, tab, series2=None, col=None):
 
   plt.clf()
  
+def display_chart_assets(settings, df,x_axis,y_axis, tab, series2=None, col=None):
+  #import pdb; pdb.set_trace()
+  plt.style.use('seaborn-v0_8-whitegrid')
+  
+  if(settings['ypercentage']):
+    df[y_axis] = df[y_axis] * 100
+    plt.gca().yaxis.set_major_formatter(mtick.PercentFormatter())            
+
+  #Add the appropriate dataframes to the 2 histogram vars
+  if(settings['type'] == 'line'):
+    plt.plot(df[x_axis], df[y_axis])
+
+  elif(settings['type'] == 'bar'):
+    plt.bar(df[x_axis], df[y_axis], edgecolor='black')       
+
+  plt.title(settings['title'])
+  plt.xlabel(settings['xlabel'])
+  plt.ylabel(settings['ylabel'])
+  plt.xticks(rotation='vertical')
+  # Set the font size for x tick labels
+  plt.rc('xtick', labelsize=8)
+  plt.rc('ytick', labelsize=8)
+  #plt.tight_layout()
+  plt.grid(True)
+
+  if(col):
+    col.pyplot(plt)
+  else:
+    tab.pyplot(plt)
+
+  plt.clf()
+
 
 def display_chart_ism(settings, df,series, col=None):
 
