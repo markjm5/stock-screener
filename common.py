@@ -408,6 +408,44 @@ def calculate_annual_etf_performance(df_etf_data,logger):
 
   return success
 
+def calculate_etf_performance(df_etf_data,rename_cols,selected_etfs):
+
+  all_columns = selected_etfs.copy()
+  all_columns.insert(0,'series_date')
+
+  df_historical_data_subset = df_etf_data[all_columns].copy()
+
+  # format date
+  df_historical_data_subset['series_date'] = pd.to_datetime(df_historical_data_subset['series_date'],format='%Y-%m-%d')
+
+  for column in df_historical_data_subset:
+      if(column != 'series_date'):
+          df_historical_data_subset[column] = pd.to_numeric(df_historical_data_subset[column])
+
+  data = {'DATE': []}
+
+  # Convert the dictionary into DataFrame
+  df_percentage_change = pd.DataFrame(data)
+
+  for etf in selected_etfs:
+    import pdb; pdb.set_trace()
+    #df_historical_data_subset['%s_3m' % (etf,)] = (df_historical_data_subset[etf] - df_historical_data_subset[etf].shift(periods=60)) / df_historical_data_subset[etf].shift()
+    #df_etf_data['%s_pct_ch' % (etf,)] = df_etf_data.groupby(df_etf_data.DATE.dt.year, group_keys=False)[etf].apply(pd.Series.pct_change)
+    #TODO: Calculate % changes for 
+    # YTD			
+    # Last 5 days		
+    # Last Month		
+    # Last 3months		
+    # Last 5 years	
+    pass
+
+  import pdb; pdb.set_trace()
+
+  success = sql_write_df_to_db(df_percentage_change, "Macro_ETFAnnualData",rename_cols=rename_cols)
+
+  return success
+
+
 def get_yf_price_action(ticker):
   
   json_yf_module_summaryProfile = {}

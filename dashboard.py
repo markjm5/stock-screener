@@ -28,6 +28,7 @@ from common import style_df_for_display, style_df_for_display_date, format_field
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
 from common import display_chart, display_chart_ism, append_two_df, standard_display, display_chart_assets
+from common import calculate_etf_performance
 import seaborn as sns
 from copy import deepcopy
 
@@ -543,6 +544,11 @@ if option == 'Calendar':
 
 if option == 'Market Data':
     option_indicator_type = st.sidebar.selectbox("Market Data", ('Market Levels','Asset Class Performance'), 0)
+    df_annual_performance = get_data(table="macro_etfannualdata").tail(15).reset_index(drop=True)           
+    df_annual_performance['series_date'] = df_annual_performance['series_date'].astype('int64')
+
+    df_yf_historical_data = get_data(table="macro_yfhistoricaletfdata").reset_index(drop=True)
+
     if option_indicator_type == 'Market Levels':
         st.subheader(f'Market Levels')
         #option_lagging_indicator_charts = st.sidebar.selectbox("Charts", ('002 - US GDP','005 - US Job Market','006 - PCE','007 - US Inflation','009 - US Industrial Production','011 - US Durable Goods', '011 - US Retail Sales'), 0)
@@ -553,27 +559,8 @@ if option == 'Market Data':
         if option_market_indicator_charts == 'Economic Cycle':    
             tab1, tab2 = st.tabs(["📈 Annual Returns (Last 15 Years)", "📈 Current Calendar Year"])
 
-            df_annual_performance = get_data(table="macro_etfannualdata").tail(15).reset_index(drop=True)           
-            df_annual_performance['series_date'] = df_annual_performance['series_date'].astype('int64')
-
             #TAB 1
             tab1.subheader("Annual Returns (Last 15 Years)")
-
-            #TODO: Rename all the columns
-            #TODO: Provide definition of different business cycles
-            rename_cols = {
-                'spy':'Large Cap (SPY)',
-                'eem':'Emerging Market (EEM)',
-                'vnq':'REITS (VNQ)',
-                'mdy':'Mid Cap (MDY)',
-                'sly':'Small cap (SLY)',
-                'efa':'International Stocks (EFA)',
-                'tip':'TIPS (TIP)',
-                'agg':'Bonds (AGG)',
-                'djp':'Commo (DJP)',
-                'bil':'Cash (BIL)',
-            }
-            df_annual_performance.rename(columns=rename_cols, inplace=True)
 
             df_annual_performance_T = df_annual_performance.T
             df_annual_performance_T.columns = df_annual_performance_T.iloc[0]
@@ -594,21 +581,41 @@ if option == 'Market Data':
             df_annual_performance_T = df_annual_performance_T.reset_index()
 
             etf_subset = [
-                'Large Cap (SPY)',
-                'Emerging Market (EEM)',
-                'REITS (VNQ)',
-                'Mid Cap (MDY)',
-                'Small cap (SLY)',
-                'International Stocks (EFA)',
-                'TIPS (TIP)',
-                'Bonds (AGG)',
-                'Commo (DJP)',
-                'Cash (BIL)'
+                'spy',
+                'eem',
+                'vnq',
+                'mdy',
+                'sly',
+                'efa',
+                'tip',
+                'agg',
+                'djp',
+                'bil'
             ]
-
             df_annual_performance_T = df_annual_performance_T[df_annual_performance_T['index'].isin(etf_subset)].reset_index()
+            df_annual_performance_T['index'] = df_annual_performance_T['index'].map(config.RENAME_ETF)
             disp, df_sectors_annual_performance = style_df_for_display(df_annual_performance_T,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=False)
             tab1.markdown(disp.to_html(), unsafe_allow_html=True)           
+            tab1.subheader(f'Phase 1:')
+            tab1.markdown('Best Performers: Equities, Credit Market')
+            tab1.markdown('Best Sectors: Cyclicals/Financials/Consumer Discretionary/Industrials')
+            tab1.markdown('Worst Sectors: Consumer Staples/Health Care/Energy/Telecom/Utilities')
+            tab1.subheader(f'Phase 2:')
+            tab1.markdown('Best Performers: Equities')
+            tab1.markdown('Worst Performers: Government Bonds')					
+            tab1.markdown('Best Sectors: Technology/Industrials')					
+            tab1.markdown('Worst Sectors: Utilities/Materials')					
+                                    
+            tab1.subheader(f'Phase 3:') 	
+            tab1.markdown('No real underperformer/outperformer between bonds and stocks')					
+            tab1.markdown('Best Sectors: Consumer Staples/Utilities/Energy/Health Care/Materials')					
+            tab1.markdown('Worst Sectors: Consumer Discretionary/Technology')					
+                                    
+            tab1.subheader(f'Phase 4:') 	
+            tab1.markdown('Best Performers: Government Bonds')					
+            tab1.markdown('You will have to reduce exposure')					
+            tab1.markdown('Best Sectors: Consumer Staples/Health Care/Telecom/Utilities')					
+            tab1.markdown('Worst Sectors: Financials/Materials/Technology/Industrials')
 
             #TAB 2
             tab2.subheader("Current Calendar Year")
@@ -634,12 +641,104 @@ if option == 'Market Data':
 
 
         if option_market_indicator_charts == 'Sectors':    
+            tab1, tab2 = st.tabs(["📈 Annual Returns (Last 15 Years)", "📈 Charts"])
 
+            df_annual_performance_T = df_annual_performance.T
+            df_annual_performance_T.columns = df_annual_performance_T.iloc[0]
 
+            #remove first row from DataFrame
+            df_annual_performance_T = df_annual_performance_T[1:]
+            
+            format_cols = {}
+            cols_gradient = []
+
+            for column in df_annual_performance_T.columns:
+                format_cols[column] = '{:,.2%}'.format
+                cols_gradient.append(column)
+
+            rename_cols = {'index': 'Asset Class'}
+            cols_drop = ['level_0']
+
+            df_annual_performance_T = df_annual_performance_T.reset_index()
+
+            etf_subset = [
+                'xlp',
+                'xly',
+                'xle',
+                'xlf',
+                'xlv',
+                'xli',
+                'xlk',
+                'xlb',
+                'xlre',
+                'xlc',
+                'xlu',
+                'spy',
+                ]
+
+            df_annual_performance_T = df_annual_performance_T[df_annual_performance_T['index'].isin(etf_subset)].reset_index()
+            df_annual_performance_T['index'] = df_annual_performance_T['index'].map(config.RENAME_ETF)
+            disp, df_sectors_annual_performance = style_df_for_display(df_annual_performance_T,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=False)
+            tab1.markdown(disp.to_html(), unsafe_allow_html=True)           
+
+            #TAB 2
+            col1, col2 = tab2.columns(2)
+            #TODO: Dont need to do the calculation here, as it should be done during downloading. 
+            # Here we want to simply retrieve the pre calculated values from the database
+            rename_cols = None
+            success = calculate_etf_performance(df_yf_historical_data,rename_cols,etf_subset)
+
+            import pdb; pdb.set_trace()        
+
+            #TODO: Charts for
+            # YTD			
+            # Last 5 days		
+            # Last Month		
+            # Last 3months		
+            # Last 5 years	
             pass
+
         if option_market_indicator_charts == 'ETF Performance':
-            pass
+            tab1, tab2 = st.tabs(["📈 Table", "📈 Charts"])
+            col1, col2 = tab2.columns(2)
 
+            etf_subset = {
+                'rxi',
+                'xlp',
+                'xly',
+                'xle',
+                'xlf',
+                'xlv',
+                'xli',
+                'xlk',
+                'xlb',
+                'xlre',
+                'xlc',
+                'xlu',
+                'spy',
+                'uso',
+                'qqq',
+                'iwm',
+                'ibb',
+                'eem',
+                'hyg',
+                'vnq',
+                'mdy',
+                'sly',
+                'efa',
+                'tip',
+                'agg',
+                'djp',
+                'bil',
+                'gc_f',
+                'dx_y_nyb',
+            }
+
+            #TAB1
+
+            #TAB2
+
+            pass
 if option == 'Macroeconomic Data':
     #st.subheader(f'Macro Economic Data')
     option_indicator_type = st.sidebar.selectbox("Indicator Type", ('Lagging Indicator','Interest Rates/FX','Leading Indicator'), 0)
