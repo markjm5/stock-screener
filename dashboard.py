@@ -685,8 +685,8 @@ if option == 'Market Data':
             col1, col2 = tab2.columns(2)
             #TODO: Dont need to do the calculation here, as it should be done during downloading. 
             # Here we want to simply retrieve the pre calculated values from the database
-            rename_cols = None
-            success = calculate_etf_performance(df_yf_historical_data,rename_cols,etf_subset)
+
+            success = calculate_etf_performance(df_yf_historical_data,etf_subset)
 
             import pdb; pdb.set_trace()        
 

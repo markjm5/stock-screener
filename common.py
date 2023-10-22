@@ -408,7 +408,7 @@ def calculate_annual_etf_performance(df_etf_data,logger):
 
   return success
 
-def calculate_etf_performance(df_etf_data,rename_cols,selected_etfs):
+def calculate_etf_performance(df_etf_data, selected_etfs):
 
   all_columns = selected_etfs.copy()
   all_columns.insert(0,'series_date')
@@ -437,9 +437,18 @@ def calculate_etf_performance(df_etf_data,rename_cols,selected_etfs):
     # Last Month		
     # Last 3months		
     # Last 5 years	
+
+    #LOOK AT LINE 1256 for example of how to work with dates
     pass
 
   import pdb; pdb.set_trace()
+
+  # Write to database
+  rename_cols = {
+    "DATE":"series_date",    
+    "DX-Y.NYB":"DX_Y_NYB",
+    "GC=F":"GC_F",
+  }
 
   success = sql_write_df_to_db(df_percentage_change, "Macro_ETFAnnualData",rename_cols=rename_cols)
 

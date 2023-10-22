@@ -23,9 +23,7 @@ selected_etfs = [
     'bil',
 ]
 
-rename_cols = None
-
-success = calculate_etf_performance(df_etf_data,rename_cols,selected_etfs)
+success = calculate_etf_performance(df_etf_data,selected_etfs)
 
 #myset = set(YF_ETF_SERIES_NEW)
 #newlist = list(myset)
