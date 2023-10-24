@@ -428,18 +428,10 @@ def calculate_etf_performance(df_etf_data, selected_etfs):
   df_percentage_change = pd.DataFrame(data)
 
   for etf in selected_etfs:
-    import pdb; pdb.set_trace()
-    #df_historical_data_subset['%s_3m' % (etf,)] = (df_historical_data_subset[etf] - df_historical_data_subset[etf].shift(periods=60)) / df_historical_data_subset[etf].shift()
-    #df_etf_data['%s_pct_ch' % (etf,)] = df_etf_data.groupby(df_etf_data.DATE.dt.year, group_keys=False)[etf].apply(pd.Series.pct_change)
-    #TODO: Calculate % changes for 
-    # YTD			
-    # Last 5 days		
-    # Last Month		
-    # Last 3months		
-    # Last 5 years	
+    df_series = df_historical_data_subset.loc[0:len(df_historical_data_subset),['series_date',etf]]
+    calculate_asset_percentage_changes(df_series)
 
     #LOOK AT LINE 1256 for example of how to work with dates
-    pass
 
   import pdb; pdb.set_trace()
 
@@ -454,6 +446,81 @@ def calculate_etf_performance(df_etf_data, selected_etfs):
 
   return success
 
+def calculate_asset_percentage_changes(df_series):
+  asset_name = df_series.columns.values.tolist()[1]
+  last_date = df_series.iloc[:, 0][len(df_series)-1].date()
+  last_value = df_series.iloc[:, 1][len(df_series)-1]
+
+  data = {'Asset': [], 'Last Date': [],'Last Value': [], 'YTD': [], 'Last_5_Days': [], 'Last_Month': [], 'Last_5_Years': []}
+  
+  # Convert the dictionary into DataFrame
+  df_percentage_change = pd.DataFrame(data)
+
+  #TODO: Calculate % changes for 
+  # YTD Date
+  rd = relativedelta(years=+1)
+  ytd_date = last_date - rd
+  df_ytd = util_return_date_values(df_series,ytd_date)
+
+  # Last 5 days		
+  td = timedelta(days=5)
+  last_5_days_date = last_date - td
+  df_last_5_days = util_return_date_values(df_series,last_5_days_date)
+
+  # Last Month		
+  rd = relativedelta(months=+1)
+  last_month_date = last_date - rd
+  df_last_month = util_return_date_values(df_series,last_month_date)
+
+  # Last 3 months		
+  rd = relativedelta(months=+3)
+  last_3_months_date = last_date - rd
+  df_last_3_months = util_return_date_values(df_series,last_3_months_date)
+
+  # Last 5 years	
+  rd = relativedelta(years=+5)
+  last_5_years_date = last_date - rd
+  df_last_5_years = util_return_date_values(df_series,last_5_years_date)
+
+  import pdb; pdb.set_trace()
+
+
+  #start_date = next_weekday   # start date
+  #end_date = next_weekday + relativedelta(weeks=+2)  # end date
+  #dt_index_dates = pd.date_range(start_date,end_date-timedelta(days=1),freq='d')
+  #list_dates = dt_index_dates.strftime('%Y-%m-%d').tolist()
+
+def util_return_date_values(df_series, temp_date):
+  df_return_row = pd.DataFrame()
+
+  if(temp_date.isoweekday() in [1,2,3,4,5]):
+    df_return_row = df_series.loc[df_series['series_date'] == temp_date.isoformat()]
+
+  if df_return_row.shape[0] == 0:
+    #Get next weekday and try and get series data again 
+    next_weekday = util_calculate_next_weekday(temp_date)
+
+    df_return_row = df_series.loc[df_series['series_date'] == next_weekday.isoformat()]
+
+  if df_return_row.shape[0] == 0:
+    #Get next weekday and try and get series data again 
+    next_weekday = util_calculate_next_weekday(next_weekday)
+    df_return_row = df_series.loc[df_series['series_date'] == next_weekday.isoformat()]
+
+  return df_return_row
+
+def util_calculate_next_weekday(temp_date):
+  # Calculate next weekday
+  r = rrule.rrule(rrule.DAILY,
+                  byweekday=[rrule.MO, rrule.TU, rrule.WE, rrule.TH, rrule.FR],
+                  dtstart=temp_date)
+
+  # Create a rruleset
+  rs = rrule.rruleset()
+  rs.rrule(r)
+  next_weekday = rs[0].date()
+
+  return next_weekday
 
 def get_yf_price_action(ticker):
   
