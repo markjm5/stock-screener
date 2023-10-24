@@ -422,18 +422,21 @@ def calculate_etf_performance(df_etf_data, selected_etfs):
       if(column != 'series_date'):
           df_historical_data_subset[column] = pd.to_numeric(df_historical_data_subset[column])
 
-  data = {'DATE': []}
-
+  data = {'asset': [], 'last_date': [],'last_value': [], 'ytd': [], 'last_5_days': [], 'last_month': [], 'last_3_months': [], 'last_5_years': []}
+  
   # Convert the dictionary into DataFrame
   df_percentage_change = pd.DataFrame(data)
 
   for etf in selected_etfs:
     df_series = df_historical_data_subset.loc[0:len(df_historical_data_subset),['series_date',etf]]
-    calculate_asset_percentage_changes(df_series)
+    
+    asset_name, last_date, last_value, ytd, last_5_days, last_month, last_3_months, last_5_years = calculate_asset_percentage_changes(df_series) 
 
-    #LOOK AT LINE 1256 for example of how to work with dates
+    df_percentage_change = df_percentage_change.append({'asset': asset_name, 'last_date': last_date,'last_value': last_value, 'ytd': ytd, 'last_5_days': last_5_days, 'last_month': last_month, 'last_3_months': last_3_months, 'last_5_years': last_5_years}, ignore_index = True)
 
   import pdb; pdb.set_trace()
+
+  #TODO: Write to Database
 
   # Write to database
   rename_cols = {
@@ -451,44 +454,41 @@ def calculate_asset_percentage_changes(df_series):
   last_date = df_series.iloc[:, 0][len(df_series)-1].date()
   last_value = df_series.iloc[:, 1][len(df_series)-1]
 
-  data = {'Asset': [], 'Last Date': [],'Last Value': [], 'YTD': [], 'Last_5_Days': [], 'Last_Month': [], 'Last_5_Years': []}
-  
-  # Convert the dictionary into DataFrame
-  df_percentage_change = pd.DataFrame(data)
-
   #TODO: Calculate % changes for 
   # YTD Date
   rd = relativedelta(years=+1)
   ytd_date = last_date - rd
   df_ytd = util_return_date_values(df_series,ytd_date)
-
+  # Calculate % change from last value
+  ytd = (last_value - df_ytd[asset_name].values[0]) / df_ytd[asset_name].values[0]
+  
   # Last 5 days		
   td = timedelta(days=5)
   last_5_days_date = last_date - td
   df_last_5_days = util_return_date_values(df_series,last_5_days_date)
+  last_5_days = (last_value - df_last_5_days[asset_name].values[0]) / df_last_5_days[asset_name].values[0]
 
   # Last Month		
   rd = relativedelta(months=+1)
   last_month_date = last_date - rd
   df_last_month = util_return_date_values(df_series,last_month_date)
+  last_month = (last_value - df_last_month[asset_name].values[0]) / df_last_month[asset_name].values[0]
 
   # Last 3 months		
   rd = relativedelta(months=+3)
   last_3_months_date = last_date - rd
   df_last_3_months = util_return_date_values(df_series,last_3_months_date)
+  last_3_months = (last_value - df_last_3_months[asset_name].values[0]) / df_last_3_months[asset_name].values[0]
 
   # Last 5 years	
   rd = relativedelta(years=+5)
   last_5_years_date = last_date - rd
   df_last_5_years = util_return_date_values(df_series,last_5_years_date)
+  last_5_years = (last_value - df_last_5_years[asset_name].values[0]) / df_last_5_years[asset_name].values[0]
 
-  import pdb; pdb.set_trace()
+  
+  return asset_name, last_date, last_value, ytd, last_5_days, last_month, last_3_months, last_5_years
 
-
-  #start_date = next_weekday   # start date
-  #end_date = next_weekday + relativedelta(weeks=+2)  # end date
-  #dt_index_dates = pd.date_range(start_date,end_date-timedelta(days=1),freq='d')
-  #list_dates = dt_index_dates.strftime('%Y-%m-%d').tolist()
 
 def util_return_date_values(df_series, temp_date):
   df_return_row = pd.DataFrame()
