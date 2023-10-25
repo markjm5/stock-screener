@@ -295,7 +295,9 @@ def set_yf_historical_data(etfs, logger):
   date_str = "%s-%s-%s" % (todays_date.year, todays_date.month, todays_date.day)
 
   for etf in etfs:
-    logger.info(f'Getting YF Histofical Data for {etf}')
+    logger.info(f'Getting YF Historical Data for {etf}')
+    #if(etf == 'SPSM'):
+    #  import pdb; pdb.set_trace()
 
     df_etf = get_yf_historical_stock_data(etf, "1d", "2007-01-01", date_str)
 
@@ -362,21 +364,40 @@ def set_yf_historical_data(etfs, logger):
   #add_col_values = {}
   conflict_cols = "series_date"
 
-  success1 = sql_write_df_to_db(df_etf_data, "Macro_YFHistoricalETFData", rename_cols=rename_cols, conflict_cols=conflict_cols)
+  success = sql_write_df_to_db(df_etf_data, "Macro_YFHistoricalETFData", rename_cols=rename_cols, conflict_cols=conflict_cols)
   logger.info(f'Successfully Saved YF Historical Data')     
 
-  success2 = calculate_annual_etf_performance(df_etf_data,logger)
+#  success2 = calculate_annual_etf_performance(df_etf_data,logger)
 
-  success = False
-  if(success1 and success2):
-    success = True
+#  selected_etfs = [
+#    'spy',
+#    'eem',
+#    'vnq',
+#    'mdy',
+#    'spsm',
+#    'efa',
+#    'tip',
+#    'agg',
+#    'djp',
+#    'bil',
+#  ]
+
+#  success3 = calculate_etf_performance(df_etf_data, selected_etfs, logger)
 
   return success
 
 def calculate_annual_etf_performance(df_etf_data,logger):
+  # format date
+  df_etf_data['series_date'] = pd.to_datetime(df_etf_data['series_date'],format='%Y-%m-%d')
+
+  for column in df_etf_data:
+      if(column != 'series_date'):
+          df_etf_data[column] = pd.to_numeric(df_etf_data[column])
+
+  df_etf_data = df_etf_data.rename(columns={'series_date': 'DATE'})
 
   data = {'DATE': []}
-  etfs = [ 'RXI','XLP','XLY','XLE','XLF','XLV','XLI','XLK','XLB','XLRE','XLC','XLU','SPY','USO','QQQ','IWM','IBB','EEM','HYG','VNQ','MDY','SLY','EFA','TIP','AGG','DJP','BIL','GC=F','DX-Y.NYB']
+  etfs = [ 'RXI','XLP','XLY','XLE','XLF','XLV','XLI','XLK','XLB','XLRE','XLC','XLU','SPY','USO','QQQ','IWM','IBB','EEM','HYG','VNQ','MDY','SPSM','EFA','TIP','AGG','DJP','BIL','GC_F','DX_Y_NYB']
 
   # Convert the dictionary into DataFrame
   df_percentage_change = pd.DataFrame(data)
@@ -385,30 +406,46 @@ def calculate_annual_etf_performance(df_etf_data,logger):
     logger.info(f'Calculating Yearly Performance for {etf}')
 
     #groupby year and determine the daily percent change by year, and add it as a column to df
-    df_etf_data['%s_pct_ch' % (etf,)] = df_etf_data.groupby(df_etf_data.DATE.dt.year, group_keys=False)[etf].apply(pd.Series.pct_change)
+    df_etf_data['%s_pct_ch' % (etf.lower(),)] = df_etf_data.groupby(df_etf_data.DATE.dt.year, group_keys=False)[etf.lower()].apply(pd.Series.pct_change)
 
     #Drop unnecessary columns
-    df_etf_data = df_etf_data.drop(columns=etf, axis=1)
+    df_etf_data = df_etf_data.drop(columns=etf.lower(), axis=1)
 
     # groupby year and aggregate sum of pct_ch to get the yearly return
     #df_yearly_pct_ch = df_etf_data.groupby(df_etf_data.DATE.dt.year)['%s_pct_ch' % (etf,)].sum().mul(100).reset_index().rename(columns={'%s_pct_ch' % (etf,): etf})
-    df_yearly_pct_ch = df_etf_data.groupby(df_etf_data.DATE.dt.year, group_keys=False)['%s_pct_ch' % (etf,)].sum().reset_index().rename(columns={'%s_pct_ch' % (etf,): etf})
+    df_yearly_pct_ch = df_etf_data.groupby(df_etf_data.DATE.dt.year, group_keys=False)['%s_pct_ch' % (etf.lower(),)].sum().reset_index().rename(columns={'%s_pct_ch' % (etf.lower(),): etf.lower()})
 
     df_percentage_change = combine_df_on_index(df_percentage_change, df_yearly_pct_ch, 'DATE')
+
+  #import pdb; pdb.set_trace()
 
   # Write to database
   rename_cols = {
     "DATE":"series_date",    
-    "DX-Y.NYB":"DX_Y_NYB",
-    "GC=F":"GC_F",
   }
+
+  #Clear out old data
+  sql_delete_all_rows('Macro_ETFAnnualData')
 
   success = sql_write_df_to_db(df_percentage_change, "Macro_ETFAnnualData",rename_cols=rename_cols)
   logger.info(f'Successfully Calculated Annual Asset Class Performance Data')     
 
   return success
 
-def calculate_etf_performance(df_etf_data, selected_etfs):
+def calculate_etf_performance(df_etf_data, logger):
+
+  selected_etfs = [
+      'spy',
+      'eem',
+      'vnq',
+      'mdy',
+      'spsm',
+      'efa',
+      'tip',
+      'agg',
+      'djp',
+      'bil',
+  ]
 
   all_columns = selected_etfs.copy()
   all_columns.insert(0,'series_date')
@@ -422,7 +459,7 @@ def calculate_etf_performance(df_etf_data, selected_etfs):
       if(column != 'series_date'):
           df_historical_data_subset[column] = pd.to_numeric(df_historical_data_subset[column])
 
-  data = {'asset': [], 'last_date': [],'last_value': [], 'ytd': [], 'last_5_days': [], 'last_month': [], 'last_3_months': [], 'last_5_years': []}
+  data = {'asset': [], 'last_date': [],'last_value': [],'ytd_value': [], 'ytd_pct': [], 'last_5_days_value': [], 'last_5_days_pct': [], 'last_month_value': [], 'last_month_pct': [], 'last_3_months_value': [], 'last_3_months_pct': [], 'last_5_years_value': [], 'last_5_years_pct': []}
   
   # Convert the dictionary into DataFrame
   df_percentage_change = pd.DataFrame(data)
@@ -430,68 +467,75 @@ def calculate_etf_performance(df_etf_data, selected_etfs):
   for etf in selected_etfs:
     df_series = df_historical_data_subset.loc[0:len(df_historical_data_subset),['series_date',etf]]
     
-    asset_name, last_date, last_value, ytd, last_5_days, last_month, last_3_months, last_5_years = calculate_asset_percentage_changes(df_series) 
+    asset, last_date, last_value, ytd_value, ytd_pct, last_5_days_value, last_5_days_pct, last_month_value, last_month_pct, last_3_months_value, last_3_months_pct, last_5_years_value, last_5_years_pct = calculate_asset_percentage_changes(df_series) 
 
-    df_percentage_change = df_percentage_change.append({'asset': asset_name, 'last_date': last_date,'last_value': last_value, 'ytd': ytd, 'last_5_days': last_5_days, 'last_month': last_month, 'last_3_months': last_3_months, 'last_5_years': last_5_years}, ignore_index = True)
+    #TODO: CHange to pandas.concat because df.append will become deprecated
+    df_percentage_change = df_percentage_change.append({'asset': asset, 'last_date': last_date,'last_value': last_value, 'ytd_value': ytd_value, 'ytd_pct': ytd_pct, 'last_5_days_value': last_5_days_value, 'last_5_days_pct': last_5_days_pct, 'last_month_value': last_month_value, 'last_month_pct': last_month_pct, 'last_3_months_value': last_3_months_value, 'last_3_months_pct': last_3_months_pct, 'last_5_years_value': last_5_years_value, 'last_5_years_pct': last_5_years_pct}, ignore_index = True)
 
   import pdb; pdb.set_trace()
 
   #TODO: Write to Database
 
-  # Write to database
-  rename_cols = {
-    "DATE":"series_date",    
-    "DX-Y.NYB":"DX_Y_NYB",
-    "GC=F":"GC_F",
-  }
+  # Write to database. Create database table
+  rename_cols = {}
 
-  success = sql_write_df_to_db(df_percentage_change, "Macro_ETFAnnualData",rename_cols=rename_cols)
+  #Clear out old data
+  sql_delete_all_rows('Macro_ETFPerformance')
+
+  success = sql_write_df_to_db(df_percentage_change, "Macro_ETFPerformance",rename_cols=rename_cols)
+  logger.info(f'Successfully Calculated ETF Performance Data')     
 
   return success
 
 def calculate_asset_percentage_changes(df_series):
-  asset_name = df_series.columns.values.tolist()[1]
+  asset = df_series.columns.values.tolist()[1]
   last_date = df_series.iloc[:, 0][len(df_series)-1].date()
   last_value = df_series.iloc[:, 1][len(df_series)-1]
 
-  #TODO: Calculate % changes for 
+  # Calculate % changes for 
   # YTD Date
   rd = relativedelta(years=+1)
   ytd_date = last_date - rd
   df_ytd = util_return_date_values(df_series,ytd_date)
   # Calculate % change from last value
-  ytd = (last_value - df_ytd[asset_name].values[0]) / df_ytd[asset_name].values[0]
+  ytd_value = df_ytd[asset].values[0]
+  ytd_pct = (last_value - df_ytd[asset].values[0]) / df_ytd[asset].values[0]
   
   # Last 5 days		
   td = timedelta(days=5)
   last_5_days_date = last_date - td
   df_last_5_days = util_return_date_values(df_series,last_5_days_date)
-  last_5_days = (last_value - df_last_5_days[asset_name].values[0]) / df_last_5_days[asset_name].values[0]
+  last_5_days_value = df_last_5_days[asset].values[0]
+  last_5_days_pct = (last_value - df_last_5_days[asset].values[0]) / df_last_5_days[asset].values[0]
 
   # Last Month		
   rd = relativedelta(months=+1)
   last_month_date = last_date - rd
   df_last_month = util_return_date_values(df_series,last_month_date)
-  last_month = (last_value - df_last_month[asset_name].values[0]) / df_last_month[asset_name].values[0]
+  last_month_value = df_last_month[asset].values[0]
+  last_month_pct = (last_value - df_last_month[asset].values[0]) / df_last_month[asset].values[0]
 
   # Last 3 months		
   rd = relativedelta(months=+3)
   last_3_months_date = last_date - rd
   df_last_3_months = util_return_date_values(df_series,last_3_months_date)
-  last_3_months = (last_value - df_last_3_months[asset_name].values[0]) / df_last_3_months[asset_name].values[0]
+  last_3_months_value = df_last_3_months[asset].values[0]
+  last_3_months_pct = (last_value - df_last_3_months[asset].values[0]) / df_last_3_months[asset].values[0]
 
   # Last 5 years	
   rd = relativedelta(years=+5)
   last_5_years_date = last_date - rd
   df_last_5_years = util_return_date_values(df_series,last_5_years_date)
-  last_5_years = (last_value - df_last_5_years[asset_name].values[0]) / df_last_5_years[asset_name].values[0]
-
+  last_5_years_value = df_last_5_years[asset].values[0]
+  last_5_years_pct = (last_value - df_last_5_years[asset].values[0]) / df_last_5_years[asset].values[0]
   
-  return asset_name, last_date, last_value, ytd, last_5_days, last_month, last_3_months, last_5_years
+  return asset, last_date, last_value, ytd_value, ytd_pct, last_5_days_value, last_5_days_pct, last_month_value, last_month_pct, last_3_months_value, last_3_months_pct, last_5_years_value, last_5_years_pct
 
 
 def util_return_date_values(df_series, temp_date):
   df_return_row = pd.DataFrame()
+
+  column_headers = list(df_series.columns.values)
 
   if(temp_date.isoweekday() in [1,2,3,4,5]):
     df_return_row = df_series.loc[df_series['series_date'] == temp_date.isoformat()]

@@ -112,7 +112,6 @@ YF_ETF_SERIES = [
     'MDY', 
     'QQQ', 
     'RXI', 
-    'SLY', 
     'SPY', 
     'TIP', 
     'USO', 
@@ -287,7 +286,8 @@ YF_ETF_SERIES = [
     '^N225', 
     '^NSEI', 
     '^NYA', 
-    '^STOXX50E'
+    '^STOXX50E',
+    'SPSM',
 ]
 
 RENAME_ETF = {
@@ -312,7 +312,7 @@ RENAME_ETF = {
     'hyg':'High Yield (HYG)',
     'vnq':'REITS (VNQ)',
     'mdy':'Mid Cap (MDY)',
-    'sly':'Small cap (SLY)',
+    'spsm':'Small cap (SPSM)',
     'efa':'International Stocks (EFA)',
     'tip':'TIPS (TIP)',
     'agg':'Bonds (AGG)',

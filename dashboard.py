@@ -28,7 +28,7 @@ from common import style_df_for_display, style_df_for_display_date, format_field
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
 from common import display_chart, display_chart_ism, append_two_df, standard_display, display_chart_assets
-from common import calculate_etf_performance
+from common import calculate_etf_performance, calculate_annual_etf_performance
 import seaborn as sns
 from copy import deepcopy
 
@@ -396,7 +396,7 @@ if option == 'Download Data':
         start_time = now_start.strftime("%H:%M:%S")    
 
         st.write(f'{start_time} - Downloading Macroeconomic Data...')
-
+        df_historical_etf_data = get_data(table="macro_yfhistoricaletfdata").reset_index(drop=True)
         # Update all St Louis FED Data
         #success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
 
@@ -412,6 +412,9 @@ if option == 'Download Data':
             e1p2 = executor.submit(set_ism_manufacturing, logger)
             e1p3 = executor.submit(set_ism_services, logger)
             e1p4 = executor.submit(set_yf_historical_data, config.YF_ETF_SERIES,logger)
+
+        success1 = calculate_annual_etf_performance(df_historical_etf_data, config.YF_ETF_SERIES,logger)
+        success2 = calculate_etf_performance(df_historical_etf_data, config.YF_ETF_SERIES,logger)
 
         #TODO: Download ADP report and store in database
 
@@ -546,8 +549,6 @@ if option == 'Market Data':
     option_indicator_type = st.sidebar.selectbox("Market Data", ('Market Levels','Asset Class Performance'), 0)
     df_annual_performance = get_data(table="macro_etfannualdata").tail(15).reset_index(drop=True)           
     df_annual_performance['series_date'] = df_annual_performance['series_date'].astype('int64')
-
-    df_yf_historical_data = get_data(table="macro_yfhistoricaletfdata").reset_index(drop=True)
 
     if option_indicator_type == 'Market Levels':
         st.subheader(f'Market Levels')
