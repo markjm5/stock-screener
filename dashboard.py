@@ -397,6 +397,17 @@ if option == 'Download Data':
 
         st.write(f'{start_time} - Downloading Macroeconomic Data...')
         df_historical_etf_data = get_data(table="macro_yfhistoricaletfdata").reset_index(drop=True)
+
+        # format date
+        df_historical_etf_data['series_date'] = pd.to_datetime(df_historical_etf_data['series_date'],format='%Y-%m-%d')
+
+        for column in df_historical_etf_data:
+            if(column != 'series_date'):
+                df_historical_etf_data[column] = pd.to_numeric(df_historical_etf_data[column])
+
+        df_historical_etf_data.sort_values(by='series_date', inplace = True)
+        df_historical_etf_data = df_historical_etf_data.reset_index(drop=True)
+
         # Update all St Louis FED Data
         #success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
 
@@ -413,8 +424,8 @@ if option == 'Download Data':
             e1p3 = executor.submit(set_ism_services, logger)
             e1p4 = executor.submit(set_yf_historical_data, config.YF_ETF_SERIES,logger)
 
-        success1 = calculate_annual_etf_performance(df_historical_etf_data, config.YF_ETF_SERIES,logger)
-        success2 = calculate_etf_performance(df_historical_etf_data, config.YF_ETF_SERIES,logger)
+        e1p5 = calculate_annual_etf_performance(df_historical_etf_data,logger)        
+        e1p6 = calculate_etf_performance(df_historical_etf_data,logger)
 
         #TODO: Download ADP report and store in database
 
@@ -472,9 +483,6 @@ if option == 'Download Data':
         logger.info(f"Start Time: {finish_time}")
         logger.info(f"Total Time: {total_time}")
 
-        #handle_exceptions_print_result(e1p1, 1, 1, logger)
-        #handle_exceptions_print_result(e1p2, 1, 2, logger)
-        #handle_exceptions_print_result(e1p3, 1, 3, logger)
         executor_count = 1
         data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
@@ -684,20 +692,14 @@ if option == 'Market Data':
 
             #TAB 2
             col1, col2 = tab2.columns(2)
-            #TODO: Dont need to do the calculation here, as it should be done during downloading. 
-            # Here we want to simply retrieve the pre calculated values from the database
-
-            success = calculate_etf_performance(df_yf_historical_data,etf_subset)
-
-            import pdb; pdb.set_trace()        
-
+            #TODO: Retrieve the pre calculated values from the database and display
             #TODO: Charts for
             # YTD			
             # Last 5 days		
             # Last Month		
             # Last 3months		
             # Last 5 years	
-            pass
+            import pdb; pdb.set_trace()        
 
         if option_market_indicator_charts == 'ETF Performance':
             tab1, tab2 = st.tabs(["📈 Table", "📈 Charts"])

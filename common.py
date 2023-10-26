@@ -387,12 +387,6 @@ def set_yf_historical_data(etfs, logger):
   return success
 
 def calculate_annual_etf_performance(df_etf_data,logger):
-  # format date
-  df_etf_data['series_date'] = pd.to_datetime(df_etf_data['series_date'],format='%Y-%m-%d')
-
-  for column in df_etf_data:
-      if(column != 'series_date'):
-          df_etf_data[column] = pd.to_numeric(df_etf_data[column])
 
   df_etf_data = df_etf_data.rename(columns={'series_date': 'DATE'})
 
@@ -435,8 +429,25 @@ def calculate_annual_etf_performance(df_etf_data,logger):
 def calculate_etf_performance(df_etf_data, logger):
 
   selected_etfs = [
+      'rxi',
+      'xlp',
+      'xly',
+      'xle',
+      'xlf',
+      'xlv',
+      'xli',
+      'xlk',
+      'xlb',
+      'xlre',
+      'xlc',
+      'xlu',
       'spy',
+      'uso',
+      'qqq',
+      'iwm',
+      'ibb',
       'eem',
+      'hyg',
       'vnq',
       'mdy',
       'spsm',
@@ -445,7 +456,22 @@ def calculate_etf_performance(df_etf_data, logger):
       'agg',
       'djp',
       'bil',
+      'gc_f',
+      'dx_y_nyb',
   ]
+
+  #selected_etfs = [
+  #    'spy',
+  #    'eem',
+  #    'vnq',
+  #    'mdy',
+  #    'spsm',
+  #    'efa',
+  #    'tip',
+  #    'agg',
+  #    'djp',
+  #    'bil',
+  #]
 
   all_columns = selected_etfs.copy()
   all_columns.insert(0,'series_date')
@@ -453,11 +479,11 @@ def calculate_etf_performance(df_etf_data, logger):
   df_historical_data_subset = df_etf_data[all_columns].copy()
 
   # format date
-  df_historical_data_subset['series_date'] = pd.to_datetime(df_historical_data_subset['series_date'],format='%Y-%m-%d')
+  #df_historical_data_subset['series_date'] = pd.to_datetime(df_historical_data_subset['series_date'],format='%Y-%m-%d')
 
-  for column in df_historical_data_subset:
-      if(column != 'series_date'):
-          df_historical_data_subset[column] = pd.to_numeric(df_historical_data_subset[column])
+  #for column in df_historical_data_subset:
+  #    if(column != 'series_date'):
+  #        df_historical_data_subset[column] = pd.to_numeric(df_historical_data_subset[column])
 
   data = {'asset': [], 'last_date': [],'last_value': [],'ytd_value': [], 'ytd_pct': [], 'last_5_days_value': [], 'last_5_days_pct': [], 'last_month_value': [], 'last_month_pct': [], 'last_3_months_value': [], 'last_3_months_pct': [], 'last_5_years_value': [], 'last_5_years_pct': []}
   
@@ -2648,6 +2674,7 @@ def sql_get_volume():
 
 def sql_get_records_as_df(table, cid, innerjoin):
   #df = pd.DataFrame()
+    
   connection, cursor = sql_open_db()
   if(cid):
     sqlCmd = """SELECT * FROM {} WHERE cid={}""".format(table, cid)
