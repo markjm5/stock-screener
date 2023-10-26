@@ -465,24 +465,20 @@ def calculate_etf_performance(df_etf_data, logger):
   df_percentage_change = pd.DataFrame(data)
 
   for etf in selected_etfs:
-    df_series = df_historical_data_subset.loc[0:len(df_historical_data_subset),['series_date',etf]]
-    
+    df_series = df_historical_data_subset.loc[0:len(df_historical_data_subset),['series_date',etf]]    
+
     asset, last_date, last_value, ytd_value, ytd_pct, last_5_days_value, last_5_days_pct, last_month_value, last_month_pct, last_3_months_value, last_3_months_pct, last_5_years_value, last_5_years_pct = calculate_asset_percentage_changes(df_series) 
 
-    #TODO: CHange to pandas.concat because df.append will become deprecated
-    df_percentage_change = df_percentage_change.append({'asset': asset, 'last_date': last_date,'last_value': last_value, 'ytd_value': ytd_value, 'ytd_pct': ytd_pct, 'last_5_days_value': last_5_days_value, 'last_5_days_pct': last_5_days_pct, 'last_month_value': last_month_value, 'last_month_pct': last_month_pct, 'last_3_months_value': last_3_months_value, 'last_3_months_pct': last_3_months_pct, 'last_5_years_value': last_5_years_value, 'last_5_years_pct': last_5_years_pct}, ignore_index = True)
+    df_temp = pd.DataFrame([[asset,last_date,last_value,ytd_value,ytd_pct,last_5_days_value,last_5_days_pct,last_month_value,last_month_pct,last_3_months_value,last_3_months_pct,last_5_years_value,last_5_years_pct]], columns=['asset', 'last_date','last_value', 'ytd_value', 'ytd_pct', 'last_5_days_value', 'last_5_days_pct', 'last_month_value', 'last_month_pct', 'last_3_months_value', 'last_3_months_pct', 'last_5_years_value', 'last_5_years_pct'])
 
-  import pdb; pdb.set_trace()
+    df_percentage_change = pd.concat([df_percentage_change, df_temp], axis=0)
 
-  #TODO: Write to Database
-
-  # Write to database. Create database table
-  rename_cols = {}
+  df_percentage_change['last_date'] = pd.to_datetime(df_percentage_change['last_date'],format='%Y-%m-%d')
 
   #Clear out old data
   sql_delete_all_rows('Macro_ETFPerformance')
 
-  success = sql_write_df_to_db(df_percentage_change, "Macro_ETFPerformance",rename_cols=rename_cols)
+  success = sql_write_df_to_db(df_percentage_change, "Macro_ETFPerformance")
   logger.info(f'Successfully Calculated ETF Performance Data')     
 
   return success
