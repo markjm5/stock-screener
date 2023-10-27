@@ -32,6 +32,8 @@ from common import calculate_etf_performance, calculate_annual_etf_performance
 import seaborn as sns
 from copy import deepcopy
 
+pd.options.mode.chained_assignment = None #Switch off warning
+
 st.set_page_config(
     page_title="Stock Screener App",
     page_icon=":shark:",
@@ -568,6 +570,80 @@ if option == 'Market Data':
         st.subheader(f'Market Levels')
         #option_lagging_indicator_charts = st.sidebar.selectbox("Charts", ('002 - US GDP','005 - US Job Market','006 - PCE','007 - US Inflation','009 - US Industrial Production','011 - US Durable Goods', '011 - US Retail Sales'), 0)
 
+        etf_subset_amer = [
+            '_dji',
+            '_gspc',
+            '_ixic',
+            '_nya',
+            '_gsptse',
+            '_mxx',		
+        ]
+
+        etf_subset_emea = [
+            '_stoxx50e',
+            '_ftse',
+            '_gdaxi',
+            '_fchi',
+            '_ibex',
+        ]
+
+        etf_subset_apac = [
+            '_n225',
+            '_hsi',
+            '000300_ss',
+            '_axjo',
+            '0P0001gy56_f',
+            '_bsesn',
+            '_nsei',        
+        ]
+
+
+        format_cols = {
+            'Last Date': lambda t: t.strftime("%m-%d-%Y"),
+            'Last': '{:,.2f}'.format, 
+            'YTD': '{:,.2%}'.format,
+            'Last 5 Days': '{:,.2%}'.format,
+            'Last Month': '{:,.2%}'.format,
+            'Last 3 Months': '{:,.2%}'.format,
+            'Last 5 Years': '{:,.2%}'.format,
+        }
+
+        cols_gradient = ['YTD', 'Last 5 Days','Last Month','Last 3 Months','Last 5 Years']
+        rename_cols = {'asset': '',
+            'last_value': 'Last',
+            'last_date': 'Last Date',
+            'ytd_pct': 'YTD',
+            'last_5_days_pct': 'Last 5 Days',
+            'last_month_pct': 'Last Month',
+            'last_3_months_pct': 'Last 3 Months',
+            'last_5_years_pct': 'Last 5 Years',
+        }
+
+        cols_drop = ['ytd_value', 'last_5_days_value', 'last_month_value', 'last_3_months_value', 'last_5_years_value']            
+
+        rename_cols['asset'] = 'Americas'
+        df_display_table_amer = df_etf_performance.copy()
+        df_display_table = df_display_table_amer[df_display_table_amer['asset'].isin(etf_subset_amer)]
+        df_display_table['asset'] = df_display_table['asset'].map(config.RENAME_ETF)
+        disp, df_display_table = style_df_for_display(df_display_table,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=False)
+        st.markdown(disp.to_html(), unsafe_allow_html=True)           
+
+        st.markdown("""---""")
+        rename_cols['asset'] = 'Europe, Middle East & Africa'
+        df_display_table_emea = df_etf_performance.copy()
+        df_display_table = df_display_table_emea[df_display_table_emea['asset'].isin(etf_subset_emea)]
+        df_display_table['asset'] = df_display_table['asset'].map(config.RENAME_ETF)
+        disp, df_display_table = style_df_for_display(df_display_table,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=False)
+        st.markdown(disp.to_html(), unsafe_allow_html=True)           
+
+        st.markdown("""---""")
+        rename_cols['asset'] = 'Asia Pacific'
+        df_display_table_apac = df_etf_performance.copy()
+        df_display_table = df_display_table_apac[df_display_table_apac['asset'].isin(etf_subset_apac)]
+        df_display_table['asset'] = df_display_table['asset'].map(config.RENAME_ETF)
+        disp, df_display_table = style_df_for_display(df_display_table,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=False)
+        st.markdown(disp.to_html(), unsafe_allow_html=True)           
+
     if option_indicator_type == 'Asset Class Performance':
         st.subheader(f'Asset Class Performance')
         option_market_indicator_charts = st.sidebar.selectbox("Charts", ('Economic Cycle','Sectors','ETF Performance'), 0)
@@ -639,7 +715,7 @@ if option == 'Market Data':
             df_annual_performance_current_year = df_annual_performance_T[['index', last_col]]
             df_annual_performance_current_year = df_annual_performance_current_year.sort_values(by=[last_col]).reset_index()
 
-            #TODO: Display Chart
+            # Display Chart
             #RENAME column to DATE
             #df_annual_performance_current_year = df_annual_performance_current_year.rename(columns={last_col: "DATE"})
             x_axis = 'index'
