@@ -367,23 +367,6 @@ def set_yf_historical_data(etfs, logger):
   success = sql_write_df_to_db(df_etf_data, "Macro_YFHistoricalETFData", rename_cols=rename_cols, conflict_cols=conflict_cols)
   logger.info(f'Successfully Saved YF Historical Data')     
 
-#  success2 = calculate_annual_etf_performance(df_etf_data,logger)
-
-#  selected_etfs = [
-#    'spy',
-#    'eem',
-#    'vnq',
-#    'mdy',
-#    'spsm',
-#    'efa',
-#    'tip',
-#    'agg',
-#    'djp',
-#    'bil',
-#  ]
-
-#  success3 = calculate_etf_performance(df_etf_data, selected_etfs, logger)
-
   return success
 
 def calculate_annual_etf_performance(df_etf_data,logger):
@@ -460,30 +443,10 @@ def calculate_etf_performance(df_etf_data, logger):
       'dx_y_nyb',
   ]
 
-  #selected_etfs = [
-  #    'spy',
-  #    'eem',
-  #    'vnq',
-  #    'mdy',
-  #    'spsm',
-  #    'efa',
-  #    'tip',
-  #    'agg',
-  #    'djp',
-  #    'bil',
-  #]
-
   all_columns = selected_etfs.copy()
   all_columns.insert(0,'series_date')
 
   df_historical_data_subset = df_etf_data[all_columns].copy()
-
-  # format date
-  #df_historical_data_subset['series_date'] = pd.to_datetime(df_historical_data_subset['series_date'],format='%Y-%m-%d')
-
-  #for column in df_historical_data_subset:
-  #    if(column != 'series_date'):
-  #        df_historical_data_subset[column] = pd.to_numeric(df_historical_data_subset[column])
 
   data = {'asset': [], 'last_date': [],'last_value': [],'ytd_value': [], 'ytd_pct': [], 'last_5_days_value': [], 'last_5_days_pct': [], 'last_month_value': [], 'last_month_pct': [], 'last_3_months_value': [], 'last_3_months_pct': [], 'last_5_years_value': [], 'last_5_years_pct': []}
   
