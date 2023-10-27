@@ -826,10 +826,105 @@ if option == 'Market Data':
             }
 
             #TAB1
+            format_cols = {
+                'Last Date': lambda t: t.strftime("%m-%d-%Y"),
+                'Last': '{:,.2f}'.format, 
+                'YTD': '{:,.2%}'.format,
+                'Last 5 Days': '{:,.2%}'.format,
+                'Last Month': '{:,.2%}'.format,
+                'Last 3 Months': '{:,.2%}'.format,
+                'Last 5 Years': '{:,.2%}'.format,
+            }
+
+            cols_gradient = ['YTD', 'Last 5 Days','Last Month','Last 3 Months','Last 5 Years']
+            rename_cols = {'asset': 'Asset Class',
+                'last_value': 'Last',
+                'last_date': 'Last Date',
+                'ytd_pct': 'YTD',
+                'last_5_days_pct': 'Last 5 Days',
+                'last_month_pct': 'Last Month',
+                'last_3_months_pct': 'Last 3 Months',
+                'last_5_years_pct': 'Last 5 Years',
+            }
+
+            cols_drop = ['ytd_value', 'last_5_days_value', 'last_month_value', 'last_3_months_value', 'last_5_years_value']            
+            df_display_table = df_etf_performance.copy()
+            df_display_table = df_display_table[df_display_table['asset'].isin(etf_subset)]
+            df_display_table['asset'] = df_display_table['asset'].map(config.RENAME_ETF)
+            disp, df_display_table = style_df_for_display(df_display_table,cols_gradient,rename_cols,cols_drop,cols_format=format_cols,format_rows=False)
+            tab1.markdown(disp.to_html(), unsafe_allow_html=True)           
 
             #TAB2
+            # YTD		
+            x_axis = 'asset'
+            y_axis = 'ytd_pct'
+            chart_settings = {
+                "type": "bar",
+                "title": "Annual Returns - %s" % 'YTD', 
+                "xlabel": "Asset Classes", 
+                "ylabel": "Percentage Return", 
+                "ypercentage": True,
+            }
+            df = df_etf_performance[df_etf_performance['asset'].isin(etf_subset)].sort_values(by=[y_axis])
+            df['asset'] = df['asset'].map(config.RENAME_ETF)
+            display_chart_assets(chart_settings, df, x_axis, y_axis, col1)
+                         	
+            # Last 5 days		
+            x_axis = 'asset'
+            y_axis = 'last_5_days_pct'
+            chart_settings = {
+                "type": "bar",
+                "title": "Annual Returns - %s" % 'Last 5 Days', 
+                "xlabel": "Asset Classes", 
+                "ylabel": "Percentage Return", 
+                "ypercentage": True,
+            }
+            df = df_etf_performance[df_etf_performance['asset'].isin(etf_subset)].sort_values(by=[y_axis])
+            df['asset'] = df['asset'].map(config.RENAME_ETF)
+            display_chart_assets(chart_settings, df, x_axis, y_axis, col2)
 
-            pass
+            # Last Month		
+            x_axis = 'asset'
+            y_axis = 'last_month_pct'
+            chart_settings = {
+                "type": "bar",
+                "title": "Annual Returns - %s" % 'Last Month', 
+                "xlabel": "Asset Classes", 
+                "ylabel": "Percentage Return", 
+                "ypercentage": True,
+            }
+            df = df_etf_performance[df_etf_performance['asset'].isin(etf_subset)].sort_values(by=[y_axis])
+            df['asset'] = df['asset'].map(config.RENAME_ETF)
+            display_chart_assets(chart_settings, df, x_axis, y_axis, col1)
+
+            # Last 3months		
+            x_axis = 'asset'
+            y_axis = 'last_3_months_pct'
+            chart_settings = {
+                "type": "bar",
+                "title": "Annual Returns - %s" % 'Last 3 Months', 
+                "xlabel": "Asset Classes", 
+                "ylabel": "Percentage Return", 
+                "ypercentage": True,
+            }
+            df = df_etf_performance[df_etf_performance['asset'].isin(etf_subset)].sort_values(by=[y_axis])
+            df['asset'] = df['asset'].map(config.RENAME_ETF)
+            display_chart_assets(chart_settings, df, x_axis, y_axis, col2)
+
+            # Last 5 years	
+            x_axis = 'asset'
+            y_axis = 'last_5_years_pct'
+            chart_settings = {
+                "type": "bar",
+                "title": "Annual Returns - %s" % 'Last 5 Years', 
+                "xlabel": "Asset Classes", 
+                "ylabel": "Percentage Return", 
+                "ypercentage": True,
+            }
+            df = df_etf_performance[df_etf_performance['asset'].isin(etf_subset)].sort_values(by=[y_axis])
+            df['asset'] = df['asset'].map(config.RENAME_ETF)
+            display_chart_assets(chart_settings, df, x_axis, y_axis, col1)
+
 if option == 'Macroeconomic Data':
     #st.subheader(f'Macro Economic Data')
     option_indicator_type = st.sidebar.selectbox("Indicator Type", ('Lagging Indicator','Interest Rates/FX','Leading Indicator'), 0)
