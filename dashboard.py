@@ -426,8 +426,10 @@ if option == 'Download Data':
             e1p3 = executor.submit(set_ism_services, logger)
             e1p4 = executor.submit(set_yf_historical_data, config.YF_ETF_SERIES,logger)
 
-        e1p5 = calculate_annual_etf_performance(df_historical_etf_data,logger)        
-        e1p6 = calculate_etf_performance(df_historical_etf_data,logger)
+        calculate_annual_etf_performance_status = calculate_annual_etf_performance(df_historical_etf_data,logger)        
+        calculate_etf_performance_status = calculate_etf_performance(df_historical_etf_data,logger)
+        st.write(f'Status of Annual ETF Performance: {calculate_annual_etf_performance_status}')
+        st.write(f'Status of ETF Performance: {calculate_etf_performance_status}')
 
         #TODO: Download ADP report and store in database
 
