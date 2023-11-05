@@ -51,8 +51,16 @@ if(sys.platform == 'win32'):
 def get_page(url):
   # When website blocks your request, simulate browser request: https://stackoverflow.com/questions/56506210/web-scraping-with-python-problem-with-beautifulsoup
   header={'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36'}
+  #header = { 
+  #  'User-Agent'      : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36', 
+  #  'Accept'          : 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8', 
+  #  'Accept-Language' : 'en-US,en;q=0.5',
+  #  'DNT'             : '1', # Do Not Track Request Header 
+  #  'Connection'      : 'close'
+  #}
   page = requests.get(url=url,headers=header)
 
+  #import pdb; pdb.set_trace()
   try:
       page.raise_for_status()
   except requests.exceptions.HTTPError as e:
@@ -569,13 +577,18 @@ def util_calculate_next_weekday(temp_date):
 
   return next_weekday
 
-def get_yf_price_action(ticker):
+def get_yf_price_action(ticker,logger):
   
+# Replace with the following:
+# https://financialmodelingprep.com/api/v3/profile/MSFT?apikey=14afe305132a682a2742743df532707d
+
   json_yf_module_summaryProfile = {}
   json_yf_module_financialData = {}
   json_yf_module_summaryDetail = {}
   json_yf_module_price = {}
   json_yf_module_defaultKeyStatistics = {}
+
+  yf_error = False
 
   modules = ['summaryProfile','financialData','summaryDetail','price','defaultKeyStatistics']
   #import pdb; pdb.set_trace()
@@ -583,30 +596,32 @@ def get_yf_price_action(ticker):
   try:
     json_yf_module_summaryProfile = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[0])).content)
   except Exception as e:
-    pass
+    yf_error = True
+    logger.exception('Failed to load data from python: %s', e)
 
   try:
     json_yf_module_financialData = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[1])).content)
   except Exception as e:
-    pass
+    logger.exception('Failed to load data from python: %s', e)
 
   try:
     json_yf_module_summaryDetail = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[2])).content)
   except Exception as e:
-    pass
+    logger.exception('Failed to load data from python: %s', e)
 
   try:
     json_yf_module_price = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[3])).content)
   except Exception as e:
-    pass
+    logger.exception('Failed to load data from python: %s', e)
+
   try:
     json_yf_module_defaultKeyStatistics = json.loads(get_page("https://query1.finance.yahoo.com/v6/finance/quoteSummary/%s?modules=%s" % (ticker,modules[4])).content)
   except Exception as e:
-    pass
+    logger.exception('Failed to load data from python: %s', e)
 
   #url_yf_modules = "https://query2.finance.yahoo.com/v10/finance/quoteSummary/%s?modules=summaryProfile,financialData,summaryDetail,price,defaultKeyStatistics" % (ticker)
 
-  return json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics
+  return json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics, yf_error
 
 def write_zacks_ticker_data_to_db(df_tickers, logger):
   #create new df using columns from old df
@@ -2013,7 +2028,7 @@ def get_data(table=None, cid=None, innerjoin=None):
   df = sql_get_records_as_df(table, cid, innerjoin)
   return df
 
-def get_peer_details(df):
+def get_peer_details(df, logger):
   data = {'Ticker': [],'Market Cap':[],'EV':[],'PE':[],'EV/EBITDA':[],'EV/EBIT':[],'EV/Revenue':[],'EBIT/Margin':[],'ROE':[],'PB':[]}
 
   df_competitor_metrics = pd.DataFrame(data)
@@ -2024,7 +2039,7 @@ def get_peer_details(df):
     cid = sql_get_cid(ticker)    
     #print(cid)
     #print(ticker)
-    json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics = get_yf_price_action(ticker)
+    json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics, yf_error = get_yf_price_action(ticker, logger)
     try:
       dataSummaryDetail = json_yf_module_summaryDetail['quoteSummary']['result'][0]['summaryDetail']
     except (KeyError,TypeError) as e:
@@ -2087,24 +2102,24 @@ def get_peer_details(df):
 
     try:
       ev_ebitda = dataDefaultKeyStatistics['enterpriseToEbitda']['fmt']
-    except (KeyError,TypeError) as e:
+    except (KeyError,TypeError, UnboundLocalError) as e:
       ev_ebitda = None
 
     try:
       ev_revenue = dataDefaultKeyStatistics['enterpriseToRevenue']['fmt']
-    except (KeyError,TypeError) as e:
+    except (KeyError,TypeError, UnboundLocalError) as e:
       ev_revenue = None
 
     #TODO: Need to retrieve EV/EBIT
     try:
       ev_ebit = None
-    except (KeyError,TypeError) as e:
+    except (KeyError,TypeError, UnboundLocalError) as e:
       ev_ebit = None
 
     #TODO: Need to retrieve EBIT MARGIN
     try:
       ebit_margin = None
-    except (KeyError,TypeError) as e:
+    except (KeyError,TypeError, UnboundLocalError) as e:
       ebit_margin = None
 
     temp_row.append(ticker)
@@ -2645,7 +2660,8 @@ def sql_get_volume():
 
   connection, cursor = sql_open_db()
 
-  sqlCmd = """SELECT companypriceaction.*, company.symbol, company.company_name, company.sector, company.industry FROM companypriceaction INNER JOIN company ON companypriceaction.cid=company.cid WHERE company.exchange IN ('NYSE','NSDQ')"""
+  # Exclude Managed Funds and ETFs
+  sqlCmd = """SELECT companypriceaction.*, company.symbol, company.company_name, company.sector, company.industry FROM companypriceaction INNER JOIN company ON companypriceaction.cid=company.cid WHERE company.exchange IN ('NYSE','NSDQ') AND company.industry NOT IN ('Financial - Investment Funds')"""
 
   cursor.execute(sqlCmd)
 
@@ -2945,6 +2961,7 @@ def atr_to_excel(df_price_action, df_ticker1_daily, df_ticker1_monthly, df_ticke
 def set_ism_manufacturing(logger):
   success = False
   logger.info("Getting ISM Manufacturing")
+
   para_manufacturing, para_new_orders, para_production, ism_date, ism_month = scrape_ism_manufacturing_data_from_page()        
 
   # We have scraped the important data from the ism manufacturing website. Now we need to extract the rankings
@@ -2995,38 +3012,42 @@ def set_ism_manufacturing(logger):
 
 def scrape_ism_manufacturing_data_from_page():
 
-    ism_date, ism_month, page = get_ism_manufacturing_page()
+  ism_date, ism_month, page = get_ism_manufacturing_page()
 
-    soup = BeautifulSoup(page.content, 'html.parser')
+  soup = BeautifulSoup(page.content, 'html.parser')
 
-    #get all paragraphs
-    paras = soup.find_all("p", attrs={'class': None})
+  #get all paragraphs
+  paras = soup.find_all("p", attrs={'class': None})
 
-    para_manufacturing = "" 
-    para_new_orders = ""
-    para_production = ""
-    pattern_manufacturing = re.compile(r'(manufacturing industries (that\s)?report(ed|ing) growth in (January|February|...|December))')
-    pattern_new_orders = re.compile(r'(growth in new orders [A-Za-z,&;\s]* (January|February|...|December))')
-    pattern_production = re.compile(r'(growth in production [A-Za-z,&;\s]* (January|February|...|December))')
+  para_manufacturing = "" 
+  para_new_orders = ""
+  para_production = ""
+  pattern_manufacturing = re.compile(r'(manufacturing industries (that\s)?report(ed|ing) growth in (January|February|...|December))')
+  pattern_new_orders = re.compile(r'(growth in new orders [A-Za-z,&;\s]* (January|February|...|December))')
+  pattern_production = re.compile(r'(growth in production [A-Za-z,&;\s]* (January|February|...|December))')
 
-    for para in paras:
-        #Get the specific paragraph
-        if(len(pattern_manufacturing.findall(para.text)) > 0):
-            para_manufacturing = para.text
+  for para in paras:
+      #Get the specific paragraph
+      if(len(pattern_manufacturing.findall(para.text)) > 0):
+        if(len(para_manufacturing) == 0):
+          para_manufacturing = para.text
 
-        if(len(pattern_new_orders.findall(para.text)) > 0):
-            para_new_orders = para.text
+      if(len(pattern_new_orders.findall(para.text)) > 0):
+        if(len(para_new_orders) == 0):
+          para_new_orders = para.text
 
-        if(len(pattern_production.findall(para.text)) > 0):
-            para_production = para.text
-
-    return para_manufacturing, para_new_orders, para_production, ism_date, ism_month
+      if(len(pattern_production.findall(para.text)) > 0):
+        if(len(para_production) == 0):          
+          para_production = para.text
+  
+  return para_manufacturing, para_new_orders, para_production, ism_date, ism_month
 
 def get_ism_manufacturing_page():
 
   ism_date, ism_month = get_ism_date(1)
   #url_ism = get_ism_manufacturing_url(ism_month)
   url_ism = 'https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/pmi/%s' % (ism_month.lower(),)
+  #url_ism = 'https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/pmi/%s' % ('august',)
 
   #This is duplicate code found in get_page function but we need to handle special case of ism data where page may not be found and we need to switch to 1 month previous
   header={'User-Agent':'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2227.0 Safari/537.36'}

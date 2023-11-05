@@ -712,6 +712,8 @@ if option == 'Market Data':
 
             #TAB 2
             tab2.subheader("Current Calendar Year")
+            col1, col2 = tab2.columns(2)
+
             # Get last column dynamically
             last_col = df_annual_performance_T.columns.to_list()[len(df_annual_performance_T.columns.to_list())-1]
             df_annual_performance_current_year = df_annual_performance_T[['index', last_col]]
@@ -730,7 +732,7 @@ if option == 'Market Data':
                 "ypercentage": True,
             }
 
-            display_chart_assets(chart_settings, df_annual_performance_current_year, x_axis, y_axis, tab2)
+            display_chart_assets(chart_settings, df_annual_performance_current_year, x_axis, y_axis, col1)
 
 
         if option_market_indicator_charts == 'Sectors':    
@@ -1835,6 +1837,7 @@ if option == 'Single Stock One Pager':
     st.write("Get 1 page quantitative data for a Company")
     symbol = st.sidebar.text_input("Symbol", value='MSFT', max_chars=None, key=None, type='default')
     clicked = st.sidebar.button("Get One Pager")
+    logger = get_logger()
 
     if('single_stock_one_pager_clicked' in st.session_state):
         clicked = st.session_state['single_stock_one_pager_clicked']
@@ -1852,22 +1855,32 @@ if option == 'Single Stock One Pager':
             except UnboundLocalError as e:
                 st.markdown("Company Not Found")
             else:
-                json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics = get_yf_price_action(symbol)
+                json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics,yf_error = get_yf_price_action(symbol,logger)
 
                 #import pdb; pdb.set_trace()
-
-                dataSummaryDetail = json_yf_module_summaryDetail['quoteSummary']['result'][0]['summaryDetail']                             #json_price_action['quoteSummary']['result'][0]['summaryDetail']
-                dataDefaultKeyStatistics = json_yf_module_defaultKeyStatistics['quoteSummary']['result'][0]['defaultKeyStatistics']        #json_price_action['quoteSummary']['result'][0]['defaultKeyStatistics']
-                dataSummaryProfile = json_yf_module_summaryProfile['quoteSummary']['result'][0]['summaryProfile']                          #json_price_action['quoteSummary']['result'][0]['summaryProfile']
-                dataFinancialData = json_yf_module_financialData['quoteSummary']['result'][0]['financialData']                             #json_price_action['quoteSummary']['result'][0]['financialData']
-                dataPrice = json_yf_module_price['quoteSummary']['result'][0]['price']                                                     #json_price_action['quoteSummary']['result'][0]['price']
+                if not yf_error:
+                    dataSummaryDetail = json_yf_module_summaryDetail['quoteSummary']['result'][0]['summaryDetail']                             #json_price_action['quoteSummary']['result'][0]['summaryDetail']
+                    dataDefaultKeyStatistics = json_yf_module_defaultKeyStatistics['quoteSummary']['result'][0]['defaultKeyStatistics']        #json_price_action['quoteSummary']['result'][0]['defaultKeyStatistics']
+                    dataSummaryProfile = json_yf_module_summaryProfile['quoteSummary']['result'][0]['summaryProfile']                          #json_price_action['quoteSummary']['result'][0]['summaryProfile']
+                    dataFinancialData = json_yf_module_financialData['quoteSummary']['result'][0]['financialData']                             #json_price_action['quoteSummary']['result'][0]['financialData']
+                    dataPrice = json_yf_module_price['quoteSummary']['result'][0]['price']                                                     #json_price_action['quoteSummary']['result'][0]['price']
+                else:
+                    dataSummaryDetail = {}                           
+                    dataDefaultKeyStatistics = {}      
+                    dataSummaryProfile = {}                     
+                    dataFinancialData = {}                             
+                    dataPrice = {}                                              
 
                 # Get High Level Company Details
                 company_name = df_company_details['company_name'][0]
                 sector = df_company_details['sector'][0]
                 industry = df_company_details['industry'][0]
                 exchange = df_company_details['exchange'][0]
-                market_cap = dataPrice['marketCap']['fmt']
+                if not yf_error:
+                    market_cap = dataPrice['marketCap']['fmt']
+                else:
+                    market_cap = None
+
                 #market_cap_formatted ='{:,.2f}'.format(market_cap)
                 shares_outstanding = df_company_details['shares_outstanding'][0]
                 ev = df_yf_key_stats['ev'][0]
@@ -1890,9 +1903,16 @@ if option == 'Single Stock One Pager':
                 shares_outstanding_formatted = '{:,.2f}'.format(shares_outstanding).split('.00')[0]
                 avg_vol_3m = df_yf_key_stats['avg_vol_3m'][0]
                 avg_vol_10d = df_yf_key_stats['avg_vol_10d'][0]
-                last = dataSummaryDetail['previousClose']['fmt']
-                annual_high = dataSummaryDetail['fiftyTwoWeekHigh']['fmt']
-                annual_low = dataSummaryDetail['fiftyTwoWeekLow']['fmt']
+
+                if not yf_error:
+                    last = dataSummaryDetail['previousClose']['fmt']
+                    annual_high = dataSummaryDetail['fiftyTwoWeekHigh']['fmt']
+                    annual_low = dataSummaryDetail['fiftyTwoWeekLow']['fmt']
+                else:
+                    last = None
+                    annual_high = None
+                    annual_low = None
+
                 percent_change_ytd = df_tickers_all.loc[df_tickers_all['Ticker']==symbol,'% Price Change (YTD)']
                 percent_change_ytd =  percent_change_ytd.values[0]
                 percent_change_ytd_formatted = '{:,.2f}%'.format(percent_change_ytd)
@@ -1909,9 +1929,16 @@ if option == 'Single Stock One Pager':
                     beta = dataSummaryDetail['beta']['fmt']
                 except KeyError as e:
                     beta = 0
-                currency = dataSummaryDetail['currency']
-                website = dataSummaryProfile['website']
-                volume = dataSummaryDetail['volume']['longFmt'] 
+
+                if not yf_error:
+                    currency = dataSummaryDetail['currency']
+                    website = dataSummaryProfile['website']
+                    volume = dataSummaryDetail['volume']['longFmt'] 
+                else:
+                    currency = None
+                    website = None
+                    volume = None 
+
                 try:
                     target_price = dataFinancialData['targetHighPrice']['fmt']
                 except KeyError as e:
@@ -1921,9 +1948,15 @@ if option == 'Single Stock One Pager':
                 except KeyError as e:
                     next_fiscal_year_end = None
 
-                business_summary = dataSummaryProfile['longBusinessSummary']
-                total_debt = dataFinancialData['totalDebt']['raw']
-                ev = dataDefaultKeyStatistics['enterpriseValue']['fmt']
+                if not yf_error:
+                    business_summary = dataSummaryProfile['longBusinessSummary']
+                    total_debt = dataFinancialData['totalDebt']['raw']
+                    ev = dataDefaultKeyStatistics['enterpriseValue']['fmt']
+                else:
+                    business_summary = "!! Yahoo Finance Data Could Not Be Retrieved !!"
+                    total_debt = None
+                    ev = None
+
                 #ev_formatted ='{:,.2f}'.format(ev)               
                 try: 
                     days_to_cover_short_ratio = dataDefaultKeyStatistics['shortRatio']['raw']
@@ -1932,8 +1965,12 @@ if option == 'Single Stock One Pager':
                 except KeyError as e:
                     days_to_cover_short_ratio_formatted = None
 
-                dividend_this_year = dataSummaryDetail['trailingAnnualDividendRate']['raw']
-                dividend_this_year_formatted ='{:,.2f}'.format(dividend_this_year)
+                if not yf_error:
+                    dividend_this_year = dataSummaryDetail['trailingAnnualDividendRate']['raw']
+                    dividend_this_year_formatted ='{:,.2f}'.format(dividend_this_year)
+                else:
+                    dividend_this_year = None
+                    dividend_this_year_formatted = None
 
                 column_names = ['Last','52 Week High','52 Week Low','YTD Change %','Market Cap', 'EV', 'Days to Cover', 'Target Price']
                 column_data = [last, annual_high, annual_low, percent_change_ytd_formatted, market_cap, ev, days_to_cover_short_ratio_formatted, target_price]
@@ -2020,7 +2057,7 @@ if option == 'Single Stock One Pager':
                 st.markdown("Peer Comparison")
 
                 #TODO: Get peer details and display it in a table
-                df_peers = get_peer_details(df_zacks_peer_comparison)
+                df_peers = get_peer_details(df_zacks_peer_comparison, logger)
                 st.dataframe(df_peers)
 
         if option_one_pager == 'Chart':
@@ -2164,10 +2201,9 @@ if option == 'Bottom Up Ideas':
                 st.markdown("""---""")
 
                 st.subheader(f'Volume by Individual Stocks')
-
                 st.markdown(f'High Volume Vs Last 3 Months')
                 df_stock_volume_3m = df_stock_volume.sort_values(by=['vs_avg_vol_3m'], ascending=False)        
-                df_stock_volume_3m = df_stock_volume_3m[df_stock_volume['vs_avg_vol_3m'] > 1].reset_index()
+                df_stock_volume_3m = df_stock_volume_3m[df_stock_volume['vs_avg_vol_3m'] > 4].reset_index()
                 df_stock_volume_3m = format_volume_df(df_stock_volume_3m)    
                 
                 sort_cols = []
@@ -2179,6 +2215,8 @@ if option == 'Bottom Up Ideas':
                 style_3m = style_3m.style.pipe(format_outlook)
 
                 st.write(style_3m)
+
+
                 st.markdown("""---""")
 
                 st.markdown(f'High Volume Last 24h')
@@ -2221,6 +2259,7 @@ if option == 'Bottom Up Ideas':
 
             st.markdown("Consolidating")
             data = {'ticker':[],'pattern':[]}
+            #TODO: Add additional context such as Company Name, Industry and Sector
             for index, row in df_consolidating.iterrows():
                 symbol = row['ticker']
                 df_temp = pd.DataFrame(data)
@@ -2239,6 +2278,7 @@ if option == 'Bottom Up Ideas':
 
             st.markdown("Breakout")
             data = {'ticker':[],'pattern':[]}
+            #TODO: Add additional context such as Company Name, Industry and Sector
             for index, row in df_breakout.iterrows():
                 symbol = row['ticker']
                 df_temp = pd.DataFrame(data)
