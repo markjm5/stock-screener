@@ -2253,7 +2253,7 @@ if option == 'Bottom Up Ideas':
                     temp_row = [row['symbol'],row['company_name'],row['sector'],row['industry'],row['percentage_sold'],row['outlook']]
     
                     df_company_row.loc[len(df.index)] = temp_row
-                    #TODO: Format each DF before printing
+                    # Format each DF before printing
 
                     #Display formatted table
                     format_cols = {}
@@ -2276,46 +2276,58 @@ if option == 'Bottom Up Ideas':
         if option_one_pager == 'TA Patterns':
             st.subheader(f'TA Patterns')
             df = get_data(table="ta_patterns")
-            df_consolidating = df.loc[df['pattern'] == 'consolidating']
-            df_breakout = df.loc[df['pattern'] == 'breakout']
+            df_tickers = get_data(table="company") 
+            df_inner_join = pd.merge(df, df_tickers, left_on='ticker', right_on='symbol', how='inner')
 
-            st.markdown("Consolidating")
-            data = {'ticker':[],'pattern':[]}
-            #TODO: Add additional context such as Company Name, Industry and Sector
+            df_consolidating = df_inner_join.loc[df_inner_join['pattern'] == 'consolidating']            
+            df_breakout = df_inner_join.loc[df_inner_join['pattern'] == 'breakout']
+
+            st.subheader("Consolidating")
+            data = {'ticker':[],'company_name':[],'sector':[],'industry':[],'pattern':[]}
+
             for index, row in df_consolidating.iterrows():
                 symbol = row['ticker']
                 df_temp = pd.DataFrame(data)
-                temp_row = [row['ticker'],row['pattern']]
+                temp_row = [row['ticker'],row['company_name'],row['sector'],row['industry'],row['pattern']]
                 df_temp.loc[len(df.index)] = temp_row
 
-                sort_cols = []
-                order_cols = []
+                #Display formatted table
+                format_cols = {}
+                cols_gradient = []
+                rename_cols = {'ticker': 'Ticker', 'pattern': 'Pattern','company_name':'Company','sector':'Sector','industry':'Industry'}
                 drop_cols = []
-                rename_cols = {'ticker': 'Ticker', 'pattern': 'Pattern'}
-                number_format_cols = []
-
-                style_company_row = format_df_for_dashboard(df_temp, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols)                
-                st.write(style_company_row)
+                disp, df_display_table = style_df_for_display(df_temp,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
+                st.markdown(disp.to_html(), unsafe_allow_html=True)   
                 st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
+                st.markdown("""---""")
 
-            st.markdown("Breakout")
-            data = {'ticker':[],'pattern':[]}
-            #TODO: Add additional context such as Company Name, Industry and Sector
+            st.subheader("Breakout")
+            data = {'ticker':[],'company_name':[],'sector':[],'industry':[],'pattern':[]}
             for index, row in df_breakout.iterrows():
                 symbol = row['ticker']
                 df_temp = pd.DataFrame(data)
-                temp_row = [row['ticker'],row['pattern']]
+                temp_row = [row['ticker'],row['company_name'],row['sector'],row['industry'],row['pattern']]
                 df_temp.loc[len(df.index)] = temp_row
 
-                sort_cols = []
-                order_cols = []
+                #Display formatted table
+                format_cols = {}
+                cols_gradient = []
+                rename_cols = {'ticker': 'Ticker', 'pattern': 'Pattern','company_name':'Company','sector':'Sector','industry':'Industry'}
                 drop_cols = []
-                rename_cols = {'ticker': 'Ticker', 'pattern': 'Pattern'}
-                number_format_cols = []
-
-                style_company_row = format_df_for_dashboard(df_temp, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols)                
-                st.write(style_company_row)
+                disp, df_display_table = style_df_for_display(df_temp,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
+                st.markdown(disp.to_html(), unsafe_allow_html=True)   
                 st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
+                st.markdown("""---""")
+
+                #sort_cols = []
+                #order_cols = []
+                #drop_cols = []
+                #rename_cols = {'ticker': 'Ticker', 'pattern': 'Pattern','company_name':'Company','sector':'Sector','industry':'Industry'}
+                #number_format_cols = []
+
+                #style_company_row = format_df_for_dashboard(df_temp, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols)                
+                #st.write(style_company_row)
+                #st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
 
         if option_one_pager == 'Insider Trading':        
             st.subheader(f'Insider Trading')
