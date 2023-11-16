@@ -1772,7 +1772,7 @@ def set_yf_price_action(df_tickers, logger):
     #TODO: Get shares outstanding from somewhere else and make sure it is the full amount
     shares_outstanding = row['shares_outstanding'] 
     df = get_ticker_price_summary(ticker, shares_outstanding, logger)
-
+    import pdb; pdb.set_trace()
     data = [df_yf_price_action, df]
     df_yf_price_action = pd.concat(data, ignore_index=True)
     logger.info(f"Successfully created csv file containing price action for: {ticker}")
@@ -2205,9 +2205,8 @@ def style_df_for_display_date(df, cols_gradient, cols_rename, cols_drop, cols_fo
   #table_styles = [{'selector': 'tr:hover',
   #    'props': 'background-color: yellow; font-size: 1em;'}]
   #cmap = plt.cm.get_cmap('YIOrRd')
-  #import pdb; pdb.set_trace()
-  df_style = df.style.background_gradient(cmap='Oranges',subset=cols_gradient).format(cols_format).hide(axis=0)
 
+  df_style = df.style.background_gradient(cmap='Oranges',subset=cols_gradient).format(cols_format).hide(axis=0)
   #import pdb; pdb.set_trace()
   #import pdb; pdb.set_trace()
   #df = df.to_html()
@@ -2216,6 +2215,17 @@ def style_df_for_display_date(df, cols_gradient, cols_rename, cols_drop, cols_fo
   #df.hide_columns_ = True 
   return df_style,df
 
+def format_bullish_bearish(row):    
+
+    bearish = 'background-color: lightcoral;'
+    bullish = 'background-color: mediumseagreen;'
+
+    # must return one string per cell in this row
+    if row[row.index[0]] == 'bullish':
+        return [bullish]
+    else:
+        return [bearish]
+    
 def style_df_for_display(df, cols_gradient, cols_rename, cols_drop, cols_format=None,format_rows=False):
 
   df = df.drop(cols_drop, axis=1)
@@ -2225,6 +2235,8 @@ def style_df_for_display(df, cols_gradient, cols_rename, cols_drop, cols_format=
     df_style = df.style.background_gradient(cmap='Oranges',axis=1).format(cols_format).hide(axis=0)
   else:
     df_style = df.style.background_gradient(cmap='Oranges',subset=cols_gradient).format(cols_format).hide(axis=0)
+
+  #df_style = df_style.apply(format_bullish_bearish, subset=['Outlook'], axis=1)
 
   return df_style, df
 

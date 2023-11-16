@@ -28,7 +28,7 @@ from common import style_df_for_display, style_df_for_display_date, format_field
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
 from common import display_chart, display_chart_ism, append_two_df, standard_display, display_chart_assets
-from common import calculate_etf_performance, calculate_annual_etf_performance
+from common import calculate_etf_performance, calculate_annual_etf_performance, format_bullish_bearish
 import seaborn as sns
 from copy import deepcopy
 
@@ -2177,10 +2177,20 @@ if option == 'Bottom Up Ideas':
             rename_cols = {'sector': 'Sector','last_volume': 'Volume'}
             number_format_cols = []
 
-            style_sectors = format_df_for_dashboard(df_vol_data_all_sectors, sort_cols, drop_cols, rename_cols, number_format_cols)
-
             col1.subheader(f'Volume by Sectors')
-            col1.write(style_sectors, unsafe_allow_html=True)
+
+            # Display Chart
+            x_axis = 'sector'
+            y_axis = 'last_volume'
+            chart_settings = {
+                "type": "bar",
+                "title": "Volume - Sector", 
+                "xlabel": "Sectors", 
+                "ylabel": "Volume", 
+                "ypercentage": False,
+            }
+
+            display_chart_assets(chart_settings, df_vol_data_all_sectors, x_axis, y_axis, col1)
 
             df_vol_data_all_industries = df_stock_volume.drop(['cid','id','sector','vs_avg_vol_10d','vs_avg_vol_3m', 'outlook', 'company_name', 'percentage_sold', 'last_close', 'symbol'], axis=1)
             df_vol_data_all_industries = df_vol_data_all_industries.groupby(['industry']).sum().sort_values(by=['last_volume'], ascending=False).reset_index()
@@ -2193,9 +2203,20 @@ if option == 'Bottom Up Ideas':
             rename_cols = {'industry': 'Industry','last_volume': 'Volume'}
             number_format_cols = []
 
-            style_industries = format_df_for_dashboard(df_vol_data_all_industries, sort_cols, drop_cols, rename_cols, number_format_cols)
             col2.subheader(f'Volume by Industries')
-            col2.write(style_industries)
+
+            # Display Chart
+            x_axis = 'industry'
+            y_axis = 'last_volume'
+            chart_settings = {
+                "type": "bar",
+                "title": "Volume - Industry", 
+                "xlabel": "Industries", 
+                "ylabel": "Volume", 
+                "ypercentage": False,
+            }
+
+            display_chart_assets(chart_settings, df_vol_data_all_industries, x_axis, y_axis, col2)
 
             if(len(df_stock_volume) > 0):
                 st.markdown("""---""")
@@ -2206,16 +2227,16 @@ if option == 'Bottom Up Ideas':
                 df_stock_volume_3m = df_stock_volume_3m[df_stock_volume['vs_avg_vol_3m'] > 4].reset_index()
                 df_stock_volume_3m = format_volume_df(df_stock_volume_3m)    
                 
-                sort_cols = []
-                order_cols = ['symbol','vs_avg_vol_10d','vs_avg_vol_3m', 'last_close', 'company_name', 'outlook']
-                drop_cols = ['index','id', 'cid']
-                rename_cols = {'vs_avg_vol_10d': '% Avg Vol 10d', 'vs_avg_vol_3m': '% Avg Vol 3m', 'outlook': 'Outlook', 'symbol': 'Symbol', 'last_close': 'Last', 'company_name': 'Company'}
+                #Display formatted table
+                format_cols = {}
+                cols_gradient = []
+                rename_cols = {'vs_avg_vol_10d': '% Avg Vol 10d', 'vs_avg_vol_3m': '% Avg Vol 3m', 'outlook': 'Outlook', 'symbol': 'Symbol', 'last_close': 'Last', 'company_name': 'Company', 'sector': 'Sector', 'industry': 'Industry', 'percentage_sold': '% Sold'}
+                drop_cols = ['index','id', 'cid','last_volume']
 
-                style_3m = format_df_for_dashboard(df_stock_volume_3m, sort_cols, drop_cols, rename_cols, order_cols=order_cols)                
-                style_3m = style_3m.style.pipe(format_outlook)
+                disp, df_display_table = style_df_for_display(df_stock_volume_3m,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
+                df_style = disp.apply(format_bullish_bearish, subset=['Outlook'], axis=1)
 
-                st.write(style_3m)
-
+                st.markdown(df_style.to_html(), unsafe_allow_html=True)   
 
                 st.markdown("""---""")
 
@@ -2233,16 +2254,17 @@ if option == 'Bottom Up Ideas':
     
                     df_company_row.loc[len(df.index)] = temp_row
                     #TODO: Format each DF before printing
-                    sort_cols = []
-                    order_cols = []
-                    drop_cols = []
-                    rename_cols = {'symbol': 'Symbol', 'company_name': 'Company', 'sector': 'Sector', 'industry': 'Industry', 'percentage_sold': '% Traded Today', 'outlook': 'Outlook'}
-                    number_format_cols = []
 
-                    style_company_row = format_df_for_dashboard(df_company_row, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols)                
-                    if(row['outlook'] == 'bullish'):
-                        style_company_row = style_company_row.style.pipe(format_outlook)
-                    st.write(style_company_row)
+                    #Display formatted table
+                    format_cols = {}
+                    cols_gradient = []
+                    rename_cols = {'symbol': 'Symbol', 'company_name': 'Company', 'sector': 'Sector', 'industry': 'Industry', 'percentage_sold': '% Traded Today', 'outlook': 'Outlook'}
+                    drop_cols = []
+
+                    disp, df_display_table = style_df_for_display(df_company_row,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
+                    df_style = disp.apply(format_bullish_bearish, subset=['Outlook'], axis=1)
+                    st.markdown(df_style.to_html(), unsafe_allow_html=True) 
+
                     st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
                     st.markdown("""---""")
             else:
@@ -2251,9 +2273,9 @@ if option == 'Bottom Up Ideas':
             #st.markdown("Price Action Volume")
             #st.dataframe(df)
 
-        if option_one_pager == 'TA Patterns':        
+        if option_one_pager == 'TA Patterns':
             st.subheader(f'TA Patterns')
-            df = get_data(table="ta_patterns")            
+            df = get_data(table="ta_patterns")
             df_consolidating = df.loc[df['pattern'] == 'consolidating']
             df_breakout = df.loc[df['pattern'] == 'breakout']
 
