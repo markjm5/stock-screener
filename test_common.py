@@ -6,7 +6,7 @@ from common import dataframe_convert_to_numeric, get_logger
 from common import set_earningswhispers_earnings_calendar, set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, set_yf_price_action, set_price_action_ta
 from common import set_todays_insider_trades, get_data, set_stlouisfed_data, set_yf_historical_data, calculate_etf_performance, calculate_annual_etf_performance
-from common import set_ism_manufacturing
+from common import set_ism_manufacturing, set_summary_ratios
 from config import YF_ETF_SERIES
 
 #YF_ETF_SERIES_TEST = [
@@ -46,8 +46,11 @@ df_tickers_one_ticker = df_tickers_alternate.loc[df_tickers_alternate['symbol'].
 
 class TestCommon(unittest.TestCase):
 
-    def test_set_ism_manufacturing(self):
-        self.assertEqual(set_ism_manufacturing(logger), True)
+    def test_set_summary_ratios(self):
+        self.assertEqual(set_summary_ratios(df_tickers,logger), True)
+
+    #def test_set_ism_manufacturing(self):
+    #    self.assertEqual(set_ism_manufacturing(logger), True)
 
     #def test_set_yf_historical_data(self):
     #    self.assertEqual(set_yf_historical_data(YF_ETF_SERIES, logger),True)

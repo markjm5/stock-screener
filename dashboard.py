@@ -21,7 +21,7 @@ from common import set_zacks_peer_comparison, set_zacks_earnings_surprises, set_
 from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
 from common import write_zacks_ticker_data_to_db, get_logger, get_one_pager,atr_to_excel
 from common import set_earningswhispers_earnings_calendar, get_atr_prices, get_stlouisfed_data
-from common import set_marketscreener_economic_calendar, get_peer_details, dataframe_convert_to_numeric
+from common import set_marketscreener_economic_calendar, dataframe_convert_to_numeric
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql_get_volume, set_yf_historical_data
 from common import set_price_action_ta, set_todays_insider_trades, combine_df_on_index
 from common import style_df_for_display, style_df_for_display_date, format_fields_for_dashboard, get_yf_price_action
@@ -29,6 +29,7 @@ from common import format_df_for_dashboard_flip, format_df_for_dashboard, format
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
 from common import display_chart, display_chart_ism, append_two_df, standard_display, display_chart_assets
 from common import calculate_etf_performance, calculate_annual_etf_performance, format_bullish_bearish
+from common import get_financialmodelingprep_price_action, set_summary_ratios, get_summary_ratios
 import seaborn as sns
 from copy import deepcopy
 
@@ -224,7 +225,8 @@ if option == 'Download Data':
 
         #Finwiz does not handle concurrent connections so need to run it without multithreading
         finwiz_stock_data_status = set_finwiz_stock_data(df_tickers, logger)
-        
+        tmp_stock_ratios_status = set_summary_ratios(df_tickers, logger)
+
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
         difference = now_finish - now_start
@@ -325,6 +327,7 @@ if option == 'Download Data':
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         st.write(f'Status of Finwiz Stock Data: {finwiz_stock_data_status}')
+        st.write(f'Status of TMP Ratios: {tmp_stock_ratios_status}')
 
     if(clicked3):
         debug = False
@@ -1846,7 +1849,7 @@ if option == 'Single Stock One Pager':
         if('single_stock_one_pager_clicked' not in st.session_state):
             st.session_state['single_stock_one_pager_clicked'] = True
 
-        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Quantitative Data', 'Chart'), 0)
+        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Quantitative Data',), 0)
 
         if option_one_pager == 'Quantitative Data':
             #Get all the data for this stock from the database
@@ -1855,31 +1858,109 @@ if option == 'Single Stock One Pager':
             except UnboundLocalError as e:
                 st.markdown("Company Not Found")
             else:
-                json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics,yf_error = get_yf_price_action(symbol,logger)
+                #json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics,yf_error = get_yf_price_action(symbol,logger)
+
+                json_module_profile, json_module_quote, json_module_balance_sheet, json_module_key_metrics, json_module_company_outlook, json_module_price_target_summary,json_module_key_metrics_ttm,json_module_company_core_information, json_module_company_income_statement, error = get_financialmodelingprep_price_action(symbol,logger)
 
                 #import pdb; pdb.set_trace()
-                if not yf_error:
-                    dataSummaryDetail = json_yf_module_summaryDetail['quoteSummary']['result'][0]['summaryDetail']                             #json_price_action['quoteSummary']['result'][0]['summaryDetail']
-                    dataDefaultKeyStatistics = json_yf_module_defaultKeyStatistics['quoteSummary']['result'][0]['defaultKeyStatistics']        #json_price_action['quoteSummary']['result'][0]['defaultKeyStatistics']
-                    dataSummaryProfile = json_yf_module_summaryProfile['quoteSummary']['result'][0]['summaryProfile']                          #json_price_action['quoteSummary']['result'][0]['summaryProfile']
-                    dataFinancialData = json_yf_module_financialData['quoteSummary']['result'][0]['financialData']                             #json_price_action['quoteSummary']['result'][0]['financialData']
-                    dataPrice = json_yf_module_price['quoteSummary']['result'][0]['price']                                                     #json_price_action['quoteSummary']['result'][0]['price']
-                else:
-                    dataSummaryDetail = {}                           
-                    dataDefaultKeyStatistics = {}      
-                    dataSummaryProfile = {}                     
-                    dataFinancialData = {}                             
-                    dataPrice = {}                                              
+                #if not yf_error:
+                #    dataSummaryDetail = json_yf_module_summaryDetail['quoteSummary']['result'][0]['summaryDetail']                             #json_price_action['quoteSummary']['result'][0]['summaryDetail']
+                #    dataDefaultKeyStatistics = json_yf_module_defaultKeyStatistics['quoteSummary']['result'][0]['defaultKeyStatistics']        #json_price_action['quoteSummary']['result'][0]['defaultKeyStatistics']
+                #    dataSummaryProfile = json_yf_module_summaryProfile['quoteSummary']['result'][0]['summaryProfile']                          #json_price_action['quoteSummary']['result'][0]['summaryProfile']
+                #    dataFinancialData = json_yf_module_financialData['quoteSummary']['result'][0]['financialData']                             #json_price_action['quoteSummary']['result'][0]['financialData']
+                #    dataPrice = json_yf_module_price['quoteSummary']['result'][0]['price']                                                     #json_price_action['quoteSummary']['result'][0]['price']
+                #else:
+                #    dataSummaryDetail = {}                           
+                #    dataDefaultKeyStatistics = {}      
+                #    dataSummaryProfile = {}                     
+                #    dataFinancialData = {}                             
+                #    dataPrice = {}                                              
 
                 # Get High Level Company Details
                 company_name = df_company_details['company_name'][0]
                 sector = df_company_details['sector'][0]
                 industry = df_company_details['industry'][0]
                 exchange = df_company_details['exchange'][0]
-                if not yf_error:
-                    market_cap = dataPrice['marketCap']['fmt']
+
+                if not error:
+                    market_cap = json_module_profile[0]['mktCap']
+                    market_cap ='{:,.2f}'.format(market_cap)                    
+                   
+                    last = json_module_profile[0]['price']
+                    last ='{:,.2f}'.format(last)
+
+                    currency = json_module_profile[0]['currency']
+                    website = json_module_profile[0]['website']
+                    volume = json_module_quote[0]['volume']
+                    business_summary = json_module_profile[0]['description']
+
+                    annual_high = json_module_quote[0]['yearHigh']
+                    annual_high ='{:,.2f}'.format(annual_high)                    
+
+                    annual_low = json_module_quote[0]['yearLow']                    
+                    annual_low ='{:,.2f}'.format(annual_low)                    
+
+                    #TODO: NEED TO USE
+                    earnings_announcement = json_module_quote[0]['earningsAnnouncement']
+
+                    total_debt = json_module_balance_sheet[0]['totalDebt'] 
+                    
+                    #Calculate EV
+                    ev = json_module_key_metrics[0]['enterpriseValue']
+
+                    #TODO: Need to find data
+
+                    #dividend_this_year = dataSummaryDetail['trailingAnnualDividendRate']['raw']
+                    dividend_this_year = json_module_key_metrics_ttm[0]['dividendPerShareTTM']
+                    dividend_this_year_formatted ='{:,.2f}'.format(dividend_this_year)
+
                 else:
                     market_cap = None
+                    market_cap = None
+                    last = None
+                    annual_high = None
+                    annual_low = None
+                    currency = None
+                    website = None
+                    volume = None 
+                    business_summary = None
+                    total_debt = None
+                    ev = None
+                    dividend_this_year = None
+                    dividend_this_year_formatted = None
+
+                try:
+                    beta = json_module_profile[0]['beta']
+                    beta ='{:,.3f}'.format(beta) 
+
+                except KeyError as e:
+                    beta = 0
+
+                #TODO: Need to find data
+                try:
+                    div_yield = json_module_key_metrics[0]['dividendYield'] 
+                except KeyError as e:
+                    div_yield = None
+
+                try:
+                    #target_price = dataFinancialData['targetHighPrice']['fmt']
+                    target_price = json_module_price_target_summary[0]['lastMonthAvgPriceTarget']
+                    target_price ='{:,.2f}'.format(target_price)
+                except KeyError as e:
+                    target_price = None
+                try:
+                    #next_fiscal_year_end = dataDefaultKeyStatistics['nextFiscalYearEnd']['fmt']
+                    next_fiscal_year_end = json_module_company_core_information[0]['fiscalYearEnd']
+                except KeyError as e:
+                    next_fiscal_year_end = None
+
+                try: 
+                    #days_to_cover_short_ratio = dataDefaultKeyStatistics['shortRatio']['raw']
+                    days_to_cover_short_ratio = json_module_company_outlook['ratios'][0]['shortTermCoverageRatiosTTM']
+                    days_to_cover_short_ratio_formatted ='{:,.2f}'.format(days_to_cover_short_ratio)
+
+                except KeyError as e:
+                    days_to_cover_short_ratio_formatted = None
 
                 #market_cap_formatted ='{:,.2f}'.format(market_cap)
                 shares_outstanding = df_company_details['shares_outstanding'][0]
@@ -1898,79 +1979,16 @@ if option == 'Single Stock One Pager':
                     forward_pe = None
                     peg_ratio = None      
                     roe = None
-                #import pdb; pdb.set_trace()
 
                 shares_outstanding_formatted = '{:,.2f}'.format(shares_outstanding).split('.00')[0]
                 avg_vol_3m = df_yf_key_stats['avg_vol_3m'][0]
                 avg_vol_10d = df_yf_key_stats['avg_vol_10d'][0]
-
-                if not yf_error:
-                    last = dataSummaryDetail['previousClose']['fmt']
-                    annual_high = dataSummaryDetail['fiftyTwoWeekHigh']['fmt']
-                    annual_low = dataSummaryDetail['fiftyTwoWeekLow']['fmt']
-                else:
-                    last = None
-                    annual_high = None
-                    annual_low = None
 
                 percent_change_ytd = df_tickers_all.loc[df_tickers_all['Ticker']==symbol,'% Price Change (YTD)']
                 percent_change_ytd =  percent_change_ytd.values[0]
                 percent_change_ytd_formatted = '{:,.2f}%'.format(percent_change_ytd)
                 moving_avg_50d = df_yf_key_stats['moving_avg_50d'][0]
                 moving_avg_200d = df_yf_key_stats['moving_avg_200d'][0]
-                #import pdb; pdb.set_trace()
-                
-                try:
-                    div_yield = dataSummaryDetail['dividendYield']['fmt'] 
-                except KeyError as e:
-                    div_yield = None
-                    #import pdb; pdb.set_trace()
-                try:
-                    beta = dataSummaryDetail['beta']['fmt']
-                except KeyError as e:
-                    beta = 0
-
-                if not yf_error:
-                    currency = dataSummaryDetail['currency']
-                    website = dataSummaryProfile['website']
-                    volume = dataSummaryDetail['volume']['longFmt'] 
-                else:
-                    currency = None
-                    website = None
-                    volume = None 
-
-                try:
-                    target_price = dataFinancialData['targetHighPrice']['fmt']
-                except KeyError as e:
-                    target_price = None
-                try:
-                    next_fiscal_year_end = dataDefaultKeyStatistics['nextFiscalYearEnd']['fmt']
-                except KeyError as e:
-                    next_fiscal_year_end = None
-
-                if not yf_error:
-                    business_summary = dataSummaryProfile['longBusinessSummary']
-                    total_debt = dataFinancialData['totalDebt']['raw']
-                    ev = dataDefaultKeyStatistics['enterpriseValue']['fmt']
-                else:
-                    business_summary = "!! Yahoo Finance Data Could Not Be Retrieved !!"
-                    total_debt = None
-                    ev = None
-
-                #ev_formatted ='{:,.2f}'.format(ev)               
-                try: 
-                    days_to_cover_short_ratio = dataDefaultKeyStatistics['shortRatio']['raw']
-                    days_to_cover_short_ratio_formatted ='{:,.2f}'.format(days_to_cover_short_ratio)
-
-                except KeyError as e:
-                    days_to_cover_short_ratio_formatted = None
-
-                if not yf_error:
-                    dividend_this_year = dataSummaryDetail['trailingAnnualDividendRate']['raw']
-                    dividend_this_year_formatted ='{:,.2f}'.format(dividend_this_year)
-                else:
-                    dividend_this_year = None
-                    dividend_this_year_formatted = None
 
                 column_names = ['Last','52 Week High','52 Week Low','YTD Change %','Market Cap', 'EV', 'Days to Cover', 'Target Price']
                 column_data = [last, annual_high, annual_low, percent_change_ytd_formatted, market_cap, ev, days_to_cover_short_ratio_formatted, target_price]
@@ -2013,6 +2031,9 @@ if option == 'Single Stock One Pager':
                 drop_rows = ['cid','id']
                 rename_cols = {'sales': 'Sales','ebit': 'EBIT','net_income': 'Net Income','pe_ratio': 'PE Ratio','earnings_per_share': 'EPS','cash_flow_per_share': 'Cash Flow Per Share','book_value_per_share': 'Book Value Per Share','total_debt': 'Total Debt','ebitda': 'EBITDA', 'fcf': "FCF"}
                 number_format_col = 'forecast_year'
+                ##TODO: CHANGE FORMATTING OF TABLE
+                ##TODO: CREATE CHART
+                 
                 style_t4 = format_df_for_dashboard_flip(df_stockrow_stock_data, sort_cols, drop_rows, rename_cols, number_format_col)
                 st.write(style_t4)
 
@@ -2024,6 +2045,8 @@ if option == 'Single Stock One Pager':
                 drop_rows = ['cid','id', 'dt']
                 rename_cols = {'reporting_priod': 'Reporting Period','eps_estimate': 'EPS Estimate','eps_reported': 'EPS Reported','sales_estimate': 'Sales Estimate','sales_reported': 'Sales Reported'}
                 number_format_col = 'reporting_period'
+                ##TODO: CHANGE FORMATTING OF TABLE
+                ##TODO: CREATE CHART
                 style_t5 = format_df_for_dashboard_flip(df_zacks_earnings_surprises, sort_cols, drop_rows, rename_cols, number_format_col)
                 st.write(style_t5)
 
@@ -2039,7 +2062,7 @@ if option == 'Single Stock One Pager':
 
                 if(len(df_zacks_product_line_geography) > 0):
                     style_t6 = format_df_for_dashboard(df_zacks_product_line_geography, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
-                    col1.write(style_t6)
+                    col1.write(style_t6) ##TODO: CHANGE FORMATTING OF TABLE
                 else:
                     col1.markdown("Geography data does not exist")
 
@@ -2050,19 +2073,30 @@ if option == 'Single Stock One Pager':
                 format_cols = []
 
                 style_t7 = format_df_for_dashboard(df_zacks_peer_comparison, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
-                col2.write(style_t7)
+                col2.write(style_t7) ##TODO: CHANGE FORMATTING OF TABLE
 
                 st.markdown("""---""")
 
+                df_zacks_peer_comparison = df_zacks_peer_comparison.rename(columns={"peer_ticker":"Ticker"})
                 st.markdown("Peer Comparison")
+                df_peers = get_summary_ratios(df_zacks_peer_comparison)
+
+                df_peers = df_peers.T
+                new_header = df_peers.iloc[0] #grab the first row for the header
+                df_peers = df_peers[1:] #take the data less the header row
+
+                df_peers.columns = new_header #set the header row as the df header
+
 
                 #TODO: Get peer details and display it in a table
-                df_peers = get_peer_details(df_zacks_peer_comparison, logger)
-                st.dataframe(df_peers)
+                #df_peers = get_peer_details(df_zacks_peer_comparison, logger)
+                st.dataframe(df_peers) ##TODO: CHANGE FORMATTING OF TABLE
 
-        if option_one_pager == 'Chart':
-            st.subheader(f'Chart For: {symbol}')
-            st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
+        #if option_one_pager == 'Chart':
+        #    st.subheader(f'Chart For: {symbol}')
+                st.markdown("""---""")
+
+                st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
 
         #if option_one_pager == 'Stock Twits':
 
@@ -2318,16 +2352,6 @@ if option == 'Bottom Up Ideas':
                 st.markdown(disp.to_html(), unsafe_allow_html=True)   
                 st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
                 st.markdown("""---""")
-
-                #sort_cols = []
-                #order_cols = []
-                #drop_cols = []
-                #rename_cols = {'ticker': 'Ticker', 'pattern': 'Pattern','company_name':'Company','sector':'Sector','industry':'Industry'}
-                #number_format_cols = []
-
-                #style_company_row = format_df_for_dashboard(df_temp, sort_cols, drop_cols, rename_cols, number_format_cols, order_cols)                
-                #st.write(style_company_row)
-                #st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
 
         if option_one_pager == 'Insider Trading':        
             st.subheader(f'Insider Trading')

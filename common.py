@@ -623,6 +623,50 @@ def get_yf_price_action(ticker,logger):
 
   return json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics, yf_error
 
+################### TODO: Return Summary Data #################
+def get_financialmodelingprep_price_action(ticker,logger):
+  
+  url_profile = 'https://financialmodelingprep.com/api/v3/profile/%s?apikey=%s' % (ticker,config.API_KEY_FMP) 
+  url_quote = 'https://financialmodelingprep.com/api/v3/quote/%s?apikey=%s' % (ticker,config.API_KEY_FMP)
+
+  url_company_outlook = 'https://financialmodelingprep.com/api/v4/company-outlook?symbol=%s&apikey=%s' % (ticker,config.API_KEY_FMP)
+  url_balance_sheet = 'https://financialmodelingprep.com/api/v3/balance-sheet-statement/%s?period=annual&apikey=%s' % (ticker,config.API_KEY_FMP)
+  url_key_metrics = 'https://financialmodelingprep.com/api/v3/key-metrics/%s?period=annual&apikey=%s' % (ticker,config.API_KEY_FMP)
+  url_price_target_summary = 'https://financialmodelingprep.com/api/v4/price-target-summary?symbol=%s&apikey=%s' % (ticker,config.API_KEY_FMP)
+  url_key_metrics_ttm = 'https://financialmodelingprep.com/api/v3/key-metrics-ttm/%s?apikey=%s' % (ticker,config.API_KEY_FMP)
+  url_company_core_information = 'https://financialmodelingprep.com/api/v4/company-core-information?symbol=%s&apikey=%s' % (ticker,config.API_KEY_FMP)
+  url_company_income_statement = 'https://financialmodelingprep.com/api/v3/income-statement/%s?period=annual&apikey=%s'% (ticker,config.API_KEY_FMP)
+
+  error = False
+
+  json_module_company_outlook = {}
+  json_module_profile = {}
+  json_module_quote = {}
+  json_module_balance_sheet = {}
+  json_module_key_metrics = {}
+  json_module_price_target_summary = {}
+  json_module_key_metrics_ttm = {}
+  json_module_company_core_information = {}
+  json_module_company_income_statement = {}
+
+  try:
+    json_module_company_outlook = json.loads(get_page(url_company_outlook).content)
+    json_module_profile = json.loads(get_page(url_profile).content)
+    json_module_quote = json.loads(get_page(url_quote).content)
+    json_module_balance_sheet = json.loads(get_page(url_balance_sheet).content)
+    json_module_key_metrics = json.loads(get_page(url_key_metrics).content)
+    json_module_price_target_summary = json.loads(get_page(url_price_target_summary).content)
+    json_module_key_metrics_ttm = json.loads(get_page(url_key_metrics_ttm).content)
+    json_module_company_core_information = json.loads(get_page(url_company_core_information).content)
+    json_module_company_income_statement = json.loads(get_page(url_company_income_statement).content)
+
+  except Exception as e:
+    error = True
+    logger.exception('Failed to load data from financial modeling prep: %s', e)
+
+  return json_module_profile, json_module_quote, json_module_balance_sheet, json_module_key_metrics, json_module_company_outlook, json_module_price_target_summary,json_module_key_metrics_ttm, json_module_company_core_information, json_module_company_income_statement, error
+
+
 def write_zacks_ticker_data_to_db(df_tickers, logger):
   #create new df using columns from old df
   df_tickers_updated = pd.DataFrame(columns=df_tickers.columns)
@@ -2028,99 +2072,195 @@ def get_data(table=None, cid=None, innerjoin=None):
   df = sql_get_records_as_df(table, cid, innerjoin)
   return df
 
-def get_peer_details(df, logger):
-  data = {'Ticker': [],'Market Cap':[],'EV':[],'PE':[],'EV/EBITDA':[],'EV/EBIT':[],'EV/Revenue':[],'EBIT/Margin':[],'ROE':[],'PB':[]}
+def set_summary_ratios(df_tickers, logger):
+  success = False
 
-  df_competitor_metrics = pd.DataFrame(data)
+  # Load exclusion list
+  csv_file_path = '/data/finwiz_exclusion_list.csv'
+  df_exclusion_list = convert_csv_to_dataframe(csv_file_path)
 
-  for index, row in df.iterrows():
+  #data = {'Ticker': [],'Market Cap':[],'EV':[],'PE':[],'EV/EBITDA':[],'EV/EBIT':[],'EV/Revenue':[],'EBIT/Margin':[],'ROE':[],'PB':[]}
+  data = {'ev_ebitda':[],'ev_ebit':[],'ev_revenue':[],'ebit_margin':[]}
+
+  df_summary_ratios = pd.DataFrame(data)
+
+  for index, row in df_tickers.iterrows():
     temp_row = []
-    ticker = row['peer_ticker']
-    cid = sql_get_cid(ticker)    
+    ticker = row['Ticker']  
+    #cid = sql_get_cid(ticker)    
     #print(cid)
     #print(ticker)
-    json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics, yf_error = get_yf_price_action(ticker, logger)
-    try:
-      dataSummaryDetail = json_yf_module_summaryDetail['quoteSummary']['result'][0]['summaryDetail']
-    except (KeyError,TypeError) as e:
-      dataSummaryDetail = None
+    if(df_exclusion_list['Ticker'].str.contains(ticker).any() == False):   
 
-    try:
-      dataDefaultKeyStatistics = json_yf_module_defaultKeyStatistics['quoteSummary']['result'][0]['defaultKeyStatistics'] 
-    except (KeyError,TypeError) as e:
-      defaultKeyStatistics = None
-    #dataSummaryProfile = json_price_action['quoteSummary']['result'][0]['summaryProfile']
-    try:
-      dataFinancialData = json_yf_module_financialData['quoteSummary']['result'][0]['financialData']
-    except (KeyError,TypeError) as e:      
-      dataFinancialData = None
-    #dataPrice = json_price_action['quoteSummary']['result'][0]['price']
+      json_module_profile, json_module_quote, json_module_balance_sheet, json_module_key_metrics, json_module_company_outlook, json_module_price_target_summary,json_module_key_metrics_ttm,json_module_company_core_information, json_module_company_income_statement, error = get_financialmodelingprep_price_action(ticker,logger)
 
-    try:
-        div_yield = dataSummaryDetail['dividendYield']['fmt'] 
-    except (KeyError,TypeError) as e:
-        div_yield = None
-    
-    try:
-      ebitda_margin = dataFinancialData['ebitdaMargins']['fmt']
-    except (KeyError,TypeError) as e:
-      ebitda_margin = None
+      #df_moving_average = get_data(table="CompanyMovingAverage", cid=cid)
+      #df_company_ratio = get_data(table="CompanyRatio", cid=cid)
+      #try:
+      #  pb = df_company_ratio['price_book'][0]
+      #except (KeyError,TypeError) as e:
+      #  pb = None
+      #try:
+      #  roe = df_company_ratio['roe'][0]
+      #except (KeyError,TypeError) as e:
+      #  roe = None
+      #try:
+      #  market_cap = df_moving_average['market_cap'][0]
+      #except (KeyError,TypeError) as e:
+      #  market_cap = None
+      #try:
+      #  ev = df_moving_average['ev'][0]
+      #except (KeyError,TypeError) as e:
+      #  ev = None
 
-    try:
-      net_margin = dataFinancialData['profitMargins']['fmt']
-    except (KeyError,TypeError) as e:
-      net_margin = None
+      try:
+        pe = json_module_key_metrics_ttm[0]['peRatioTTM']
+        pe ='{:,.2f}'.format(pe) 
+      except (IndexError, KeyError,TypeError) as e:
+        pe = None
 
-    try:
-      dividend_yield = dataSummaryDetail['dividendYield']['fmt'] 
-    except (KeyError,TypeError) as e:
-      dividend_yield = None
+      try:
+        ev_ebitda = json_module_key_metrics[0]['enterpriseValueOverEBITDA']
+        ev_ebitda ='{:,.2f}'.format(ev_ebitda) 
+      except (IndexError, KeyError,TypeError, UnboundLocalError) as e:
+        ev_ebitda = None
+
+      # Get EV.
+      try:
+        ev_unformatted = json_module_key_metrics[0]['enterpriseValue']
+      except (IndexError, KeyError,TypeError, UnboundLocalError) as e:
+        ev_unformatted = None
+
+      # Get Revenue
+      try:
+        revenue = json_module_company_income_statement[0]['revenue']
+      except (IndexError, KeyError,TypeError, UnboundLocalError) as e:
+        revenue = None
+
+      # Calculate Ebit using latest Ebitda and D&A
+      try:
+        ebitda = json_module_company_income_statement[0]['ebitda']
+      except (IndexError, KeyError,TypeError, UnboundLocalError) as e:
+        ebitda = None
+
+      try:
+        depreciation_and_amortization = json_module_company_income_statement[0]['depreciationAndAmortization']
+      except (IndexError, KeyError,TypeError, UnboundLocalError) as e:
+        depreciation_and_amortization = None
+
+      try:
+        ebit = ebitda - depreciation_and_amortization
+      except (KeyError,TypeError, UnboundLocalError, ZeroDivisionError) as e:
+        ebit = None
+
+      try:
+        #ev_revenue = dataDefaultKeyStatistics['enterpriseToRevenue']['fmt']
+        ev_revenue = ev_unformatted/revenue 
+        ev_revenue ='{:,.2f}'.format(ev_revenue) 
+      except (KeyError,TypeError, UnboundLocalError, ZeroDivisionError) as e:
+        ev_revenue = None
+
+      try:
+        ev_ebit = ev_unformatted/ebit
+        ev_ebit ='{:,.2f}'.format(ev_ebit) 
+      except (KeyError,TypeError, UnboundLocalError, ZeroDivisionError) as e:
+        ev_ebit = None
+
+      try:
+        ebit_margin = (ebit/revenue) * 100
+        ebit_margin ='{:,.2f}'.format(ebit_margin)      
+      except (KeyError,TypeError, UnboundLocalError, ZeroDivisionError) as e:
+        ebit_margin = None
+
+      #temp_row.append(ticker)
+      #temp_row.append(market_cap)
+      #temp_row.append(ev)
+      #temp_row.append(pe) 
+      temp_row.append(ev_ebitda) 
+      temp_row.append(ev_ebit) 
+      temp_row.append(ev_revenue) 
+      temp_row.append(ebit_margin)
+      #temp_row.append(roe) 
+      #temp_row.append(pb)
+
+      df_summary_ratios.loc[len(df_summary_ratios.index)] = temp_row
+
+      # get ticker cid
+      cid = sql_get_cid(ticker)
+      if(cid):
+        # write records to database
+        rename_cols = {}
+        add_col_values = {"cid": cid}
+        conflict_cols = "cid"
+
+        success = sql_write_df_to_db(df_summary_ratios, "CompanyRatio", rename_cols, add_col_values, conflict_cols)
+        logger.info(f'Successfully Saved Additional Summary Ratios from TMP for {ticker}')     
+
+#  df_competitor_metrics = df_competitor_metrics.T
+#  new_header = df_competitor_metrics.iloc[0] #grab the first row for the header
+#  df_competitor_metrics = df_competitor_metrics[1:] #take the data less the header row
+
+#  df_competitor_metrics.columns = new_header #set the header row as the df header
+
+#  return df_competitor_metrics
+  return success
+
+def get_summary_ratios(df_tickers):
+  data = {'Ticker': [],'Market Cap':[],'EV':[],'PE':[],'EV/EBITDA':[],'EV/EBIT':[],'EV/Revenue':[],'EBIT/Margin':[],'ROE':[],'PB':[]}
+  df_summary_ratios = pd.DataFrame(data)
+
+  for index, row in df_tickers.iterrows():
+    temp_row = []
+    ticker = row['Ticker']  
+    cid = sql_get_cid(ticker)
 
     df_moving_average = get_data(table="CompanyMovingAverage", cid=cid)
     df_company_ratio = get_data(table="CompanyRatio", cid=cid)
-    try:
-      pb = df_company_ratio['price_book'][0]
-    except (KeyError,TypeError) as e:
-      pb = None
-    try:
-      roe = df_company_ratio['roe'][0]
-    except (KeyError,TypeError) as e:
-      roe = None
+
     try:
       market_cap = df_moving_average['market_cap'][0]
     except (KeyError,TypeError) as e:
       market_cap = None
+
     try:
       ev = df_moving_average['ev'][0]
     except (KeyError,TypeError) as e:
       ev = None
 
     try:
-      pe = dataSummaryDetail['trailingPE']['fmt'] 
+      pe = df_company_ratio['pe'][0]
     except (KeyError,TypeError) as e:
       pe = None
 
     try:
-      ev_ebitda = dataDefaultKeyStatistics['enterpriseToEbitda']['fmt']
-    except (KeyError,TypeError, UnboundLocalError) as e:
+      ev_ebitda = df_company_ratio['ev_ebitda'][0]
+    except (KeyError,TypeError) as e:
       ev_ebitda = None
 
     try:
-      ev_revenue = dataDefaultKeyStatistics['enterpriseToRevenue']['fmt']
-    except (KeyError,TypeError, UnboundLocalError) as e:
+      ev_ebit = df_company_ratio['ev_ebit'][0]
+    except (KeyError,TypeError) as e:
+      ev_ebit = None
+
+    try:
+      ev_revenue = df_company_ratio['ev_revenue'][0]
+    except (KeyError,TypeError) as e:
       ev_revenue = None
 
-    #TODO: Need to retrieve EV/EBIT
     try:
-      ev_ebit = None
-    except (KeyError,TypeError, UnboundLocalError) as e:
-      ev_ebit = None
+      ebit_margin = df_company_ratio['ebit_margin'][0]
+    except (KeyError,TypeError) as e:
+      ebit_margin = None
 
-    #TODO: Need to retrieve EBIT MARGIN
     try:
-      ebit_margin = None
-    except (KeyError,TypeError, UnboundLocalError) as e:
-      ebit_margin = None
+      pb = df_company_ratio['price_book'][0]
+    except (KeyError,TypeError) as e:
+      pb = None
+
+    try:
+      roe = df_company_ratio['roe'][0]
+    except (KeyError,TypeError) as e:
+      roe = None
 
     temp_row.append(ticker)
     temp_row.append(market_cap)
@@ -2133,15 +2273,9 @@ def get_peer_details(df, logger):
     temp_row.append(roe) 
     temp_row.append(pb)
 
-    df_competitor_metrics.loc[len(df_competitor_metrics.index)] = temp_row
+    df_summary_ratios.loc[len(df_summary_ratios.index)] = temp_row
 
-  df_competitor_metrics = df_competitor_metrics.T
-  new_header = df_competitor_metrics.iloc[0] #grab the first row for the header
-  df_competitor_metrics = df_competitor_metrics[1:] #take the data less the header row
-
-  df_competitor_metrics.columns = new_header #set the header row as the df header
-
-  return df_competitor_metrics
+  return df_summary_ratios
 
 def get_stlouisfed_data(series, period, num_years):
 
