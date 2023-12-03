@@ -28,7 +28,7 @@ from common import style_df_for_display, style_df_for_display_date, format_field
 from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
 from common import display_chart, display_chart_ism, append_two_df, standard_display, display_chart_assets
-from common import calculate_etf_performance, calculate_annual_etf_performance, format_bullish_bearish
+from common import calculate_etf_performance, calculate_annual_etf_performance, format_bullish_bearish, format_earnings_surprises
 from common import get_financialmodelingprep_price_action, set_summary_ratios, get_summary_ratios
 import seaborn as sns
 from copy import deepcopy
@@ -2025,6 +2025,11 @@ if option == 'Single Stock One Pager':
                 st.markdown("""---""")
                 df_stockrow_stock_data = df_stockrow_stock_data.sort_values(by=['forecast_year'], ascending=True)
 
+                #df_stockrow_stock_data['net_income'] = pd.to_numeric(df_stockrow_stock_data['net_income'])
+                #df_stockrow_stock_data['sales'] = pd.to_numeric(df_stockrow_stock_data['sales'])
+                #df_stockrow_stock_data['fcf'] = pd.to_numeric(df_stockrow_stock_data['fcf'])
+                #df_stockrow_stock_data['total_debt'] = pd.to_numeric(df_stockrow_stock_data['total_debt'])
+
                 rename_cols = {'sales': 'Sales','ebit': 'EBIT','net_income': 'Net Income','pe_ratio': 'PE Ratio','earnings_per_share': 'EPS','cash_flow_per_share': 'Cash Flow Per Share','book_value_per_share': 'Book Value Per Share','total_debt': 'Total Debt','ebitda': 'EBITDA', 'fcf': "FCF", 'forecast_year': 'Year'}
                 cols_gradient = ['Sales', 'Net Income', 'FCF']
                 cols_drop = ['id', 'cid']
@@ -2100,40 +2105,79 @@ if option == 'Single Stock One Pager':
                 st.markdown("""---""")
 
                 st.markdown("Earnings Surprises")
+                #import pdb; pdb.set_trace()
+                df_zacks_earnings_surprises = df_zacks_earnings_surprises.sort_values(by=['dt'], ascending=True)
 
-                sort_cols = ['dt']
-                drop_rows = ['cid','id', 'dt']
-                rename_cols = {'reporting_priod': 'Reporting Period','eps_estimate': 'EPS Estimate','eps_reported': 'EPS Reported','sales_estimate': 'Sales Estimate','sales_reported': 'Sales Reported'}
-                number_format_col = 'reporting_period'
-                ##TODO: CHANGE FORMATTING OF TABLE
-                ##TODO: CREATE CHART
-                style_t5 = format_df_for_dashboard_flip(df_zacks_earnings_surprises, sort_cols, drop_rows, rename_cols, number_format_col)
-                st.write(style_t5)
+                # get a list of columns
+                cols = list(df_zacks_earnings_surprises)
+
+                cols.insert(0, cols.pop(cols.index('id')))
+                cols.insert(1, cols.pop(cols.index('cid')))
+                cols.insert(2, cols.pop(cols.index('dt')))
+                cols.insert(3, cols.pop(cols.index('reporting_period')))
+                cols.insert(4, cols.pop(cols.index('sales_estimate')))
+                cols.insert(5, cols.pop(cols.index('sales_reported')))
+                cols.insert(6, cols.pop(cols.index('eps_estimate')))
+                cols.insert(7, cols.pop(cols.index('eps_reported')))
+
+                # reorder
+                df_zacks_earnings_surprises = df_zacks_earnings_surprises[cols]
+
+                rename_cols = {'reporting_period': 'Period','eps_estimate': 'EPS Estimate','eps_reported': 'EPS Actual','sales_estimate': 'Sales Estimate','sales_reported': 'Sales Actual'}
+                cols_gradient = []
+                cols_drop = ['id', 'cid','dt']
+                format_cols = {
+                    'Sales Estimate': '{:,.2f}'.format,
+                    'Sales Actual': '{:,.0f}'.format,
+                }
+
+                disp,df = style_df_for_display(df_zacks_earnings_surprises,cols_gradient,rename_cols,cols_drop,format_cols)
+                #st.markdown(disp.to_html(), unsafe_allow_html=True)
+                df_style = disp.apply(format_earnings_surprises, subset=['EPS Estimate', 'EPS Actual'], axis=1)
+                df_style = disp.apply(format_earnings_surprises, subset=['Sales Estimate', 'Sales Actual'], axis=1)
+                st.markdown(df_style.to_html(), unsafe_allow_html=True)
 
                 st.markdown("""---""")
 
                 col1,col2 = st.columns(2)
 
                 col1.markdown("Geography") 
-                sort_cols = ['revenue']
-                drop_cols = ['cid','id']
-                rename_cols = {'region': 'Region','revenue': 'Revenue'}
-                format_cols = {'revenue': 'number'}
 
                 if(len(df_zacks_product_line_geography) > 0):
-                    style_t6 = format_df_for_dashboard(df_zacks_product_line_geography, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
-                    col1.write(style_t6) ##TODO: CHANGE FORMATTING OF TABLE
+
+                    df_zacks_product_line_geography['revenue'] = pd.to_numeric(df_zacks_product_line_geography['revenue'])
+                    df_zacks_product_line_geography = df_zacks_product_line_geography.sort_values(by=['revenue'], ascending=False)
+
+                    rename_cols = {'region':'Region','revenue':'Revenue'}
+                    cols_gradient = []
+                    cols_drop = ['id', 'cid']
+                    format_cols = {
+                        'Revenue': '{:,.0f}'.format,
+                    }
+
+                    disp,df = style_df_for_display(df_zacks_product_line_geography,cols_gradient,rename_cols,cols_drop,format_cols)
+                    col1.markdown(disp.to_html(), unsafe_allow_html=True)
                 else:
                     col1.markdown("Geography data does not exist")
 
                 col2.markdown("Peers")
-                sort_cols = ['peer_ticker']
-                drop_cols = ['cid','id' ]
+                df_zacks_peer_comparison = df_zacks_peer_comparison.sort_values(by=['peer_ticker'], ascending=True)
                 rename_cols = {'peer_company': 'Peer Company','peer_ticker': 'Peer Ticker'}
-                format_cols = []
+                cols_gradient = []
+                cols_drop = ['id', 'cid']
+                format_cols = {}
 
-                style_t7 = format_df_for_dashboard(df_zacks_peer_comparison, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
-                col2.write(style_t7) ##TODO: CHANGE FORMATTING OF TABLE
+                disp,df = style_df_for_display(df_zacks_peer_comparison,cols_gradient,rename_cols,cols_drop,format_cols)
+                col2.markdown(disp.to_html(), unsafe_allow_html=True)
+
+
+                #sort_cols = ['peer_ticker']
+                #drop_cols = ['cid','id' ]
+                #rename_cols = {'peer_company': 'Peer Company','peer_ticker': 'Peer Ticker'}
+                #format_cols = []
+
+                #style_t7 = format_df_for_dashboard(df_zacks_peer_comparison, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+                #col2.write(style_t7) ##TODO: CHANGE FORMATTING OF TABLE
 
                 st.markdown("""---""")
 
@@ -2147,10 +2191,19 @@ if option == 'Single Stock One Pager':
 
                 df_peers.columns = new_header #set the header row as the df header
 
-
+                #import pdb; pdb.set_trace()
+                df_peers = df_peers.reset_index(drop=False)
                 #TODO: Get peer details and display it in a table
                 #df_peers = get_peer_details(df_zacks_peer_comparison, logger)
-                st.dataframe(df_peers) ##TODO: CHANGE FORMATTING OF TABLE
+                rename_cols = {}
+                cols_gradient = []
+                cols_drop = []
+                format_cols = {}
+
+                disp,df = style_df_for_display(df_peers,cols_gradient,rename_cols,cols_drop,format_cols)
+                st.markdown(disp.to_html(), unsafe_allow_html=True)
+
+                #st.dataframe(df_peers) ##TODO: CHANGE FORMATTING OF TABLE
 
         #if option_one_pager == 'Chart':
         #    st.subheader(f'Chart For: {symbol}')

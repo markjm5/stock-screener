@@ -2359,7 +2359,19 @@ def format_bullish_bearish(row):
         return [bullish]
     else:
         return [bearish]
-    
+
+def format_earnings_surprises(row):    
+
+    negative = 'background-color: lightcoral;'
+    positive = 'background-color: mediumseagreen;'
+    normal = ''
+
+    if(row[row.index[1]] > row[row.index[0]]):
+      return [normal, positive]
+    else:
+      return [normal, negative]
+
+
 def style_df_for_display(df, cols_gradient, cols_rename, cols_drop, cols_format=None,format_rows=False):
 
   df = df.drop(cols_drop, axis=1)
