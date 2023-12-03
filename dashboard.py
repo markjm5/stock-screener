@@ -1934,7 +1934,6 @@ if option == 'Single Stock One Pager':
                 except KeyError as e:
                     beta = 0
 
-                #TODO: Need to find data
                 try:
                     div_yield = json_module_key_metrics[0]['dividendYield'] 
                 except KeyError as e:
@@ -1946,6 +1945,7 @@ if option == 'Single Stock One Pager':
                     target_price ='{:,.2f}'.format(target_price)
                 except KeyError as e:
                     target_price = None
+
                 try:
                     #next_fiscal_year_end = dataDefaultKeyStatistics['nextFiscalYearEnd']['fmt']
                     next_fiscal_year_end = json_module_company_core_information[0]['fiscalYearEnd']
@@ -1956,7 +1956,6 @@ if option == 'Single Stock One Pager':
                     #days_to_cover_short_ratio = dataDefaultKeyStatistics['shortRatio']['raw']
                     days_to_cover_short_ratio = json_module_company_outlook['ratios'][0]['shortTermCoverageRatiosTTM']
                     days_to_cover_short_ratio_formatted ='{:,.2f}'.format(days_to_cover_short_ratio)
-
                 except KeyError as e:
                     days_to_cover_short_ratio_formatted = None
 
@@ -2042,8 +2041,62 @@ if option == 'Single Stock One Pager':
                 disp,df = style_df_for_display(df_stockrow_stock_data,cols_gradient,rename_cols,cols_drop,format_cols)
                 st.markdown(disp.to_html(), unsafe_allow_html=True)           
 
-                ##TODO: CREATE CHART
-                 
+                st.markdown("""---""")
+
+                col1,col2 = st.columns(2)
+
+                # Display Chart
+                x_axis = 'forecast_year'
+                y_axis = 'sales'
+                chart_settings = {
+                    "type": "bar",
+                    "title": "Sales", 
+                    "xlabel": "Year", 
+                    "ylabel": "Sales", 
+                    "ypercentage": False,
+                }
+
+                display_chart_assets(chart_settings, df_stockrow_stock_data, x_axis, y_axis, col1)
+
+                # Display Chart
+                x_axis = 'forecast_year'
+                y_axis = 'net_income'
+                chart_settings = {
+                    "type": "bar",
+                    "title": "Net Income", 
+                    "xlabel": "Year", 
+                    "ylabel": "Net Income", 
+                    "ypercentage": False,
+                }
+
+                display_chart_assets(chart_settings, df_stockrow_stock_data, x_axis, y_axis, col2)
+
+                # Display Chart
+                x_axis = 'forecast_year'
+                y_axis = 'fcf'
+                chart_settings = {
+                    "type": "bar",
+                    "title": "Free Cash Flow", 
+                    "xlabel": "Year", 
+                    "ylabel": "FCF", 
+                    "ypercentage": False,
+                }
+
+                display_chart_assets(chart_settings, df_stockrow_stock_data, x_axis, y_axis, col1)
+
+                # Display Chart
+                x_axis = 'forecast_year'
+                y_axis = 'total_debt'
+                chart_settings = {
+                    "type": "bar",
+                    "title": "Tobal Debt", 
+                    "xlabel": "Year", 
+                    "ylabel": "Debt", 
+                    "ypercentage": False,
+                }
+
+                display_chart_assets(chart_settings, df_stockrow_stock_data, x_axis, y_axis, col2)
+
                 st.markdown("""---""")
 
                 st.markdown("Earnings Surprises")
