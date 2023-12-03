@@ -1908,8 +1908,6 @@ if option == 'Single Stock One Pager':
                     #Calculate EV
                     ev = json_module_key_metrics[0]['enterpriseValue']
 
-                    #TODO: Need to find data
-
                     #dividend_this_year = dataSummaryDetail['trailingAnnualDividendRate']['raw']
                     dividend_this_year = json_module_key_metrics_ttm[0]['dividendPerShareTTM']
                     dividend_this_year_formatted ='{:,.2f}'.format(dividend_this_year)
@@ -2026,17 +2024,26 @@ if option == 'Single Stock One Pager':
                 col1.write(style_t3.to_html(), unsafe_allow_html=True)
 
                 st.markdown("""---""")
+                df_stockrow_stock_data = df_stockrow_stock_data.sort_values(by=['forecast_year'], ascending=True)
 
-                sort_cols = ['forecast_year']
-                drop_rows = ['cid','id']
-                rename_cols = {'sales': 'Sales','ebit': 'EBIT','net_income': 'Net Income','pe_ratio': 'PE Ratio','earnings_per_share': 'EPS','cash_flow_per_share': 'Cash Flow Per Share','book_value_per_share': 'Book Value Per Share','total_debt': 'Total Debt','ebitda': 'EBITDA', 'fcf': "FCF"}
-                number_format_col = 'forecast_year'
-                ##TODO: CHANGE FORMATTING OF TABLE
+                rename_cols = {'sales': 'Sales','ebit': 'EBIT','net_income': 'Net Income','pe_ratio': 'PE Ratio','earnings_per_share': 'EPS','cash_flow_per_share': 'Cash Flow Per Share','book_value_per_share': 'Book Value Per Share','total_debt': 'Total Debt','ebitda': 'EBITDA', 'fcf': "FCF", 'forecast_year': 'Year'}
+                cols_gradient = ['Sales', 'Net Income', 'FCF']
+                cols_drop = ['id', 'cid']
+                format_cols = {}
+                format_cols = {
+                    'Sales': '{:,.0f}'.format,
+                    'EBIT': '{:,.0f}'.format,
+                    'Net Income': '{:,.0f}'.format,
+                    'Total Debt': '{:,.0f}'.format,
+                    'EBITDA': '{:,.0f}'.format,
+                    'FCF': '{:,.0f}'.format,
+                }
+
+                disp,df = style_df_for_display(df_stockrow_stock_data,cols_gradient,rename_cols,cols_drop,format_cols)
+                st.markdown(disp.to_html(), unsafe_allow_html=True)           
+
                 ##TODO: CREATE CHART
                  
-                style_t4 = format_df_for_dashboard_flip(df_stockrow_stock_data, sort_cols, drop_rows, rename_cols, number_format_col)
-                st.write(style_t4)
-
                 st.markdown("""---""")
 
                 st.markdown("Earnings Surprises")
