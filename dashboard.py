@@ -1902,6 +1902,12 @@ if option == 'Single Stock One Pager':
 
                     #TODO: NEED TO USE
                     earnings_announcement = json_module_quote[0]['earningsAnnouncement']
+                    #import pdb; pdb.set_trace()
+                    try:
+                        dt_earnings_announcement = dt.strptime(earnings_announcement, '%Y-%m-%dT%H:%M:00.000+0000')
+                        earnings_date_str = dt_earnings_announcement.strftime("%d %b %Y")
+                    except ValueError as e:
+                        earnings_date_str = "TBC"
 
                     total_debt = json_module_balance_sheet[0]['totalDebt'] 
                     
@@ -1987,8 +1993,8 @@ if option == 'Single Stock One Pager':
                 moving_avg_50d = df_yf_key_stats['moving_avg_50d'][0]
                 moving_avg_200d = df_yf_key_stats['moving_avg_200d'][0]
 
-                column_names = ['Last','52 Week High','52 Week Low','YTD Change %','Market Cap', 'EV', 'Days to Cover', 'Target Price']
-                column_data = [last, annual_high, annual_low, percent_change_ytd_formatted, market_cap, ev, days_to_cover_short_ratio_formatted, target_price]
+                column_names = ['Next Earnings Call','Last','52 Week High','52 Week Low','YTD Change %','Market Cap', 'EV', 'Days to Cover', 'Target Price']
+                column_data = [earnings_date_str,last, annual_high, annual_low, percent_change_ytd_formatted, market_cap, ev, days_to_cover_short_ratio_formatted, target_price]
                 style_t1 = format_fields_for_dashboard(column_names, column_data)
 
                 column_names = ['Trailing P/E','Forward P/E','PEG','Divedend Y0','Dividend Yield', 'Beta', 'Currency','ROE','Exchange','Sector','Industry','Website', 'Year End']
@@ -2008,7 +2014,6 @@ if option == 'Single Stock One Pager':
 
                 st.markdown("""---""")
 
-                #col1,col2,col3 = st.columns(3)
                 col1,col2 = st.columns(2)
 
                 style_t1.hide_columns()

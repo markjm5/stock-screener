@@ -623,7 +623,6 @@ def get_yf_price_action(ticker,logger):
 
   return json_yf_module_summaryProfile, json_yf_module_financialData,json_yf_module_summaryDetail,json_yf_module_price,json_yf_module_defaultKeyStatistics, yf_error
 
-################### TODO: Return Summary Data #################
 def get_financialmodelingprep_price_action(ticker,logger):
   
   url_profile = 'https://financialmodelingprep.com/api/v3/profile/%s?apikey=%s' % (ticker,config.API_KEY_FMP) 
