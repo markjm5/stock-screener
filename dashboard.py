@@ -1884,7 +1884,7 @@ if option == 'Single Stock One Pager':
 
                 if not error:
                     market_cap = json_module_profile[0]['mktCap']
-                    market_cap ='{:,.2f}'.format(market_cap)                    
+                    market_cap ='{:,.0f}'.format(market_cap)   
                    
                     last = json_module_profile[0]['price']
                     last ='{:,.2f}'.format(last)
