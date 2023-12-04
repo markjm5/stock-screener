@@ -225,7 +225,14 @@ if option == 'Download Data':
 
         #Finwiz does not handle concurrent connections so need to run it without multithreading
         finwiz_stock_data_status = set_finwiz_stock_data(df_tickers, logger)
-        tmp_stock_ratios_status = set_summary_ratios(df_tickers, logger)
+        #tmp_stock_ratios_status = set_summary_ratios(df_tickers, logger)
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            #Executor 1: set_zacks_balance_sheet_shares
+            e6p1 = executor.submit(set_summary_ratios, df_tickers1, logger)
+            e6p2 = executor.submit(set_summary_ratios, df_tickers2, logger)
+            e6p3 = executor.submit(set_summary_ratios, df_tickers3, logger)
+            e6p4 = executor.submit(set_summary_ratios, df_tickers4, logger)
+            e6p5 = executor.submit(set_summary_ratios, df_tickers5, logger)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
@@ -327,10 +334,25 @@ if option == 'Download Data':
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         st.write(f'Status of Finwiz Stock Data: {finwiz_stock_data_status}')
-        st.write(f'Status of TMP Ratios: {tmp_stock_ratios_status}')
+
+        executor_count = 6
+        data = {'Executor':[],'Process':[],'Error':[]}
+        df_result = pd.DataFrame(data)
+        
+        for x in range(1,6):
+            result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
+            temp_row = [executor_count,x,result]
+            df_result.loc[len(df_result.index)] = temp_row
+
+        rename_cols = {}
+        cols_gradient = ['Error']
+        cols_drop = []
+        disp,df = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
+        st.markdown(disp.to_html(), unsafe_allow_html=True)
+
 
     if(clicked3):
-        debug = False
+        debug = True
 
         logger = get_logger()
         now_start = dt.now()

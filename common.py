@@ -91,18 +91,22 @@ def get_page_selenium(url,wait_until_element_id=None, no_sandbox=False):
   #except ZipFile.BadZipFile as e:
   #TODO: Follow Instructions to Use manually installed driver
   #TODO: Have a look at chromedrivermanager: https://pypi.org/project/webdriver-manager/
+  try:
+    driver.get(url)
+    driver.implicitly_wait(10)  
 
-  driver.get(url)
-  driver.implicitly_wait(10)  
+    if(wait_until_element_id):
+      elem = WebDriverWait(driver, 30).until(
+      EC.presence_of_element_located((By.ID, wait_until_element_id)))  
 
-  if(wait_until_element_id):
-    elem = WebDriverWait(driver, 30).until(
-    EC.presence_of_element_located((By.ID, wait_until_element_id)))  
+    time.sleep(15)
+    html = driver.page_source
+    driver.close()
+  except ste as e:    
+    print(f'Selenium Timed Out for {url}')
+    #TODO: ADD LOGGER
+    #logger.exception(f'Selenium Timed Out for {url}')
 
-  time.sleep(15)
-  html = driver.page_source
-  driver.close()
-  
   return html
 
 
@@ -538,8 +542,11 @@ def calculate_asset_percentage_changes(df_series):
   last_5_years_date = last_date - rd
   df_last_5_years = util_return_date_values(df_series,last_5_years_date)
   last_5_years_value = df_last_5_years[asset].values[0]
-  last_5_years_pct = (last_value - df_last_5_years[asset].values[0]) / df_last_5_years[asset].values[0]
-  
+  try:
+    last_5_years_pct = (last_value - df_last_5_years[asset].values[0]) / df_last_5_years[asset].values[0]
+  except ZeroDivisionError as e:
+    df_last_5_years = 0
+
   return asset, last_date, last_value, ytd_value, ytd_pct, last_5_days_value, last_5_days_pct, last_month_value, last_month_pct, last_3_months_value, last_3_months_pct, last_5_years_value, last_5_years_pct
 
 
@@ -1812,13 +1819,12 @@ def set_yf_price_action(df_tickers, logger):
 
   for index, row in df_tickers.iterrows():
     ticker = row['symbol'] 
-    #TODO: Get shares outstanding from somewhere else and make sure it is the full amount
+    # Get shares outstanding and make sure it is the full amount
     shares_outstanding = row['shares_outstanding'] 
     df = get_ticker_price_summary(ticker, shares_outstanding, logger)
-    import pdb; pdb.set_trace()
     data = [df_yf_price_action, df]
     df_yf_price_action = pd.concat(data, ignore_index=True)
-    logger.info(f"Successfully created csv file containing price action for: {ticker}")
+    logger.info(f"Successfully retrieved price action for: {ticker}")
 
   #Clear out old data
   sql_delete_all_rows('CompanyPriceAction')
@@ -1827,7 +1833,7 @@ def set_yf_price_action(df_tickers, logger):
   rename_cols = None
   add_col_values = None
   conflict_cols = None
-
+  
   success = sql_write_df_to_db(df_yf_price_action, "CompanyPriceAction", rename_cols, add_col_values, conflict_cols)
 
   logger.info(f"Successfully Scraped Price Action")
@@ -1917,6 +1923,8 @@ def set_ta_pattern_stocks(df_tickers, logger):
       df = pd.read_csv('data/daily_prices/{}'.format(filename))
       symbol = row['symbol']
       if(row['exchange'] in ['NYSE','NSDQ']):
+
+        #TODO: CALCULATE TA PATTERNS BASED ON ADAM KHOO RECOMMENDATIONS. IE. USING MA50, MA100 ETC.
 
         if is_consolidating(df, percentage=2.5):
             df_consolidating.loc[len(df_consolidating.index)] = [symbol, 'consolidating']
@@ -2619,6 +2627,9 @@ def dataframe_convert_to_numeric(df, column, logger):
     #contains a billion. Because we are reporting in billions, simply remove the "b"
     if(df[column].str.contains('b',regex=False).sum() > 0):
       df[column] = df[column].str.replace('b','')
+
+    #TODO: what if number contains a k. We are reporting in billions so we need to deal with the "k". For example, NXE
+
     df[column] = df[column].str.replace('N/A','')
     df[column] = df[column].str.replace('NA','')
     df[column] = df[column].str.replace('$','', regex=False)

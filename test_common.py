@@ -30,7 +30,7 @@ logger = get_logger()
 df_tickers = get_zacks_us_companies()
 #import pdb; pdb.set_trace()
 #Ticker Sets used for testing
-df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['AAPL'])]
+df_tickers1 = df_tickers.loc[df_tickers['Ticker'].isin(['NXE'])]
 df_tickers2 = df_tickers.loc[df_tickers['Ticker'].isin(['ACWI'])]
 df_tickers3 = df_tickers.loc[df_tickers['Ticker'].isin(['AIMC'])]
 df_tickers4 = df_tickers.loc[df_tickers['Ticker'].isin(['TKAGY'])]
@@ -46,8 +46,11 @@ df_tickers_one_ticker = df_tickers_alternate.loc[df_tickers_alternate['symbol'].
 
 class TestCommon(unittest.TestCase):
 
-    def test_set_summary_ratios(self):
-        self.assertEqual(set_summary_ratios(df_tickers,logger), True)
+    #def test_set_summary_ratios(self):
+    #    self.assertEqual(set_summary_ratios(df_tickers,logger), True)
+
+    #def test_set_price_action_ta(self):
+    #    self.assertEqual(set_price_action_ta(df_tickers_alternate,logger), True)
 
     #def test_set_ism_manufacturing(self):
     #    self.assertEqual(set_ism_manufacturing(logger), True)
@@ -111,8 +114,8 @@ class TestCommon(unittest.TestCase):
     
 
     #Executor 5
-    #def test_set_stockrow_stock_data(self):
-    #    self.assertEqual(set_stockrow_stock_data(df_tickers1, logger),True)
+    def test_set_stockrow_stock_data(self):
+        self.assertEqual(set_stockrow_stock_data(df_tickers1, logger),True)
     
     #Executor 6
     #def test_set_yf_key_stats(self):
