@@ -19,7 +19,7 @@ import config
 import logging
 import matplotlib.ticker as mtick
 import numpy as np
-import ta
+import metpy.calc as mpcalc
 from copy import deepcopy
 from matplotlib import pyplot as plt
 from selenium.common.exceptions import TimeoutException as ste
@@ -1955,13 +1955,6 @@ def set_ta_pattern_stocks(df_tickers, logger):
   return success
 
 def is_breaking_sma(df):
-  #from ta.volatility import BollingerBands
-  #from ta.
-
-  #bb_indicator = BollingerBands(df['Close'])
-  #hband = bb_indicator.bollinger_hband
-  #lband = bb_indicator.bollinger_lband
-  #mavg = bb_indicator.bollinger_mavg
 
   # Calculate the 50-day simple moving average
   sma50 = df['Close'].rolling(50).mean()
@@ -1974,10 +1967,38 @@ def is_breaking_sma(df):
 
   # Print the DataFrame containing the closing prices and the SMA150
   df = df.join(sma150, rsuffix='_sma150')
+  df['Date'] = df['Date'].str.replace("-","").astype(int)
+
+  df_intersections = calc_intersections_date(df['Date'].ravel(),df['Close_sma50'].ravel(),df['Close_sma150'].ravel())
 
   import pdb; pdb.set_trace()
-  #TODO: find where SMA50 and SMA150 cross each other
+
+def calc_intersections_date(x, y1, y2):
+
+  xi_all, yi_all = mpcalc.find_intersections(x,y1,y2)
+
+  xi_list = xi_all.to_tuple()[0].tolist()
+  yi_list = yi_all.to_tuple()[0].tolist()
+
+  #clean the lists to remove nan values
+  xi_list = [x for x in xi_list if str(x) != 'nan']
+  yi_list = [x for x in yi_list if str(x) != 'nan']
+
+  # xi_list contains a date. Need to convert it into a date
+  for i in range(len(xi_list)):
+    xi_list[i]=str(xi_list[i]).split('.')[0]
+
+  #TODO: Convert value in xi_list into date
+  import pdb; pdb.set_trace()
+
+  #create a df containing the date, and the value of the intersection 
+  df_intersections = pd.DataFrame({"x": [],"y": []})
+  df_intersections['x'] = xi_list
+  df_intersections['y'] = yi_list
+  
   #https://www.youtube.com/watch?v=sP1Dy5qH-JM
+
+  return df_intersections
 
 def is_consolidating(df, percentage=2):
   try:
