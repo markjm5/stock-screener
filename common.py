@@ -1928,7 +1928,8 @@ def set_ta_pattern_stocks(df_tickers, logger):
         if(row['industry'] not in config.EXCLUDED_INDUSTRIES_TA): 
           #TODO: CALCULATE TA PATTERNS BASED ON ADAM KHOO RECOMMENDATIONS. IE. USING SMA50, SMA150 ETC.
           #TODO: Use Python TA patterns package to look at SMA50, SMA150
-          if is_breaking_sma(df):
+          print("Ticker: %s" % (symbol,))
+          if is_breaking_sma_50_150(df):
             #TODO: Add to a dataframe
             pass
           if is_consolidating(df, percentage=2.5):
@@ -1939,7 +1940,7 @@ def set_ta_pattern_stocks(df_tickers, logger):
 
   data = [df_consolidating, df_breakout]
   df_patterns = pd.concat(data, ignore_index=True)
-
+  import pdb; pdb.set_trace()
   #Clear out old data
   sql_delete_all_rows("TA_Patterns")
 
@@ -1954,7 +1955,7 @@ def set_ta_pattern_stocks(df_tickers, logger):
 
   return success
 
-def is_breaking_sma(df):
+def is_breaking_sma_50_150(df):
 
   # Calculate the 50-day simple moving average
   sma50 = df['Close'].rolling(50).mean()
@@ -1968,8 +1969,11 @@ def is_breaking_sma(df):
   # Print the DataFrame containing the closing prices and the SMA150
   df = df.join(sma150, rsuffix='_sma150')
   df['Date'] = df['Date'].str.replace("-","").astype(int)
-
+  #import pdb; pdb.set_trace()
   df_intersections = calc_intersections_date(df['Date'].ravel(),df['Close_sma50'].ravel(),df['Close_sma150'].ravel())
+
+  #TODO: Process df and return TRUE where appropriate (ie. 50-150 crossover happened in the last week). Return Bool
+  #print(df_intersections)
 
   import pdb; pdb.set_trace()
 
@@ -1986,17 +1990,20 @@ def calc_intersections_date(x, y1, y2):
 
   # xi_list contains a date. Need to convert it into a date
   for i in range(len(xi_list)):
-    xi_list[i]=str(xi_list[i]).split('.')[0]
-
-  #TODO: Convert value in xi_list into date
-  import pdb; pdb.set_trace()
-
+    date_str = str(xi_list[i]).split('.')[0]
+    try:
+      xi_list[i] = dt.strptime(date_str, '%Y%m%d').date()  
+    except ValueError as e:
+      xi_list[i] = dt.strptime('19000101', '%Y%m%d').date()  
+    
   #create a df containing the date, and the value of the intersection 
   df_intersections = pd.DataFrame({"x": [],"y": []})
   df_intersections['x'] = xi_list
   df_intersections['y'] = yi_list
-  
-  #https://www.youtube.com/watch?v=sP1Dy5qH-JM
+  try:
+    df_intersections['x'] = pd.to_datetime(df_intersections['x'],format='%Y-%m-%d')
+  except ValueError as e:
+    pass
 
   return df_intersections
 
