@@ -350,9 +350,8 @@ if option == 'Download Data':
         disp,df = style_df_for_display(df_result,cols_gradient,rename_cols,cols_drop)   
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
-
     if(clicked3):
-        debug = True
+        debug = False
 
         logger = get_logger()
         now_start = dt.now()
@@ -434,7 +433,7 @@ if option == 'Download Data':
 
         df_historical_etf_data.sort_values(by='series_date', inplace = True)
         df_historical_etf_data = df_historical_etf_data.reset_index(drop=True)
-
+        #import pdb; pdb.set_trace()
         # Update all St Louis FED Data
         #success = set_stlouisfed_data(config.STLOUISFED_SERIES, logger)
 
@@ -450,7 +449,7 @@ if option == 'Download Data':
             e1p2 = executor.submit(set_ism_manufacturing, logger)
             e1p3 = executor.submit(set_ism_services, logger)
             e1p4 = executor.submit(set_yf_historical_data, config.YF_ETF_SERIES,logger)
-
+        #import pdb; pdb.set_trace()
         calculate_annual_etf_performance_status = calculate_annual_etf_performance(df_historical_etf_data,logger)        
         calculate_etf_performance_status = calculate_etf_performance(df_historical_etf_data,logger)
         st.write(f'Status of Annual ETF Performance: {calculate_annual_etf_performance_status}')

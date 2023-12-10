@@ -19,6 +19,7 @@ import config
 import logging
 import matplotlib.ticker as mtick
 import numpy as np
+import ta
 from copy import deepcopy
 from matplotlib import pyplot as plt
 from selenium.common.exceptions import TimeoutException as ste
@@ -83,7 +84,7 @@ def get_page_selenium(url,wait_until_element_id=None, no_sandbox=False):
 
   svc = webdriver.ChromeService(executable_path=binary_path)
   driver = webdriver.Chrome(service=svc, options=chrome_options)
-
+  html = ''
   #TODO: https://stackoverflow.com/questions/22130109/cant-use-chrome-driver-for-selenium
   #driver = webdriver.Chrome(executable_path=CHROME_EXECUTABLE_PATH,options=chrome_options)
   #driver = webdriver.Chrome(ChromeDriverManager().install(),options=chrome_options)
@@ -1061,7 +1062,7 @@ def set_stlouisfed_data(series_codes, logger):
       # write records to database
       rename_cols = {'DATE':'series_date'}
       conflict_cols = 'series_date'
-
+      import pdb; pdb.set_trace()
       success = sql_write_df_to_db(df, "Macro_StLouisFed", rename_cols=rename_cols, conflict_cols=conflict_cols)
 
       logger.info("Retrieved Data for Series %s" % (series_code,))
@@ -1923,14 +1924,18 @@ def set_ta_pattern_stocks(df_tickers, logger):
       df = pd.read_csv('data/daily_prices/{}'.format(filename))
       symbol = row['symbol']
       if(row['exchange'] in ['NYSE','NSDQ']):
+        #Some industries are investment funds rather than companies. We want to exclude them.
+        if(row['industry'] not in config.EXCLUDED_INDUSTRIES_TA): 
+          #TODO: CALCULATE TA PATTERNS BASED ON ADAM KHOO RECOMMENDATIONS. IE. USING SMA50, SMA150 ETC.
+          #TODO: Use Python TA patterns package to look at SMA50, SMA150
+          if is_breaking_sma(df):
+            #TODO: Add to a dataframe
+            pass
+          if is_consolidating(df, percentage=2.5):
+              df_consolidating.loc[len(df_consolidating.index)] = [symbol, 'consolidating']
 
-        #TODO: CALCULATE TA PATTERNS BASED ON ADAM KHOO RECOMMENDATIONS. IE. USING MA50, MA100 ETC.
-
-        if is_consolidating(df, percentage=2.5):
-            df_consolidating.loc[len(df_consolidating.index)] = [symbol, 'consolidating']
-
-        if is_breaking_out(df):
-            df_breakout.loc[len(df_breakout.index)] = [symbol, 'breakout']
+          if is_breaking_out(df):
+              df_breakout.loc[len(df_breakout.index)] = [symbol, 'breakout']
 
   data = [df_consolidating, df_breakout]
   df_patterns = pd.concat(data, ignore_index=True)
@@ -1948,6 +1953,31 @@ def set_ta_pattern_stocks(df_tickers, logger):
   logger.info("Successfully Scraped TA Patterns")
 
   return success
+
+def is_breaking_sma(df):
+  #from ta.volatility import BollingerBands
+  #from ta.
+
+  #bb_indicator = BollingerBands(df['Close'])
+  #hband = bb_indicator.bollinger_hband
+  #lband = bb_indicator.bollinger_lband
+  #mavg = bb_indicator.bollinger_mavg
+
+  # Calculate the 50-day simple moving average
+  sma50 = df['Close'].rolling(50).mean()
+
+  # Print the DataFrame containing the closing prices and the SMA50
+  df = df.join(sma50, rsuffix='_sma50')
+
+  # Calculate the 150-day simple moving average
+  sma150 = df['Close'].rolling(150).mean()
+
+  # Print the DataFrame containing the closing prices and the SMA150
+  df = df.join(sma150, rsuffix='_sma150')
+
+  import pdb; pdb.set_trace()
+  #TODO: find where SMA50 and SMA150 cross each other
+  #https://www.youtube.com/watch?v=sP1Dy5qH-JM
 
 def is_consolidating(df, percentage=2):
   try:
@@ -2615,7 +2645,14 @@ def dataframe_convert_to_numeric(df, column, logger):
   #TODO: Deal with percentages and negative values in brackets
   try:
     contains_mill = False
+    contains_thousands = False
     contains_percentage = False
+
+    #TODO: what if number contains a k. We are reporting in billions so we need to deal with the "k". For example, NXE
+    if(df[column].str.contains('k',regex=False).sum() > 0):
+      contains_thousands = True
+      df[column] = df[column].str.replace('k','')
+
     if(df[column].str.contains('m',regex=False).sum() > 0):
       contains_mill = True
       df[column] = df[column].str.replace('m','')
@@ -2627,8 +2664,6 @@ def dataframe_convert_to_numeric(df, column, logger):
     #contains a billion. Because we are reporting in billions, simply remove the "b"
     if(df[column].str.contains('b',regex=False).sum() > 0):
       df[column] = df[column].str.replace('b','')
-
-    #TODO: what if number contains a k. We are reporting in billions so we need to deal with the "k". For example, NXE
 
     df[column] = df[column].str.replace('N/A','')
     df[column] = df[column].str.replace('NA','')
@@ -2645,6 +2680,10 @@ def dataframe_convert_to_numeric(df, column, logger):
     logger.exception(column)
 
   df[column] = pd.to_numeric(df[column])
+
+  if(contains_thousands):
+    df[column] = df[column]/1000000000
+
   if(contains_mill):
     df[column] = df[column]/1000000
 

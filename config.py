@@ -21,6 +21,10 @@ DB_NAME = 'stockdb'
 
 API_KEY_FMP = '14afe305132a682a2742743df532707d'
 
+EXCLUDED_INDUSTRIES_TA = [
+    'Financial - Investment Funds',
+]
+
 STLOUISFED_SERIES = ['A072RC1Q156SBEA',	
     'DPCCRV1Q225SBEA',	
     'EXPGSC1',

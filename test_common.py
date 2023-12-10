@@ -6,13 +6,16 @@ from common import dataframe_convert_to_numeric, get_logger
 from common import set_earningswhispers_earnings_calendar, set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, set_yf_price_action, set_price_action_ta
 from common import set_todays_insider_trades, get_data, set_stlouisfed_data, set_yf_historical_data, calculate_etf_performance, calculate_annual_etf_performance
-from common import set_ism_manufacturing, set_summary_ratios
+from common import set_ism_manufacturing, set_summary_ratios, set_ta_pattern_stocks
 from config import YF_ETF_SERIES
 
 #YF_ETF_SERIES_TEST = [
 #    'SLY'
 #]
 
+STLOUISFED_SERIES = [	
+    'FEDFUNDS',	
+]
 #myset = set(YF_ETF_SERIES_NEW)
 #newlist = list(myset)
 
@@ -46,11 +49,17 @@ df_tickers_one_ticker = df_tickers_alternate.loc[df_tickers_alternate['symbol'].
 
 class TestCommon(unittest.TestCase):
 
+    #def test_set_stlouisfed_data(self):
+    #    self.assertEqual(set_stlouisfed_data(STLOUISFED_SERIES,logger), True)
+
     #def test_set_summary_ratios(self):
     #    self.assertEqual(set_summary_ratios(df_tickers,logger), True)
 
     #def test_set_price_action_ta(self):
     #    self.assertEqual(set_price_action_ta(df_tickers_alternate,logger), True)
+
+    def test_set_ta_pattern_stocks(self):
+        self.assertEqual(set_ta_pattern_stocks(df_tickers_alternate,logger), True)
 
     #def test_set_ism_manufacturing(self):
     #    self.assertEqual(set_ism_manufacturing(logger), True)
@@ -114,8 +123,8 @@ class TestCommon(unittest.TestCase):
     
 
     #Executor 5
-    def test_set_stockrow_stock_data(self):
-        self.assertEqual(set_stockrow_stock_data(df_tickers1, logger),True)
+    #def test_set_stockrow_stock_data(self):
+    #    self.assertEqual(set_stockrow_stock_data(df_tickers1, logger),True)
     
     #Executor 6
     #def test_set_yf_key_stats(self):
