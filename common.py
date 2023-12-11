@@ -1917,6 +1917,7 @@ def set_ta_pattern_stocks(df_tickers, logger):
   data = {'ticker': [], 'pattern': []}
   df_consolidating = pd.DataFrame(data)
   df_breakout = pd.DataFrame(data)
+  df_sma_breakout = pd.DataFrame(data)
 
   for index, row in df_tickers.iterrows():
       filename = "{}.csv".format(row['symbol'])
@@ -1927,20 +1928,22 @@ def set_ta_pattern_stocks(df_tickers, logger):
         #Some industries are investment funds rather than companies. We want to exclude them.
         if(row['industry'] not in config.EXCLUDED_INDUSTRIES_TA): 
           #TODO: CALCULATE TA PATTERNS BASED ON ADAM KHOO RECOMMENDATIONS. IE. USING SMA50, SMA150 ETC.
-          #TODO: Use Python TA patterns package to look at SMA50, SMA150
-          print("Ticker: %s" % (symbol,))
-          if is_breaking_sma_50_150(df):
+          #print("Ticker: %s" % (symbol,))
+          df_intersections, bool_is_breaking_sma_50_150_last_14_days = is_breaking_sma(df,50,150,14)
+
+          if bool_is_breaking_sma_50_150_last_14_days:
             #TODO: Add to a dataframe
-            pass
+            df_sma_breakout.loc[len(df_sma_breakout.index)] = [symbol, 'sma_breakout_50_150_14']
+
           if is_consolidating(df, percentage=2.5):
               df_consolidating.loc[len(df_consolidating.index)] = [symbol, 'consolidating']
 
           if is_breaking_out(df):
               df_breakout.loc[len(df_breakout.index)] = [symbol, 'breakout']
 
-  data = [df_consolidating, df_breakout]
+  data = [df_consolidating, df_breakout, df_sma_breakout]
   df_patterns = pd.concat(data, ignore_index=True)
-  import pdb; pdb.set_trace()
+
   #Clear out old data
   sql_delete_all_rows("TA_Patterns")
 
@@ -1955,22 +1958,25 @@ def set_ta_pattern_stocks(df_tickers, logger):
 
   return success
 
-def is_breaking_sma_50_150(df):
+def is_breaking_sma(df, lower, upper,last_x_days):
 
   # Calculate the 50-day simple moving average
-  sma50 = df['Close'].rolling(50).mean()
-
+  sma_lower = df['Close'].rolling(lower).mean()
+  suffix_lower = '_sma%s' % (lower)
   # Print the DataFrame containing the closing prices and the SMA50
-  df = df.join(sma50, rsuffix='_sma50')
+  df = df.join(sma_lower, rsuffix=suffix_lower)
 
   # Calculate the 150-day simple moving average
-  sma150 = df['Close'].rolling(150).mean()
-
+  sma_upper = df['Close'].rolling(upper).mean()
+  suffix_upper = '_sma%s' % (upper)
   # Print the DataFrame containing the closing prices and the SMA150
-  df = df.join(sma150, rsuffix='_sma150')
+  df = df.join(sma_upper, rsuffix=suffix_upper)
   df['Date'] = df['Date'].str.replace("-","").astype(int)
-  #import pdb; pdb.set_trace()
-  df_intersections = calc_intersections_date(df['Date'].ravel(),df['Close_sma50'].ravel(),df['Close_sma150'].ravel())
+
+  col_lower = 'Close%s' % (suffix_lower)
+  col_upper = 'Close%s' % (suffix_upper)
+
+  df_intersections = calc_intersections_date(df['Date'].ravel(),df[col_lower].ravel(),df[col_upper].ravel())
 
   # Get current date and put it tinto a df
   data = {'dt': []}
@@ -1980,13 +1986,24 @@ def is_breaking_sma_50_150(df):
   temp_row1.append(current_date_str)
   df_current_date.loc[len(df_current_date.index)] = temp_row1
   df_current_date['dt'] = pd.to_datetime(df_current_date['dt'],format='%Y-%m-%d')
-  temp_days = df_intersections.tail(1).reset_index(drop=True)['x'] - df_current_date['dt']
+  temp_days = df_current_date['dt'] - df_intersections.tail(1).reset_index(drop=True)['x']
   str_days = temp_days.to_string()
-  print(str_days)
-  #TODO: Extract days and see if it is less than a week. If less than a week, return TRUE
-  #df_days = temp_days.to_frame()
-  #TODO: Process df and return TRUE where appropriate (ie. 50-150 crossover happened in the last week). Return Bool
-  #print(df_intersections)
+
+  # Extract days and see if it is less than a week. If less than a week, return TRUE
+  # Process df and return TRUE where appropriate (ie. 50-150 crossover happened in the last week)
+
+  pattern_select = re.compile(r'([^0\s]+[0-9]+)')
+  matches = pattern_select.findall(str_days)
+
+  try:
+    days = int(matches[0])
+  except(ValueError, IndexError) as e:
+    days = 1000
+
+  if(days <= last_x_days):
+    return df_intersections.tail(1).reset_index(drop=True), True
+  else:
+    return df_intersections.tail(1).reset_index(drop=True), False
 
 def calc_intersections_date(x, y1, y2):
 
