@@ -1972,10 +1972,21 @@ def is_breaking_sma_50_150(df):
   #import pdb; pdb.set_trace()
   df_intersections = calc_intersections_date(df['Date'].ravel(),df['Close_sma50'].ravel(),df['Close_sma150'].ravel())
 
+  # Get current date and put it tinto a df
+  data = {'dt': []}
+  df_current_date = pd.DataFrame(data)
+  current_date_str = dt.now().strftime('%Y-%m-%d')  
+  temp_row1 = []
+  temp_row1.append(current_date_str)
+  df_current_date.loc[len(df_current_date.index)] = temp_row1
+  df_current_date['dt'] = pd.to_datetime(df_current_date['dt'],format='%Y-%m-%d')
+  temp_days = df_intersections.tail(1).reset_index(drop=True)['x'] - df_current_date['dt']
+  str_days = temp_days.to_string()
+  print(str_days)
+  #TODO: Extract days and see if it is less than a week. If less than a week, return TRUE
+  #df_days = temp_days.to_frame()
   #TODO: Process df and return TRUE where appropriate (ie. 50-150 crossover happened in the last week). Return Bool
   #print(df_intersections)
-
-  import pdb; pdb.set_trace()
 
 def calc_intersections_date(x, y1, y2):
 
@@ -2004,6 +2015,9 @@ def calc_intersections_date(x, y1, y2):
     df_intersections['x'] = pd.to_datetime(df_intersections['x'],format='%Y-%m-%d')
   except ValueError as e:
     pass
+
+  # Order by Date DESC
+  df_intersections.sort_values(by='x', inplace = True)
 
   return df_intersections
 
