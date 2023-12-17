@@ -1642,7 +1642,7 @@ if option == 'Macroeconomic Data':
 
         option_interest_rates_charts = st.sidebar.selectbox("Charts", ('013 - Interest Rates','013 - Yield Curve'), 0)
         if option_interest_rates_charts == '013 - Interest Rates':    
-            df_interest_rates_10y = get_data(table="macro_ir_10y")#.reset_index(drop=True)           
+            df_interest_rates_10y = get_data(table="macro_ir_10y")           
             df_interest_rates_10y = df_interest_rates_10y.sort_values('dt').fillna(method='ffill')           
             rename_cols = {'australia':'Australia','brazil':'Brazil','canada':'Canada','china':'China','france':'France','germany':'Germany', 'uk': 'United Kingdom', 'us': 'United States'}
             df_interest_rates_10y = df_interest_rates_10y.rename(columns=rename_cols)
@@ -1656,9 +1656,33 @@ if option == 'Macroeconomic Data':
             df_interest_rates_10y_uk = calc_ir_metrics(df_interest_rates_10y[["dt", "United Kingdom"]])
             df_interest_rates_10y_us = calc_ir_metrics(df_interest_rates_10y[["dt", "United States"]])
 
+            df_10y = df_interest_rates_10y_australia.append(df_interest_rates_10y_brazil,ignore_index = True) 
+            df_10y = df_10y.append(df_interest_rates_10y_canada,ignore_index = True) 
+            df_10y = df_10y.append(df_interest_rates_10y_china,ignore_index = True) 
+            df_10y = df_10y.append(df_interest_rates_10y_france,ignore_index = True) 
+            df_10y = df_10y.append(df_interest_rates_10y_germany,ignore_index = True) 
+            df_10y = df_10y.append(df_interest_rates_10y_uk,ignore_index = True) 
+            df_10y = df_10y.append(df_interest_rates_10y_us,ignore_index = True) 
 
             df_interest_rates_2y = get_data(table="macro_ir_2y")#.reset_index(drop=True)           
             df_interest_rates_2y = df_interest_rates_2y.sort_values('dt').fillna(method='ffill')           
+
+            df_interest_rates_2y_australia = calc_ir_metrics(df_interest_rates_2y[["dt", "Australia"]])
+            df_interest_rates_2y_brazil = calc_ir_metrics(df_interest_rates_2y[["dt", "Brazil"]])
+            df_interest_rates_2y_canada = calc_ir_metrics(df_interest_rates_2y[["dt", "Canada"]])
+            df_interest_rates_2y_china = calc_ir_metrics(df_interest_rates_2y[["dt", "China"]])
+            df_interest_rates_2y_france = calc_ir_metrics(df_interest_rates_2y[["dt", "France"]])
+            df_interest_rates_2y_germany = calc_ir_metrics(df_interest_rates_2y[["dt", "Germany"]])
+            df_interest_rates_2y_uk = calc_ir_metrics(df_interest_rates_2y[["dt", "United Kingdom"]])
+            df_interest_rates_2y_us = calc_ir_metrics(df_interest_rates_2y[["dt", "United States"]])
+
+            df_2y = df_interest_rates_10y_australia.append(df_interest_rates_2y_brazil,ignore_index = True) 
+            df_2y = df_2y.append(df_interest_rates_2y_canada,ignore_index = True) 
+            df_2y = df_2y.append(df_interest_rates_2y_china,ignore_index = True) 
+            df_2y = df_2y.append(df_interest_rates_2y_france,ignore_index = True) 
+            df_2y = df_2y.append(df_interest_rates_2y_germany,ignore_index = True) 
+            df_2y = df_2y.append(df_interest_rates_2y_uk,ignore_index = True) 
+            df_2y = df_2y.append(df_interest_rates_2y_us,ignore_index = True) 
 
             #.fillna(method='ffill')
             #.sort_values('ism_date')

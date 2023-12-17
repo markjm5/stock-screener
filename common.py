@@ -13,6 +13,7 @@ import json
 import copy
 import re
 import math
+import decimal
 import yfinance as yf
 import psycopg2, psycopg2.extras
 import config
@@ -4081,6 +4082,8 @@ def calc_ir_metrics(df):
   df_last_5_days = util_return_date_values(df_series,last_5_days_date)
   last_5_days_value = df_last_5_days[country].values[0]
   #TODO: minus last price
+  last_5_days_value = decimal.Decimal(last_value) - decimal.Decimal(last_5_days_value)
+  last_5_days_value = round(last_5_days_value, 2)
 
   #1m 
   rd = relativedelta(months=+1)
@@ -4088,6 +4091,8 @@ def calc_ir_metrics(df):
   df_last_month = util_return_date_values(df_series,last_month_date)
   last_month_value = df_last_month[country].values[0]
   #TODO: minus last price
+  last_month_value = decimal.Decimal(last_value) - decimal.Decimal(last_month_value)
+  last_month_value = round(last_month_value, 2)
 
   #3m
   rd = relativedelta(months=+3)
@@ -4095,12 +4100,16 @@ def calc_ir_metrics(df):
   df_last_3_months = util_return_date_values(df_series,last_3_months_date)
   last_3_months_value = df_last_3_months[country].values[0]
   #TODO: minus last price
+  last_3_months_value = decimal.Decimal(last_value) - decimal.Decimal(last_3_months_value)
+  last_3_months_value = round(last_3_months_value, 2)
 
   #ytd   
   year_first_day = date(date.today().year, 1, 1)
   df_ytd = util_return_date_values(df_series,year_first_day)
   ytd_value = df_ytd[country].values[0]
   #TODO: minus last price
+  ytd_value = decimal.Decimal(last_value) - decimal.Decimal(ytd_value)
+  ytd_value = round(ytd_value, 2)
 
   #yoy
   rd = relativedelta(years=+1)
@@ -4108,7 +4117,9 @@ def calc_ir_metrics(df):
   df_yoy = util_return_date_values(df_series,yoy_date)
   yoy_value = df_yoy[country].values[0]
   #TODO: minus last price
-  
+  yoy_value = decimal.Decimal(last_value) - decimal.Decimal(yoy_value)
+  yoy_value = round(yoy_value, 2)
+
   # create and return df with values
   data = {'Country': [],'Last Date': [],'Last': [],'1w': [],'1m': [],'3m': [],'YTD': [],'YoY': []}
 
@@ -4118,9 +4129,7 @@ def calc_ir_metrics(df):
   temp_row = [country,last_date,last_value,last_5_days_value,last_month_value,last_3_months_value,ytd_value,yoy_value]
   df_country_ir.loc[len(df_country_ir.index)] = temp_row
 
-  import pdb; pdb.set_trace()
-
-  return df
+  return df_country_ir
 
 #################################################
 # Get Credit Rating Data from Trading Economics #
