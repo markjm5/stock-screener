@@ -29,7 +29,7 @@ from common import format_df_for_dashboard_flip, format_df_for_dashboard, format
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
 from common import display_chart, display_chart_ism, append_two_df, standard_display, display_chart_assets
 from common import calculate_etf_performance, calculate_annual_etf_performance, format_bullish_bearish, format_earnings_surprises
-from common import get_financialmodelingprep_price_action, set_summary_ratios, get_summary_ratios
+from common import get_financialmodelingprep_price_action, set_summary_ratios, get_summary_ratios, set_2y_rates, set_10y_rates, calc_ir_metrics
 import seaborn as sns
 from copy import deepcopy
 
@@ -113,7 +113,7 @@ if option == 'Download Data':
             e1p3 = executor.submit(set_whitehouse_news, logger)
             e1p4 = executor.submit(set_geopolitical_calendar, logger)
             e1p5 = executor.submit(set_price_action_ta, df_tickers, logger)
-            e1p6 = executor.submit(set_todays_insider_trades,logger)
+            #e1p6 = executor.submit(set_todays_insider_trades,logger)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
@@ -143,7 +143,7 @@ if option == 'Download Data':
         data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
-        for x in range(1,7):
+        for x in range(1,6):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
             temp_row = [executor_count,x,result]
             df_result.loc[len(df_result.index)] = temp_row
@@ -449,6 +449,9 @@ if option == 'Download Data':
             e1p2 = executor.submit(set_ism_manufacturing, logger)
             e1p3 = executor.submit(set_ism_services, logger)
             e1p4 = executor.submit(set_yf_historical_data, config.YF_ETF_SERIES,logger)
+            e1p5 = executor.submit(set_10y_rates, logger)
+            e1p6 = executor.submit(set_2y_rates, logger)
+
         #import pdb; pdb.set_trace()
         calculate_annual_etf_performance_status = calculate_annual_etf_performance(df_historical_etf_data,logger)        
         calculate_etf_performance_status = calculate_etf_performance(df_historical_etf_data,logger)
@@ -515,7 +518,7 @@ if option == 'Download Data':
         data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
-        for x in range(1,5):
+        for x in range(1,7):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
             temp_row = [executor_count,x,result]
             df_result.loc[len(df_result.index)] = temp_row
@@ -1031,7 +1034,7 @@ if option == 'Market Data':
 
 if option == 'Macroeconomic Data':
     #st.subheader(f'Macro Economic Data')
-    option_indicator_type = st.sidebar.selectbox("Indicator Type", ('Lagging Indicator','Interest Rates/FX','Leading Indicator'), 0)
+    option_indicator_type = st.sidebar.selectbox("Indicator Type", ('Lagging Indicator','Interest Rates','Leading Indicator'), 0)
     #logger = get_logger()
 
     if option_indicator_type == 'Lagging Indicator':
@@ -1634,11 +1637,34 @@ if option == 'Macroeconomic Data':
                         	
             #RSEAS	
             		
-    if option_indicator_type == 'Interest Rates/FX':
-        st.subheader(f'Interest Rates/FX')
+    if option_indicator_type == 'Interest Rates':
+        st.subheader(f'Interest Rates')
 
-        option_interest_rates_fx_charts = st.sidebar.selectbox("Charts", ('012 - Central Banks','014 - Money Supply'), 0)
-        pass
+        option_interest_rates_charts = st.sidebar.selectbox("Charts", ('013 - Interest Rates','013 - Yield Curve'), 0)
+        if option_interest_rates_charts == '013 - Interest Rates':    
+            df_interest_rates_10y = get_data(table="macro_ir_10y")#.reset_index(drop=True)           
+            df_interest_rates_10y = df_interest_rates_10y.sort_values('dt').fillna(method='ffill')           
+            rename_cols = {'australia':'Australia','brazil':'Brazil','canada':'Canada','china':'China','france':'France','germany':'Germany', 'uk': 'United Kingdom', 'us': 'United States'}
+            df_interest_rates_10y = df_interest_rates_10y.rename(columns=rename_cols)
+
+            df_interest_rates_10y_australia = calc_ir_metrics(df_interest_rates_10y[["dt", "Australia"]])
+            df_interest_rates_10y_brazil = calc_ir_metrics(df_interest_rates_10y[["dt", "Brazil"]])
+            df_interest_rates_10y_canada = calc_ir_metrics(df_interest_rates_10y[["dt", "Canada"]])
+            df_interest_rates_10y_china = calc_ir_metrics(df_interest_rates_10y[["dt", "China"]])
+            df_interest_rates_10y_france = calc_ir_metrics(df_interest_rates_10y[["dt", "France"]])
+            df_interest_rates_10y_germany = calc_ir_metrics(df_interest_rates_10y[["dt", "Germany"]])
+            df_interest_rates_10y_uk = calc_ir_metrics(df_interest_rates_10y[["dt", "United Kingdom"]])
+            df_interest_rates_10y_us = calc_ir_metrics(df_interest_rates_10y[["dt", "United States"]])
+
+
+            df_interest_rates_2y = get_data(table="macro_ir_2y")#.reset_index(drop=True)           
+            df_interest_rates_2y = df_interest_rates_2y.sort_values('dt').fillna(method='ffill')           
+
+            #.fillna(method='ffill')
+            #.sort_values('ism_date')
+            import pdb; pdb.set_trace()
+            #TODO: Apply FillNA on dfs
+            #TODO: Calculate metrics and display in table
 
     if option_indicator_type == 'Leading Indicator':
         st.subheader(f'Leading Indicators')
@@ -2333,7 +2359,7 @@ if option == 'ATR Calculator':
             st.write("Please enter 2 ticker symbols")
 
 if option == 'Bottom Up Ideas':
-        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','TA Patterns','Insider Trading', 'Country Exposure'), 0)
+        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','TA Patterns', 'Country Exposure'), 0)
         if option_one_pager == 'Volume':        
             df_stock_volume = sql_get_volume()
 
@@ -2350,7 +2376,7 @@ if option == 'Bottom Up Ideas':
             rename_cols = {'sector': 'Sector','last_volume': 'Volume'}
             number_format_cols = []
 
-            col1.subheader(f'Volume by Sectors')
+            col1.subheader(f'Volume by Sectors (Last 24 Hrs)')
 
             # Display Chart
             x_axis = 'sector'
@@ -2376,7 +2402,7 @@ if option == 'Bottom Up Ideas':
             rename_cols = {'industry': 'Industry','last_volume': 'Volume'}
             number_format_cols = []
 
-            col2.subheader(f'Volume by Industries')
+            col2.subheader(f'Volume by Industries (Last 24 Hrs)')
 
             # Display Chart
             x_axis = 'industry'
@@ -2454,8 +2480,14 @@ if option == 'Bottom Up Ideas':
 
             df_consolidating = df_inner_join.loc[df_inner_join['pattern'] == 'consolidating']            
             df_breakout = df_inner_join.loc[df_inner_join['pattern'] == 'breakout']
+            df_breaking_sma_50_150_last_14_days = df_inner_join.loc[df_inner_join['pattern'] == 'sma_breakout_50_150_14']
 
-            st.subheader("Consolidating")
+
+            tab1, tab2, tab3 = st.tabs(["📈 Consolidating", "📈 Breakout", "SMA 50-150 Breakout"])
+
+            #TAB 1
+            tab1.subheader("Consolidating")
+
             data = {'ticker':[],'company_name':[],'sector':[],'industry':[],'pattern':[]}
 
             for index, row in df_consolidating.iterrows():
@@ -2470,11 +2502,11 @@ if option == 'Bottom Up Ideas':
                 rename_cols = {'ticker': 'Ticker', 'pattern': 'Pattern','company_name':'Company','sector':'Sector','industry':'Industry'}
                 drop_cols = []
                 disp, df_display_table = style_df_for_display(df_temp,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
-                st.markdown(disp.to_html(), unsafe_allow_html=True)   
-                st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
-                st.markdown("""---""")
+                tab1.markdown(disp.to_html(), unsafe_allow_html=True)   
+                tab1.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
+                tab1.markdown("""---""")
 
-            st.subheader("Breakout")
+            tab2.subheader("Breakout")
             data = {'ticker':[],'company_name':[],'sector':[],'industry':[],'pattern':[]}
             for index, row in df_breakout.iterrows():
                 symbol = row['ticker']
@@ -2488,22 +2520,41 @@ if option == 'Bottom Up Ideas':
                 rename_cols = {'ticker': 'Ticker', 'pattern': 'Pattern','company_name':'Company','sector':'Sector','industry':'Industry'}
                 drop_cols = []
                 disp, df_display_table = style_df_for_display(df_temp,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
-                st.markdown(disp.to_html(), unsafe_allow_html=True)   
-                st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
-                st.markdown("""---""")
+                tab2.markdown(disp.to_html(), unsafe_allow_html=True)   
+                tab2.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
+                tab2.markdown("""---""")
 
-        if option_one_pager == 'Insider Trading':        
-            st.subheader(f'Insider Trading')
-            df = get_data(table="macro_insidertrading")
+            tab3.subheader("SMA 50-150 Breakout (Past 14 Days)")
+            data = {'ticker':[],'company_name':[],'sector':[],'industry':[],'pattern':[]}
+            for index, row in df_breaking_sma_50_150_last_14_days.iterrows():
+                symbol = row['ticker']
+                df_temp = pd.DataFrame(data)
+                temp_row = [row['ticker'],row['company_name'],row['sector'],row['industry'],row['pattern']]
+                df_temp.loc[len(df.index)] = temp_row
 
-            sort_cols = []
-            order_cols = ['filing_date','company_ticker','company_name', 'insider_name', 'insider_title', 'trade_type', 'trade_price', 'percentage_owned']
-            drop_cols = ['id']
-            rename_cols = {'filing_date': 'Filing Date', 'company_ticker': 'Ticker', 'company_name': 'Company', 'insider_name': 'Insider', 'insider_title': 'Title', 'trade_type': 'Trade', 'trade_price': 'Price', 'percentage_owned': '% Owned'}
+                #Display formatted table
+                format_cols = {}
+                cols_gradient = []
+                rename_cols = {'ticker': 'Ticker', 'pattern': 'Pattern','company_name':'Company','sector':'Sector','industry':'Industry'}
+                drop_cols = []
+                disp, df_display_table = style_df_for_display(df_temp,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
+                tab3.markdown(disp.to_html(), unsafe_allow_html=True)   
+                tab3.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
+                tab3.markdown("""---""")
 
-            style_insider_trading = format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, order_cols=order_cols)                
 
-            st.write(style_insider_trading)
+        #if option_one_pager == 'Insider Trading':        
+        #    st.subheader(f'Insider Trading')
+        #    df = get_data(table="macro_insidertrading")
+
+        #    sort_cols = []
+        #    order_cols = ['filing_date','company_ticker','company_name', 'insider_name', 'insider_title', 'trade_type', 'trade_price', 'percentage_owned']
+        #    drop_cols = ['id']
+        #    rename_cols = {'filing_date': 'Filing Date', 'company_ticker': 'Ticker', 'company_name': 'Company', 'insider_name': 'Insider', 'insider_title': 'Title', 'trade_type': 'Trade', 'trade_price': 'Price', 'percentage_owned': '% Owned'}
+
+        #    style_insider_trading = format_df_for_dashboard(df, sort_cols, drop_cols, rename_cols, order_cols=order_cols)                
+
+        #    st.write(style_insider_trading)
 
         if option_one_pager == 'Country Exposure':
             st.subheader(f'Country Exposure')

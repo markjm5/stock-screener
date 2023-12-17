@@ -1062,12 +1062,12 @@ def set_stlouisfed_data(series_codes, logger):
       # write records to database
       rename_cols = {'DATE':'series_date'}
       conflict_cols = 'series_date'
-      import pdb; pdb.set_trace()
       success = sql_write_df_to_db(df, "Macro_StLouisFed", rename_cols=rename_cols, conflict_cols=conflict_cols)
 
       logger.info("Retrieved Data for Series %s" % (series_code,))
       success = True
     except Exception as e:
+      #import pdb; pdb.set_trace()
       logger.error("Could Not get Data for Series %s" % (series_code,))
 
   return success
@@ -1932,7 +1932,6 @@ def set_ta_pattern_stocks(df_tickers, logger):
           df_intersections, bool_is_breaking_sma_50_150_last_14_days = is_breaking_sma(df,50,150,14)
 
           if bool_is_breaking_sma_50_150_last_14_days:
-            #TODO: Add to a dataframe
             df_sma_breakout.loc[len(df_sma_breakout.index)] = [symbol, 'sma_breakout_50_150_14']
 
           if is_consolidating(df, percentage=2.5):
@@ -3755,15 +3754,36 @@ def get_ism_services_content():
 ##########################################
 
 def temp_load_excel_data_to_db(excel_file_path, sheet_name, database_table,rename_cols=None, conflict_cols=False):
-  
+  #import pdb; pdb.set_trace()
   # Load original data from excel file into original df
-  df_original = convert_excelsheet_to_dataframe(excel_file_path, sheet_name, False)
+  #df_original = convert_excelsheet_to_dataframe(excel_file_path, sheet_name, False)
+  df_original = convert_csv_to_dataframe(excel_file_path, True,'%m/%d/%Y')
+  df_original = df_original.fillna(method='ffill')
   #TODO: Need to write this data into the database
-  df_original = df_original.drop(['SP500','GDPC1','GDPQoQ','GDPYoY','GDPQoQ_ANNUALIZED','GDPC1_QoQ','GDPC1_QoQ_ANNUALIZED','GDPC1_YoY',], axis=1)
-
+  #df_original = df_original.drop(['SP500','GDPC1','GDPQoQ','GDPYoY','GDPQoQ_ANNUALIZED','GDPC1_QoQ','GDPC1_QoQ_ANNUALIZED','GDPC1_YoY',], axis=1)
   #import pdb; pdb.set_trace()
   add_col_values = {}
   success = sql_write_df_to_db(df_original, database_table, rename_cols, add_col_values, conflict_cols)
+
+  return success
+
+def convert_csv_to_dataframe(excel_file_path,date_exists=False, date_format=None):
+
+  if(isWindows):
+    filepath = os.getcwd()
+    excel_file_path = filepath + excel_file_path.replace("/","\\")
+
+  else:
+    filepath = os.path.realpath(__file__)
+    excel_file_path = filepath[:filepath.rfind('/')] + excel_file_path
+
+
+  df = pd.read_csv(excel_file_path)
+
+  if(date_exists):
+    df['DATE'] = pd.to_datetime(df['DATE'],format=date_format)
+
+  return df
 
 def convert_excelsheet_to_dataframe(excel_file_path,sheet_name,date_exists=False, index_col=None, date_format='%d/%m/%Y'):
 
@@ -3991,3 +4011,206 @@ def standard_display(series_name, tab, title, period, series_display,col1, col2)
   tab.markdown(disp.to_html(), unsafe_allow_html=True)
 
   return df_series_all, df_series_recent
+
+# 10y database Data from Investing.com
+def set_10y_rates(logger):
+  success = False
+  country_list = ['u.s.','canada','brazil','germany','france','uk','australia','china']
+
+  df_invest_10y = get_invest_data_manual_scrape(country_list,'10')
+  df_invest_10y = df_invest_10y.rename(columns={"DATE":"dt", "u.s.": "us"})
+
+  # Fill NA values by propegating values before
+  df_invest_10y = df_invest_10y.fillna(method='ffill')
+
+  # Write to database macro_ir_10y
+  try:
+    rename_cols = {}
+    add_col_values = None
+    conflict_cols = "dt"
+    success = sql_write_df_to_db(df_invest_10y, "macro_ir_10y", rename_cols, add_col_values, conflict_cols)
+
+    logger.info("Successfully retrieved 10y Rates")
+  except Exception as e:
+    logger.error("Error retrieving 10y Rates")
+
+  return success
+
+# 2y database Data from Investing.com
+def set_2y_rates(logger):
+  success = False
+  country_list = ['u.s.','canada','brazil','germany','france','uk','australia','china']
+
+  df_invest_2y = get_invest_data_manual_scrape(country_list,'2')
+  df_invest_2y = df_invest_2y.rename(columns={"DATE":"dt", "u.s.": "us"})
+
+  # Fill NA values by propegating values before
+  df_invest_2y = df_invest_2y.fillna(method='ffill')
+
+  # Write to database macro_ir_10y
+  try:
+    rename_cols = {}
+    add_col_values = None
+    conflict_cols = "dt"
+    success = sql_write_df_to_db(df_invest_2y, "macro_ir_2y", rename_cols, add_col_values, conflict_cols)
+
+    logger.info("Successfully retrieved 2y Rates")
+  except Exception as e:
+    logger.error("Error retrieving 2y Rates")
+
+  return success
+
+def calc_ir_metrics(df):
+
+  cols = list(df.columns)
+  country = cols[1]
+
+  last_date = df.iloc[-1]['dt']
+  last_value = df.iloc[-1][country]
+
+  df_series = df.copy().squeeze()
+  df_series['dt'] = pd.to_datetime(df_series['dt'],format='%Y-%m-%d')
+  df_series[country] = pd.to_numeric(df_series[country])
+  rename_cols = {"dt": "series_date"}
+  df_series = df_series.rename(columns=rename_cols)
+
+  #TODO: calculate_asset_percentage_changes
+  #1w 
+  td = timedelta(days=5)
+  last_5_days_date = last_date - td
+  df_last_5_days = util_return_date_values(df_series,last_5_days_date)
+  last_5_days_value = df_last_5_days[country].values[0]
+
+  #1m 
+  rd = relativedelta(months=+1)
+  last_month_date = last_date - rd
+  df_last_month = util_return_date_values(df_series,last_month_date)
+  last_month_value = df_last_month[country].values[0]
+
+  #3m
+  rd = relativedelta(months=+3)
+  last_3_months_date = last_date - rd
+  df_last_3_months = util_return_date_values(df_series,last_3_months_date)
+  last_3_months_value = df_last_3_months[country].values[0]
+
+  #ytd 
+  rd = relativedelta(years=+1)
+  ytd_date = last_date - rd
+  df_ytd = util_return_date_values(df_series,ytd_date)
+  ytd_value = df_ytd[country].values[0]
+
+  #yoy   
+  # TODO: Find YTD date	
+  rd = relativedelta(years=+5)
+  last_5_years_date = last_date - rd
+  df_last_5_years = util_return_date_values(df_series,last_5_years_date)
+  last_5_years_value = df_last_5_years[country].values[0]
+
+  import pdb; pdb.set_trace()
+
+  return df
+
+#################################################
+# Get Credit Rating Data from Trading Economics #
+#################################################
+
+def set_country_credit_rating():
+
+  #https://tradingeconomics.com/country-list/rating
+
+  sheet_name = 'DB Credit Rating'
+
+  #Get World Production Data
+  df_country_credit_rating = scrape_table_country_rating("https://tradingeconomics.com/country-list/rating")
+
+  df_original = convert_excelsheet_to_dataframe(excel_file_path, sheet_name)
+
+  df_updated = combine_df_on_index(df_original, df_country_credit_rating, 'Country')
+
+  write_dataframe_to_excel(excel_file_path, sheet_name, df_updated, False, -1)
+
+
+def get_invest_data_manual_scrape(country_list, bond_year):
+
+  data = {'DATE': []}
+
+  # Convert the dictionary into DataFrame
+  df_invest_data = pd.DataFrame(data)
+
+  for country in country_list:
+    print("Getting %s-y data for: %s" % (bond_year,country))
+    
+    url = "https://www.investing.com/rates-bonds/%s-%s-year-bond-yield-historical-data" % (country,bond_year)
+
+    print("Getting URL: %s" % (url))
+
+    df_country_rates = return_selenium_rates_table_to_df(url)
+
+    if(len(df_country_rates) == 0):
+      url = "https://www.investing.com/rates-bonds/%s-%s-year-historical-data" % (country,bond_year)
+      df_country_rates = return_selenium_rates_table_to_df(url)
+
+    if(len(df_country_rates) == 0):
+      url = "https://www.investing.com/rates-bonds/%s-%s-years-bond-yield-historical-data" % (country,bond_year)
+      df_country_rates = return_selenium_rates_table_to_df(url)
+
+    try:
+        df_country_rates = df_country_rates.drop(['Open', 'High', 'Low', 'Change %'], axis=1)
+        df_country_rates['Date'] = pd.to_datetime(df_country_rates['Date'],format='%m/%d/%Y')
+        df_country_rates = df_country_rates.rename(columns={"Date": "DATE","Price": country})
+        df_country_rates[country] = pd.to_numeric(df_country_rates[country])
+        df_invest_data = combine_df_on_index(df_invest_data, df_country_rates, 'DATE')
+
+    except KeyError as e:
+        print("======================================%s DOES NOT EXIST=======================================" % country)
+        print("======================================%s DOES NOT EXIST=======================================" % url)
+
+  return df_invest_data.drop_duplicates()
+
+
+def return_selenium_rates_table_to_df(url):
+  #import pdb; pdb.set_trace() #Need to check that the URL is getting the data
+  page = get_page_selenium(url)
+  soup = BeautifulSoup(page, 'html.parser')
+  table = soup.find_all('table')[0]
+  df = convert_html_table_to_df(table, False)
+
+  return df
+
+def scrape_table_country_rating(url):
+    page = get_page(url)
+
+    soup = BeautifulSoup(page.content, 'html.parser')
+
+    #TODO: Need to scrape table for world production countries and numbers.
+    table = soup.find('table')
+
+    table_rows = table.find_all('tr', recursive=False)
+    #table_rows = table.find_all('tr', attrs={'class':'an-estimate-row'})
+    table_rows_header = table.find_all('tr')[0].find_all('th')
+    df = pd.DataFrame()
+    index = 0
+    for header in table_rows_header:
+        if(index == 0):
+            df.insert(0,"Country",[],True)
+        else:
+            df.insert(index,str(header.text).strip().replace("'", ""),[],True)
+        index+=1
+
+    #Get rows of data.
+    for tr in table_rows:
+        temp_row = []
+        #first_col = True
+        index = 0
+        td = tr.find_all('td')
+
+        if(td):        
+            for obs in td:
+                text = str(obs.text).strip()
+                temp_row.append(text)        
+                index += 1
+
+            df.loc[len(df.index)] = temp_row
+
+    df = df.drop(['TE'], axis=1)
+    return df

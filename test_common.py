@@ -6,8 +6,11 @@ from common import dataframe_convert_to_numeric, get_logger
 from common import set_earningswhispers_earnings_calendar, set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, set_yf_price_action, set_price_action_ta
 from common import set_todays_insider_trades, get_data, set_stlouisfed_data, set_yf_historical_data, calculate_etf_performance, calculate_annual_etf_performance
-from common import set_ism_manufacturing, set_summary_ratios, set_ta_pattern_stocks
+from common import set_ism_manufacturing, set_summary_ratios, set_ta_pattern_stocks, set_10y_rates, set_2y_rates, temp_load_excel_data_to_db
+from common import calc_ir_metrics
 from config import YF_ETF_SERIES
+#import chromedriver_autoinstaller as chromedriver
+#chromedriver.install()
 
 #YF_ETF_SERIES_TEST = [
 #    'SLY'
@@ -47,7 +50,41 @@ df_tickers_alternate = get_data(table="company")
 df_etf_historical_data = get_data(table="macro_yfhistoricaletfdata").reset_index(drop=True)
 df_tickers_one_ticker = df_tickers_alternate.loc[df_tickers_alternate['symbol'].isin(['VSAT'])]
 
+df_interest_rates_10y = get_data(table="macro_ir_10y")           
+df_interest_rates_10y = df_interest_rates_10y.sort_values('dt').fillna(method='ffill')           
+df_ir = calc_ir_metrics(df_interest_rates_10y[["dt", "australia"]])
+
+sheet_name = 'us_2y'
+
+excel_file_path = '/data/temp_macro_data/us_2y.csv'
+
+rename_cols = {
+    'DATE':'dt',
+#    'czech republic': 'czech_republic',
+#    'hong kong': 'hong_kong',
+#    'new zealand': 'new_zealand',
+#    'south africa': 'south_africa',
+#    'south korea': 'south_korea',
+#    'u.k.': 'uk',
+#    'u.s.':'us'
+}
+
+conflict_cols = "dt"
+database_table = 'macro_ir_2y'
+
 class TestCommon(unittest.TestCase):
+
+    def test_calc_ir_metrics(self):
+        self.assertEqual(calc_ir_metrics(df_ir), True)
+
+    #def test_temp_load_excel_data_to_db(self):
+    #    self.assertEqual(temp_load_excel_data_to_db(excel_file_path, sheet_name, database_table,rename_cols, conflict_cols), True)
+
+    #def test_set_10y_rates(self):
+    #    self.assertEqual(set_10y_rates(logger), True)
+
+    #def test_set_2y_rates(self):
+    #    self.assertEqual(set_2y_rates(logger), True)
 
     #def test_set_stlouisfed_data(self):
     #    self.assertEqual(set_stlouisfed_data(STLOUISFED_SERIES,logger), True)
@@ -58,8 +95,8 @@ class TestCommon(unittest.TestCase):
     #def test_set_price_action_ta(self):
     #    self.assertEqual(set_price_action_ta(df_tickers_alternate,logger), True)
 
-    def test_set_ta_pattern_stocks(self):
-        self.assertEqual(set_ta_pattern_stocks(df_tickers_alternate,logger), True)
+    #def test_set_ta_pattern_stocks(self):
+    #    self.assertEqual(set_ta_pattern_stocks(df_tickers_alternate,logger), True)
 
     #def test_set_ism_manufacturing(self):
     #    self.assertEqual(set_ism_manufacturing(logger), True)
