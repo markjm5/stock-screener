@@ -4074,37 +4074,49 @@ def calc_ir_metrics(df):
   rename_cols = {"dt": "series_date"}
   df_series = df_series.rename(columns=rename_cols)
 
-  #TODO: calculate_asset_percentage_changes
+  # calculate_asset_percentage_changes
   #1w 
   td = timedelta(days=5)
   last_5_days_date = last_date - td
   df_last_5_days = util_return_date_values(df_series,last_5_days_date)
   last_5_days_value = df_last_5_days[country].values[0]
+  #TODO: minus last price
 
   #1m 
   rd = relativedelta(months=+1)
   last_month_date = last_date - rd
   df_last_month = util_return_date_values(df_series,last_month_date)
   last_month_value = df_last_month[country].values[0]
+  #TODO: minus last price
 
   #3m
   rd = relativedelta(months=+3)
   last_3_months_date = last_date - rd
   df_last_3_months = util_return_date_values(df_series,last_3_months_date)
   last_3_months_value = df_last_3_months[country].values[0]
+  #TODO: minus last price
 
-  #ytd 
-  rd = relativedelta(years=+1)
-  ytd_date = last_date - rd
-  df_ytd = util_return_date_values(df_series,ytd_date)
+  #ytd   
+  year_first_day = date(date.today().year, 1, 1)
+  df_ytd = util_return_date_values(df_series,year_first_day)
   ytd_value = df_ytd[country].values[0]
+  #TODO: minus last price
 
-  #yoy   
-  # TODO: Find YTD date	
-  rd = relativedelta(years=+5)
-  last_5_years_date = last_date - rd
-  df_last_5_years = util_return_date_values(df_series,last_5_years_date)
-  last_5_years_value = df_last_5_years[country].values[0]
+  #yoy
+  rd = relativedelta(years=+1)
+  yoy_date = last_date - rd
+  df_yoy = util_return_date_values(df_series,yoy_date)
+  yoy_value = df_yoy[country].values[0]
+  #TODO: minus last price
+  
+  # create and return df with values
+  data = {'Country': [],'Last Date': [],'Last': [],'1w': [],'1m': [],'3m': [],'YTD': [],'YoY': []}
+
+  # Convert the dictionary into DataFrame
+  df_country_ir = pd.DataFrame(data)
+
+  temp_row = [country,last_date,last_value,last_5_days_value,last_month_value,last_3_months_value,ytd_value,yoy_value]
+  df_country_ir.loc[len(df_country_ir.index)] = temp_row
 
   import pdb; pdb.set_trace()
 
