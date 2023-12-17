@@ -1664,8 +1664,10 @@ if option == 'Macroeconomic Data':
             df_10y = df_10y.append(df_interest_rates_10y_uk,ignore_index = True) 
             df_10y = df_10y.append(df_interest_rates_10y_us,ignore_index = True) 
 
-            df_interest_rates_2y = get_data(table="macro_ir_2y")#.reset_index(drop=True)           
+            df_interest_rates_2y = get_data(table="macro_ir_2y")          
             df_interest_rates_2y = df_interest_rates_2y.sort_values('dt').fillna(method='ffill')           
+            rename_cols = {'australia':'Australia','brazil':'Brazil','canada':'Canada','china':'China','france':'France','germany':'Germany', 'uk': 'United Kingdom', 'us': 'United States'}
+            df_interest_rates_2y = df_interest_rates_2y.rename(columns=rename_cols)
 
             df_interest_rates_2y_australia = calc_ir_metrics(df_interest_rates_2y[["dt", "Australia"]])
             df_interest_rates_2y_brazil = calc_ir_metrics(df_interest_rates_2y[["dt", "Brazil"]])
@@ -1684,11 +1686,11 @@ if option == 'Macroeconomic Data':
             df_2y = df_2y.append(df_interest_rates_2y_uk,ignore_index = True) 
             df_2y = df_2y.append(df_interest_rates_2y_us,ignore_index = True) 
 
-            #.fillna(method='ffill')
-            #.sort_values('ism_date')
+            #TODO: Also calculate 10y - 2y values
+
+            #TODO: Also get country credit ratings
+
             import pdb; pdb.set_trace()
-            #TODO: Apply FillNA on dfs
-            #TODO: Calculate metrics and display in table
 
     if option_indicator_type == 'Leading Indicator':
         st.subheader(f'Leading Indicators')
