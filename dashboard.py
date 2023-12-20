@@ -114,9 +114,6 @@ if option == 'Download Data':
             e1p3 = executor.submit(set_whitehouse_news, logger)
             e1p4 = executor.submit(set_geopolitical_calendar, logger)
             e1p5 = executor.submit(set_price_action_ta, df_tickers, logger)
-            e1p6 = executor.submit(set_10y_rates,logger)
-            e1p7 = executor.submit(set_2y_rates,logger)
-            e1p8 = executor.submit(set_country_credit_rating,logger)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
@@ -146,7 +143,7 @@ if option == 'Download Data':
         data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
-        for x in range(1,9):
+        for x in range(1,6):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
             temp_row = [executor_count,x,result]
             df_result.loc[len(df_result.index)] = temp_row
@@ -454,6 +451,9 @@ if option == 'Download Data':
             e1p4 = executor.submit(set_yf_historical_data, config.YF_ETF_SERIES,logger)
             e1p5 = executor.submit(set_10y_rates, logger)
             e1p6 = executor.submit(set_2y_rates, logger)
+            e1p7 = executor.submit(set_10y_rates,logger)
+            e1p8 = executor.submit(set_2y_rates,logger)
+            e1p9 = executor.submit(set_country_credit_rating,logger)
 
         #import pdb; pdb.set_trace()
         calculate_annual_etf_performance_status = calculate_annual_etf_performance(df_historical_etf_data,logger)        
@@ -521,7 +521,7 @@ if option == 'Download Data':
         data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
-        for x in range(1,7):
+        for x in range(1,10):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
             temp_row = [executor_count,x,result]
             df_result.loc[len(df_result.index)] = temp_row
