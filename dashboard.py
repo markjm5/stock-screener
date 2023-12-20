@@ -1663,6 +1663,14 @@ if option == 'Macroeconomic Data':
             df_10y = df_10y.append(df_interest_rates_10y_germany,ignore_index = True) 
             df_10y = df_10y.append(df_interest_rates_10y_uk,ignore_index = True) 
             df_10y = df_10y.append(df_interest_rates_10y_us,ignore_index = True) 
+            
+            df_10y['Last Date'] = pd.to_datetime(df_10y['Last Date'],format='%Y-%m-%d')
+            df_10y['Last'] = pd.to_numeric(df_10y['Last'])
+            df_10y['1w'] = pd.to_numeric(df_10y['1w'])
+            df_10y['1m'] = pd.to_numeric(df_10y['1m'])
+            df_10y['3m'] = pd.to_numeric(df_10y['3m'])
+            df_10y['YTD'] = pd.to_numeric(df_10y['YTD'])
+            df_10y['YoY'] = pd.to_numeric(df_10y['YoY'])
 
             df_interest_rates_2y = get_data(table="macro_ir_2y")          
             df_interest_rates_2y = df_interest_rates_2y.sort_values('dt').fillna(method='ffill')           
@@ -1686,11 +1694,88 @@ if option == 'Macroeconomic Data':
             df_2y = df_2y.append(df_interest_rates_2y_uk,ignore_index = True) 
             df_2y = df_2y.append(df_interest_rates_2y_us,ignore_index = True) 
 
-            #TODO: Also calculate 10y - 2y values
+            df_2y['Last Date'] = pd.to_datetime(df_2y['Last Date'],format='%Y-%m-%d')
+            df_2y['Last'] = pd.to_numeric(df_2y['Last'])
+            df_2y['1w'] = pd.to_numeric(df_2y['1w'])
+            df_2y['1m'] = pd.to_numeric(df_2y['1m'])
+            df_2y['3m'] = pd.to_numeric(df_2y['3m'])
+            df_2y['YTD'] = pd.to_numeric(df_2y['YTD'])
+            df_2y['YoY'] = pd.to_numeric(df_2y['YoY'])
 
-            #TODO: Also get country credit ratings
+            # Calculate 10y - 2y values
+            data = {'Country': [],'Last': [],'1w': [],'1m': [],'3m': [],'YTD': [],'YoY': []}
 
-            import pdb; pdb.set_trace()
+            # Convert the dictionary into DataFrame
+            df_10y_minus_2y = pd.DataFrame(data)
+
+            df_10y_minus_2y['Country'] = ['Australia','Brazil','Canada','China','France','Germany','United Kingdom','United States']
+            df_10y_minus_2y['Last'] = df_10y['Last'] - df_2y['Last']
+            df_10y_minus_2y['1w'] = df_10y['1w'] - df_2y['1w']
+            df_10y_minus_2y['1m'] = df_10y['1m'] - df_2y['1m']
+            df_10y_minus_2y['3m'] = df_10y['3m'] - df_2y['3m']
+            df_10y_minus_2y['YTD'] = df_10y['YTD'] - df_2y['YTD']
+            df_10y_minus_2y['YoY'] = df_10y['YoY'] - df_2y['YoY']
+
+            st.markdown('10Y Interest Rates')
+
+            rename_cols = {}
+            cols_gradient = ['Last','1w','1m','3m','YTD','YoY']
+            cols_drop = []
+            format_cols = {
+                'Last': '{:,.2f}'.format,
+                '1w': '{:,.2f}'.format,
+                '1m': '{:,.2f}'.format,
+                '3m': '{:,.2f}'.format,
+                'YTD': '{:,.2f}'.format,
+                'YoY': '{:,.2f}'.format,
+                'Last Date': lambda t: t.strftime("%d-%m-%Y"),                
+            }
+
+            disp,df = style_df_for_display(df_10y,cols_gradient,rename_cols,cols_drop,format_cols)
+            st.markdown(disp.to_html(), unsafe_allow_html=True)           
+
+            st.markdown("""---""")
+
+            st.markdown('2Y Interest Rates')
+
+            rename_cols = {}
+            cols_gradient = ['Last','1w','1m','3m','YTD','YoY']
+            cols_drop = []
+            format_cols = {
+                'Last': '{:,.2f}'.format,
+                '1w': '{:,.2f}'.format,
+                '1m': '{:,.2f}'.format,
+                '3m': '{:,.2f}'.format,
+                'YTD': '{:,.2f}'.format,
+                'YoY': '{:,.2f}'.format,
+                'Last Date': lambda t: t.strftime("%d-%m-%Y"),                
+            }
+
+            disp,df = style_df_for_display(df_2y,cols_gradient,rename_cols,cols_drop,format_cols)
+            st.markdown(disp.to_html(), unsafe_allow_html=True)           
+
+            st.markdown("""---""")
+
+            st.markdown('10Y - 2Y Interest Rates')
+
+            rename_cols = {}
+            cols_gradient = ['Last','1w','1m','3m','YTD','YoY']
+            cols_drop = []
+            format_cols = {
+                'Last': '{:,.2f}'.format,
+                '1w': '{:,.2f}'.format,
+                '1m': '{:,.2f}'.format,
+                '3m': '{:,.2f}'.format,
+                'YTD': '{:,.2f}'.format,
+                'YoY': '{:,.2f}'.format,
+                'Last Date': lambda t: t.strftime("%d-%m-%Y"),                
+            }
+
+            disp,df = style_df_for_display(df_10y_minus_2y,cols_gradient,rename_cols,cols_drop,format_cols)
+            st.markdown(disp.to_html(), unsafe_allow_html=True)          
+
+            #TODO: Fix Australia Interst Rates (they are the same for 10Y and 2Y)
+            #TODO: Get Company Credit Ratings
 
     if option_indicator_type == 'Leading Indicator':
         st.subheader(f'Leading Indicators')
@@ -2005,6 +2090,7 @@ if option == 'Single Stock One Pager':
                     ev = None
                     dividend_this_year = None
                     dividend_this_year_formatted = None
+                    earnings_date_str = None
 
                 try:
                     beta = json_module_profile[0]['beta']
