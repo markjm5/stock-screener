@@ -170,7 +170,8 @@ CREATE TABLE IF NOT EXISTS Macro_GeopoliticalCalendar (
 CREATE TABLE IF NOT EXISTS TA_Patterns (
     id SERIAL,
     ticker TEXT NOT NULL,
-    pattern TEXT NOT NULL
+    pattern TEXT NOT NULL,
+    dt timestamp not null default CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS Macro_InsiderTrading (
@@ -680,4 +681,38 @@ CREATE TABLE IF NOT EXISTS Macro_ETFPerformance (
     last_5_years_value NUMERIC,
     last_5_years_pct NUMERIC,
     PRIMARY KEY (asset)
+);
+
+CREATE TABLE IF NOT EXISTS Macro_IR_2Y (
+    dt DATE NOT NULL,
+    australia NUMERIC,
+    brazil NUMERIC,
+    canada NUMERIC,
+    china NUMERIC,
+    france NUMERIC,
+    germany NUMERIC,
+    uk NUMERIC,
+    us NUMERIC,
+    PRIMARY KEY (dt)
+);
+
+CREATE TABLE IF NOT EXISTS Macro_IR_10Y (
+    dt DATE NOT NULL,
+    australia NUMERIC,
+    brazil NUMERIC,
+    canada NUMERIC,
+    china NUMERIC,
+    france NUMERIC,
+    germany NUMERIC,
+    uk NUMERIC,
+    us NUMERIC,
+    PRIMARY KEY (dt)
+);
+
+CREATE TABLE IF NOT EXISTS Macro_CountryRatings (
+    id SERIAL,
+    country TEXT NOT NULL,    
+    s_and_p TEXT NULL,        
+    moodys TEXT NULL,     
+    dbrs TEXT NULL
 );
