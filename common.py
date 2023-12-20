@@ -4081,7 +4081,7 @@ def calc_ir_metrics(df):
   last_5_days_date = last_date - td
   df_last_5_days = util_return_date_values(df_series,last_5_days_date)
   last_5_days_value = df_last_5_days[country].values[0]
-  #TODO: minus last price
+  # minus last price
   last_5_days_value = decimal.Decimal(last_value) - decimal.Decimal(last_5_days_value)
   last_5_days_value = round(last_5_days_value, 2)
 
@@ -4090,7 +4090,7 @@ def calc_ir_metrics(df):
   last_month_date = last_date - rd
   df_last_month = util_return_date_values(df_series,last_month_date)
   last_month_value = df_last_month[country].values[0]
-  #TODO: minus last price
+  # minus last price
   last_month_value = decimal.Decimal(last_value) - decimal.Decimal(last_month_value)
   last_month_value = round(last_month_value, 2)
 
@@ -4099,7 +4099,7 @@ def calc_ir_metrics(df):
   last_3_months_date = last_date - rd
   df_last_3_months = util_return_date_values(df_series,last_3_months_date)
   last_3_months_value = df_last_3_months[country].values[0]
-  #TODO: minus last price
+  # minus last price
   last_3_months_value = decimal.Decimal(last_value) - decimal.Decimal(last_3_months_value)
   last_3_months_value = round(last_3_months_value, 2)
 
@@ -4107,7 +4107,7 @@ def calc_ir_metrics(df):
   year_first_day = date(date.today().year, 1, 1)
   df_ytd = util_return_date_values(df_series,year_first_day)
   ytd_value = df_ytd[country].values[0]
-  #TODO: minus last price
+  # minus last price
   ytd_value = decimal.Decimal(last_value) - decimal.Decimal(ytd_value)
   ytd_value = round(ytd_value, 2)
 
@@ -4116,7 +4116,7 @@ def calc_ir_metrics(df):
   yoy_date = last_date - rd
   df_yoy = util_return_date_values(df_series,yoy_date)
   yoy_value = df_yoy[country].values[0]
-  #TODO: minus last price
+  # minus last price
   yoy_value = decimal.Decimal(last_value) - decimal.Decimal(yoy_value)
   yoy_value = round(yoy_value, 2)
 
@@ -4131,25 +4131,29 @@ def calc_ir_metrics(df):
 
   return df_country_ir
 
-#################################################
-# Get Credit Rating Data from Trading Economics #
-#################################################
-
-def set_country_credit_rating():
-
-  #https://tradingeconomics.com/country-list/rating
-
-  sheet_name = 'DB Credit Rating'
+# Set Credit Rating Data from Trading Economics
+def set_country_credit_rating(logger):
+  success = False
 
   #Get World Production Data
   df_country_credit_rating = scrape_table_country_rating("https://tradingeconomics.com/country-list/rating")
 
-  df_original = convert_excelsheet_to_dataframe(excel_file_path, sheet_name)
+  # Write to database
+  rename_cols = {
+    "Country": "country",    
+    "Moodys":"Moodys",     
+    "DBRS":"dbrs",
+    "S&P":"s_and_p"
+  }
+  try:
+    #Clear out old data
+    sql_delete_all_rows('Macro_CountryRatings')
+    success = sql_write_df_to_db(df_country_credit_rating, "Macro_CountryRatings",rename_cols=rename_cols)
+    logger.info(f'Successfully Downloaded Company Credit Ratings')     
+  except Exception as e:
+    logger.error(f'Failed to download Company Credit Ratings')     
 
-  df_updated = combine_df_on_index(df_original, df_country_credit_rating, 'Country')
-
-  write_dataframe_to_excel(excel_file_path, sheet_name, df_updated, False, -1)
-
+  return success
 
 def get_invest_data_manual_scrape(country_list, bond_year):
 
@@ -4199,6 +4203,7 @@ def return_selenium_rates_table_to_df(url):
   return df
 
 def scrape_table_country_rating(url):
+    #import pdb; pdb.set_trace()
     page = get_page(url)
 
     soup = BeautifulSoup(page.content, 'html.parser')

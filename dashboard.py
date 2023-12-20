@@ -25,11 +25,12 @@ from common import set_marketscreener_economic_calendar, dataframe_convert_to_nu
 from common import set_whitehouse_news, set_geopolitical_calendar, get_data, sql_get_volume, set_yf_historical_data
 from common import set_price_action_ta, set_todays_insider_trades, combine_df_on_index
 from common import style_df_for_display, style_df_for_display_date, format_fields_for_dashboard, get_yf_price_action
-from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, format_outlook
+from common import format_df_for_dashboard_flip, format_df_for_dashboard, format_volume_df, set_country_credit_rating
 from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manufacturing, set_ism_services
 from common import display_chart, display_chart_ism, append_two_df, standard_display, display_chart_assets
 from common import calculate_etf_performance, calculate_annual_etf_performance, format_bullish_bearish, format_earnings_surprises
 from common import get_financialmodelingprep_price_action, set_summary_ratios, get_summary_ratios, set_2y_rates, set_10y_rates, calc_ir_metrics
+
 import seaborn as sns
 from copy import deepcopy
 
@@ -113,7 +114,9 @@ if option == 'Download Data':
             e1p3 = executor.submit(set_whitehouse_news, logger)
             e1p4 = executor.submit(set_geopolitical_calendar, logger)
             e1p5 = executor.submit(set_price_action_ta, df_tickers, logger)
-            #e1p6 = executor.submit(set_todays_insider_trades,logger)
+            e1p6 = executor.submit(set_10y_rates,logger)
+            e1p7 = executor.submit(set_2y_rates,logger)
+            e1p8 = executor.submit(set_country_credit_rating,logger)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
@@ -143,7 +146,7 @@ if option == 'Download Data':
         data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
-        for x in range(1,6):
+        for x in range(1,9):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
             temp_row = [executor_count,x,result]
             df_result.loc[len(df_result.index)] = temp_row
@@ -1686,7 +1689,7 @@ if option == 'Macroeconomic Data':
             df_interest_rates_2y_uk = calc_ir_metrics(df_interest_rates_2y[["dt", "United Kingdom"]])
             df_interest_rates_2y_us = calc_ir_metrics(df_interest_rates_2y[["dt", "United States"]])
 
-            df_2y = df_interest_rates_10y_australia.append(df_interest_rates_2y_brazil,ignore_index = True) 
+            df_2y = df_interest_rates_2y_australia.append(df_interest_rates_2y_brazil,ignore_index = True) 
             df_2y = df_2y.append(df_interest_rates_2y_canada,ignore_index = True) 
             df_2y = df_2y.append(df_interest_rates_2y_china,ignore_index = True) 
             df_2y = df_2y.append(df_interest_rates_2y_france,ignore_index = True) 
@@ -1719,7 +1722,8 @@ if option == 'Macroeconomic Data':
             st.markdown('10Y Interest Rates')
 
             rename_cols = {}
-            cols_gradient = ['Last','1w','1m','3m','YTD','YoY']
+            #cols_gradient = ['Last','1w','1m','3m','YTD','YoY']
+            cols_gradient = []
             cols_drop = []
             format_cols = {
                 'Last': '{:,.2f}'.format,
@@ -1739,7 +1743,8 @@ if option == 'Macroeconomic Data':
             st.markdown('2Y Interest Rates')
 
             rename_cols = {}
-            cols_gradient = ['Last','1w','1m','3m','YTD','YoY']
+            #cols_gradient = ['Last','1w','1m','3m','YTD','YoY']
+            cols_gradient = []
             cols_drop = []
             format_cols = {
                 'Last': '{:,.2f}'.format,
@@ -1759,7 +1764,8 @@ if option == 'Macroeconomic Data':
             st.markdown('10Y - 2Y Interest Rates')
 
             rename_cols = {}
-            cols_gradient = ['Last','1w','1m','3m','YTD','YoY']
+            #cols_gradient = ['Last','1w','1m','3m','YTD','YoY']
+            cols_gradient = []
             cols_drop = []
             format_cols = {
                 'Last': '{:,.2f}'.format,
@@ -1774,8 +1780,28 @@ if option == 'Macroeconomic Data':
             disp,df = style_df_for_display(df_10y_minus_2y,cols_gradient,rename_cols,cols_drop,format_cols)
             st.markdown(disp.to_html(), unsafe_allow_html=True)          
 
-            #TODO: Fix Australia Interst Rates (they are the same for 10Y and 2Y)
-            #TODO: Get Company Credit Ratings
+            # Get Company Credit Ratings
+            st.markdown("""---""")
+            st.markdown('Country Ratings')
+
+            df_country_ratings = get_data(table="macro_countryratings")           
+            # Filter by certain countries only
+            countries_list = ['Australia','Brazil','Canada','China','France','Germany', 'United Kingdom', 'United States'] #{'australia':'Australia','brazil':'Brazil','canada':'Canada','china':'China','france':'France','germany':'Germany', 'uk': 'United Kingdom', 'us': 'United States'}
+            # selecting rows based on condition 
+            df_countries_list_filtered = df_country_ratings[df_country_ratings['country'].isin(countries_list)]
+            df_countries_list_filtered = df_countries_list_filtered.sort_values(by=['country'], ascending=True)
+            rename_cols = {
+                'country':'Country',	
+                's_and_p':'S&P',	
+                'moodys':'Moodys',	
+                'dbr':'DBR',
+            }
+            cols_gradient = []
+            cols_drop = ['id',]
+            format_cols = {}
+
+            disp,df = style_df_for_display(df_countries_list_filtered,cols_gradient,rename_cols,cols_drop,format_cols)
+            st.markdown(disp.to_html(), unsafe_allow_html=True)          
 
     if option_indicator_type == 'Leading Indicator':
         st.subheader(f'Leading Indicators')
