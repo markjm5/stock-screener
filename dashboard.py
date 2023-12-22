@@ -16,6 +16,7 @@ import concurrent.futures
 from psycopg2 import sql
 from datetime import date
 from datetime import datetime as dt
+from dateutil.relativedelta import relativedelta
 from common import set_finwiz_stock_data, set_stockrow_stock_data, set_zacks_balance_sheet_shares
 from common import set_zacks_peer_comparison, set_zacks_earnings_surprises, set_zacks_product_line_geography
 from common import set_yf_key_stats, get_zacks_us_companies, handle_exceptions_print_result
@@ -1803,6 +1804,53 @@ if option == 'Macroeconomic Data':
 
             disp,df = style_df_for_display(df_countries_list_filtered,cols_gradient,rename_cols,cols_drop,format_cols)
             st.markdown(disp.to_html(), unsafe_allow_html=True)          
+        if option_interest_rates_charts == '013 - Yield Curve':    
+            df_us_treasury_yields = get_data(table="macro_ustreasuryyields") 
+            df_us_treasury_yields = df_us_treasury_yields.rename(columns={"dt": "DATE"}) 
+            df_us_treasury_yields['DATE'] = pd.to_datetime(df_us_treasury_yields['DATE'],format='%Y-%m-%d')
+            df_us_treasury_yields['10Y-2Y'] = df_us_treasury_yields['rate10y'] - df_us_treasury_yields['rate2y']
+            df_us_treasury_yields['10Y-3Y'] = df_us_treasury_yields['rate10y'] - df_us_treasury_yields['rate3y']         
+            #df_us_treasury_yields['10Y-2Y'] = pd.to_numeric(df_us_treasury_yields['10Y-2Y'])
+            #df_us_treasury_yields['10Y-3Y'] = pd.to_numeric(df_us_treasury_yields['10Y-3Y'])
+
+            df_display = df_us_treasury_yields[["DATE", "10Y-2Y", "10Y-3Y"]]
+            tabs_list = ["📈 Yield Curve 2Y-10Y", 
+                        "📈 Yield Curve 3Y-10Y", 
+                        "📈 Interest Rates 2M & 30Y"]
+            
+            tab1, tab2, tab3 = st.tabs(tabs_list)
+
+            #TAB 1
+            # Get the most recent data (ie. last 8 years)
+            todays_date = date.today()
+            start_date = todays_date - relativedelta(years=8)
+            date_str_start = "%s-%s-%s" % (start_date.year, start_date.month, start_date.day)
+
+            df_display_recent = df_display.loc[(df_display['DATE'] >= date_str_start)].reset_index(drop=True)            
+            col1, col2 = tab1.columns(2)
+
+            series = "10Y-2Y"
+            chart_settings = {
+                "type": "line",
+                "title": "Yield Curve 10Y - 2Y", 
+                "xlabel": "Date", 
+                "ylabel": "Rate", 
+                "ypercentage": False,
+            }
+
+            display_chart(chart_settings, df_display_recent, series, tab1, col=col1)
+
+            series = "10Y-3Y"
+            chart_settings = {
+                "type": "line",
+                "title": "Yield Curve 10Y - 3Y", 
+                "xlabel": "Date", 
+                "ylabel": "Rate", 
+                "ypercentage": False,
+            }
+
+            display_chart(chart_settings, df_display_recent, series, tab1, col=col2)
+
 
     if option_indicator_type == 'Leading Indicator':
         st.subheader(f'Leading Indicators')
