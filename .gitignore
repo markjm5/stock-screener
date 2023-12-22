@@ -132,3 +132,5 @@ dmypy.json
 *.log
 logs/
 data/daily_prices/
+data/temp_macro_data/
+data/xml/
