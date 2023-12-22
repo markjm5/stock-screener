@@ -30,7 +30,7 @@ from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manu
 from common import display_chart, display_chart_ism, append_two_df, standard_display, display_chart_assets
 from common import calculate_etf_performance, calculate_annual_etf_performance, format_bullish_bearish, format_earnings_surprises
 from common import get_financialmodelingprep_price_action, set_summary_ratios, get_summary_ratios, set_2y_rates, set_10y_rates, calc_ir_metrics
-
+from common import set_us_treasury_yields
 import seaborn as sns
 from copy import deepcopy
 
@@ -454,6 +454,7 @@ if option == 'Download Data':
             e1p7 = executor.submit(set_10y_rates,logger)
             e1p8 = executor.submit(set_2y_rates,logger)
             e1p9 = executor.submit(set_country_credit_rating,logger)
+            e1p10 = executor.submit(set_us_treasury_yields,logger)
 
         #import pdb; pdb.set_trace()
         calculate_annual_etf_performance_status = calculate_annual_etf_performance(df_historical_etf_data,logger)        
@@ -521,7 +522,7 @@ if option == 'Download Data':
         data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
-        for x in range(1,10):
+        for x in range(1,11):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
             temp_row = [executor_count,x,result]
             df_result.loc[len(df_result.index)] = temp_row

@@ -716,3 +716,14 @@ CREATE TABLE IF NOT EXISTS Macro_CountryRatings (
     moodys TEXT NULL,     
     dbrs TEXT NULL
 );
+
+CREATE TABLE IF NOT EXISTS Macro_USTreasuryYields (
+    id SERIAL,
+    dt DATE NOT NULL,    
+    rate3m NUMERIC,
+    rate2y NUMERIC,
+    rate3y NUMERIC,
+    rate10y NUMERIC,
+    rate30y NUMERIC,
+    PRIMARY KEY (dt)
+);

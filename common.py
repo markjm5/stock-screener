@@ -39,6 +39,7 @@ from dateutil import rrule
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
+import xml.etree.ElementTree as ET
 #from zipfile import ZipFile
 
 isWindows = False
@@ -4240,3 +4241,75 @@ def scrape_table_country_rating(url):
 
     df = df.drop(['TE'], axis=1)
     return df
+
+
+def set_us_treasury_yields(logger):
+  success = False
+  filename = '013_Daily_Treasury_Yields.xml'
+
+  todays_date = date.today()
+  date_str = "%s%s" % (todays_date.strftime('%Y'), todays_date.strftime('%m'))
+
+  url = "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value_month=%s" % (date_str,)
+
+  file_path = "%s/data/xml/%s" % (sys.path[0],filename)
+
+  try:
+      resp = requests.get(url=url)
+
+      resp_formatted = resp.text[resp.text.find('<'):len(resp.text)]
+      # Write response to an XML File
+      with open(file_path, 'w') as f:
+          f.write(resp_formatted)
+
+  except requests.exceptions.ConnectionError:
+      print("Connection refused, Opening from File...")
+
+  # Load in the XML file into ElementTree
+  tree = ET.parse(file_path)
+  data = {'dt': [], 'rate3m':[], 'rate2y': [], 'rate3y': [], 'rate10y': [], 'rate30y': []}
+  df_us_treasury_yields = pd.DataFrame(data=data)
+
+  #Load into a dataframe and return the data frame
+  root = tree.getroot()
+
+  ns = {'ty': 'http://www.w3.org/2005/Atom'}
+
+  # <class 'xml.etree.ElementTree.Element'>
+  for content in root.findall('./ty:entry/ty:content',ns):
+    temp_row = []
+
+    for elem in content.iter():
+      #Check if current tag is the date, 30y, 10y, 2y or 3y
+      if(elem.tag.__contains__("NEW_DATE")|elem.tag.__contains__("BC_3MONTH")|elem.tag.__contains__("BC_2YEAR")|elem.tag.__contains__("BC_3YEAR")|elem.tag.__contains__("BC_10YEAR")|elem.tag.__contains__("BC_30YEARDISPLAY")):
+        temp_row.append(elem.text)        
+
+    try:
+      df_us_treasury_yields.loc[len(df_us_treasury_yields.index)] = temp_row
+      logger.info(f'Rates: {temp_row}')     
+    except ValueError as e:
+      logger.error(f'Cound not append row {temp_row}')
+    #print(elem.tag)
+    #print(elem.text)
+
+  # format columns
+  df_us_treasury_yields['dt'] = pd.to_datetime(df_us_treasury_yields['dt'],format='%Y-%m-%d')
+  df_us_treasury_yields['rate3m'] = pd.to_numeric(df_us_treasury_yields['rate3m'])
+  df_us_treasury_yields['rate2y'] = pd.to_numeric(df_us_treasury_yields['rate2y'])
+  df_us_treasury_yields['rate3y'] = pd.to_numeric(df_us_treasury_yields['rate3y'])
+  df_us_treasury_yields['rate10y'] = pd.to_numeric(df_us_treasury_yields['rate10y'])
+  df_us_treasury_yields['rate30y'] = pd.to_numeric(df_us_treasury_yields['rate30y'])
+
+  # Write to database
+  try:
+    rename_cols = {}
+    #add_col_values = {}
+    #conflict_cols = "dt"
+
+    success = sql_write_df_to_db(df_us_treasury_yields, "Macro_USTreasuryYields",rename_cols=rename_cols)
+    logger.info(f'Successfully Downloaded US Treasury Yields for: {date_str}')     
+  except Exception as e:
+    logger.error(f'Could not download US Treasury Yields for: {date_str}')     
+
+  return success
+#  return df_us_treasury_yields
