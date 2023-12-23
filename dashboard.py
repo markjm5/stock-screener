@@ -1644,10 +1644,11 @@ if option == 'Macroeconomic Data':
             		
     if option_indicator_type == 'Interest Rates':
         st.subheader(f'Interest Rates')
+        df_interest_rates_10y = get_data(table="macro_ir_10y")           
+        df_us_treasury_yields = get_data(table="macro_ustreasuryyields") 
 
         option_interest_rates_charts = st.sidebar.selectbox("Charts", ('013 - Interest Rates','013 - Yield Curve'), 0)
         if option_interest_rates_charts == '013 - Interest Rates':    
-            df_interest_rates_10y = get_data(table="macro_ir_10y")           
             df_interest_rates_10y = df_interest_rates_10y.sort_values('dt').fillna(method='ffill')           
             rename_cols = {'australia':'Australia','brazil':'Brazil','canada':'Canada','china':'China','france':'France','germany':'Germany', 'uk': 'United Kingdom', 'us': 'United States'}
             df_interest_rates_10y = df_interest_rates_10y.rename(columns=rename_cols)
@@ -1805,7 +1806,6 @@ if option == 'Macroeconomic Data':
             disp,df = style_df_for_display(df_countries_list_filtered,cols_gradient,rename_cols,cols_drop,format_cols)
             st.markdown(disp.to_html(), unsafe_allow_html=True)          
         if option_interest_rates_charts == '013 - Yield Curve':    
-            df_us_treasury_yields = get_data(table="macro_ustreasuryyields") 
             df_us_treasury_yields = df_us_treasury_yields.rename(columns={"dt": "DATE"}) 
             df_us_treasury_yields['DATE'] = pd.to_datetime(df_us_treasury_yields['DATE'],format='%Y-%m-%d')
             df_us_treasury_yields['10Y-2Y'] = df_us_treasury_yields['rate10y'] - df_us_treasury_yields['rate2y']
@@ -1815,10 +1815,9 @@ if option == 'Macroeconomic Data':
 
             df_display = df_us_treasury_yields[["DATE", "10Y-2Y", "10Y-3Y"]]
             tabs_list = ["📈 Yield Curve 2Y-10Y", 
-                        "📈 Yield Curve 3Y-10Y", 
-                        "📈 Interest Rates 2M & 30Y"]
+                        "📈 Interest Rates Table"]
             
-            tab1, tab2, tab3 = st.tabs(tabs_list)
+            tab1, tab2 = st.tabs(tabs_list)
 
             #TAB 1
             # Get the most recent data (ie. last 8 years)
@@ -1851,6 +1850,18 @@ if option == 'Macroeconomic Data':
 
             display_chart(chart_settings, df_display_recent, series, tab1, col=col2)
 
+            #TAB 2
+            rename_cols = {'rate3m':'3 Month','rate2y':'2 Year','rate3y':'3 Year','rate10y':'10 Year','rate30y':'30 Year'}
+
+            #cols_gradient = ['Last','1w','1m','3m','YTD','YoY']
+            cols_gradient = []
+            cols_drop = ['id','10Y-2Y','10Y-3Y']            
+            format_cols = {
+                'DATE': lambda t: t.strftime("%d-%m-%Y"),                
+            }
+
+            disp,df = style_df_for_display(df_us_treasury_yields.sort_values(by=['DATE'],ascending=False),cols_gradient,rename_cols,cols_drop,format_cols)
+            tab2.markdown(disp.to_html(), unsafe_allow_html=True)           
 
     if option_indicator_type == 'Leading Indicator':
         st.subheader(f'Leading Indicators')
