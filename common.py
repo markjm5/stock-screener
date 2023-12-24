@@ -683,40 +683,39 @@ def set_financialmodelingprep_dcf(df_tickers,logger):
 
     url_dcf_url = 'https://financialmodelingprep.com/api/v3/discounted-cash-flow/%s?apikey=%s' % (ticker,config.API_KEY_FMP)
     json_module_dcf_inputs = json.loads(get_page(url_dcf_url).content)
-
-    dcf = json_module_dcf_inputs[0]['dcf']
-    stock_price =  json_module_dcf_inputs[0]['Stock Price']
-    is_close = ""
-    valued = ""
-    # calculate how far current price is from dcf value
-    if(np.isclose(dcf,stock_price,rtol=0.10)):
-      is_close = "fair price"
-    elif(np.isclose(dcf,stock_price,rtol=0.20)):
-      is_close = "moderate"
-    else:
-      is_close = "grossly"
-    if(float(dcf) < float(stock_price)):
-      valued = "overvalued"
-    else:
-      valued = "undervalued"
-
-    #print(f'DCF: {dcf}')
-    #print(f'Stock Price: {stock_price}')
-    #print()
-    if(is_close == 'fair price'):
-      under_over = f'{is_close}'
-    else:
-      under_over = f'{is_close} {valued}'
-
-    list_dcf = [stock_price, dcf, under_over]
-    #Create DF containing this data
-    data = {'stock_price': [], 'dcf': [], 'under_over': []}
-
-    # Convert the dictionary into DataFrame
-    df_dcf = pd.DataFrame(data)
-    df_dcf.loc[len(df_dcf.index)] = list_dcf
-    # get ticker cid
     try:
+      dcf = json_module_dcf_inputs[0]['dcf']
+      stock_price =  json_module_dcf_inputs[0]['Stock Price']
+      is_close = ""
+      valued = ""
+      # calculate how far current price is from dcf value
+      if(np.isclose(dcf,stock_price,rtol=0.10)):
+        is_close = "fair price"
+      elif(np.isclose(dcf,stock_price,rtol=0.20)):
+        is_close = "moderate"
+      else:
+        is_close = "grossly"
+      if(float(dcf) < float(stock_price)):
+        valued = "overvalued"
+      else:
+        valued = "undervalued"
+
+      #print(f'DCF: {dcf}')
+      #print(f'Stock Price: {stock_price}')
+      #print()
+      if(is_close == 'fair price'):
+        under_over = f'{is_close}'
+      else:
+        under_over = f'{is_close} {valued}'
+
+      list_dcf = [stock_price, dcf, under_over]
+      #Create DF containing this data
+      data = {'stock_price': [], 'dcf': [], 'under_over': []}
+
+      # Convert the dictionary into DataFrame
+      df_dcf = pd.DataFrame(data)
+      df_dcf.loc[len(df_dcf.index)] = list_dcf
+      # get ticker cid
       cid = sql_get_cid(ticker)
       if(cid):
         rename_cols = {}
@@ -727,8 +726,8 @@ def set_financialmodelingprep_dcf(df_tickers,logger):
 
         logger.info(f'Successfully Saved Stock Value DCF for {ticker}')
 
-    except Exception as e:
-      logger.exception(f'Could Not Save Stock Value DCF for {ticker}: {e}')    
+    except IndexError as e:
+      logger.error(f'Could Not Save Stock Value DCF for {ticker}: {e}')    
 
   return success
 

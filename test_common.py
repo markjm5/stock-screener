@@ -94,7 +94,7 @@ class TestCommon(unittest.TestCase):
     #    self.assertEqual(set_us_treasury_yields(date_str, logger),True)
 
     def test_set_financialmodelingprep_dcf(self):
-        self.assertEqual(set_financialmodelingprep_dcf('ADBE',logger),True)
+        self.assertEqual(set_financialmodelingprep_dcf(df_tickers_alternate,logger),True)
 
     #def test_calc_ir_metrics(self):
     #    self.assertEqual(calc_ir_metrics(df_ir), True)
