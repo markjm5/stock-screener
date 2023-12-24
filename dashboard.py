@@ -92,7 +92,7 @@ if option == 'Download Data':
     clicked1 = st.markdown("Download Price Action Data (takes 15 minutes)")
     clicked1 = st.button(label="Click to Download Price Action Data",key="price_data")
 
-    clicked2 = st.markdown("Download Stock Data (takes 1 hour)")
+    clicked2 = st.markdown("Download Stock Data (takes 2 hours)")
     clicked2 = st.button(label="Click to Download Stock Data", key="stock_data")
 
     clicked3 = st.markdown("Download Stock Row Data (takes 6 hours)")

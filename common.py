@@ -675,6 +675,45 @@ def get_financialmodelingprep_price_action(ticker,logger):
 
   return json_module_profile, json_module_quote, json_module_balance_sheet, json_module_key_metrics, json_module_company_outlook, json_module_price_target_summary,json_module_key_metrics_ttm, json_module_company_core_information, json_module_company_income_statement, error
 
+def get_financialmodelingprep_dcf(logger):
+  ticker = 'CRM'  
+  url_dcf_url = 'https://financialmodelingprep.com/api/v3/discounted-cash-flow/%s?apikey=%s' % (ticker,config.API_KEY_FMP)
+  #'https://financialmodelingprep.com/api/v4/advanced_levered_discounted_cash_flow?symbol=%s&apikey=%s' % (ticker,config.API_KEY_FMP) 
+  # https://www.youtube.com/watch?v=gLULdxrS-CU - The Theory
+  # https://www.youtube.com/watch?v=Vi-BQx4gE3k&t=646s - Using Python
+  json_module_dcf_inputs = json.loads(get_page(url_dcf_url).content)
+
+  dcf = json_module_dcf_inputs[0]['dcf']
+  stock_price =  json_module_dcf_inputs[0]['Stock Price']
+  v_close = False
+  mod_close = False
+  v_far = False
+  is_close = ""
+  #TODO calculate how far current price is from dcf value
+  if(np.isclose(dcf,stock_price,rtol=0.10)):
+    is_close = "fair price"
+  elif(np.isclose(dcf,stock_price,rtol=0.20)):
+    is_close = "moderate"
+  else:
+    is_close = "grossly"
+  valued = ""
+  if(float(dcf) < float(stock_price)):
+    valued = "overvalued"
+  else:
+    valued = "undervalued"
+
+  print(f'DCF: {dcf}')
+  print(f'Stock Price: {stock_price}')
+  print()
+  if(is_close == 'fair price'):
+    print(f'{is_close}')
+  else:
+    print(f'{is_close} {valued}')
+
+  import pdb; pdb.set_trace()
+  #Create DF containing this data
+
+  return dcf
 
 def write_zacks_ticker_data_to_db(df_tickers, logger):
   #create new df using columns from old df
@@ -4252,21 +4291,27 @@ def set_us_treasury_yields(logger):
 
   url = "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml?data=daily_treasury_yield_curve&field_tdr_date_value_month=%s" % (date_str,)
 
-  file_path = "%s/data/xml/%s" % (sys.path[0],filename)
+  #xml_file_path = "%s/data/xml/%s" % (sys.path[0],filename)
+  partial_file_path = "data/xml/%s" % (filename,)
+
+  if(isWindows):
+    filepath = os.getcwd()
+    temp_file_path = "%s/%s" % (filepath,partial_file_path)
+    full_file_path = temp_file_path.replace("/","\\")
 
   try:
       resp = requests.get(url=url)
 
       resp_formatted = resp.text[resp.text.find('<'):len(resp.text)]
       # Write response to an XML File
-      with open(file_path, 'w') as f:
+      with open(full_file_path, 'w') as f:
           f.write(resp_formatted)
 
   except requests.exceptions.ConnectionError:
       print("Connection refused, Opening from File...")
 
   # Load in the XML file into ElementTree
-  tree = ET.parse(file_path)
+  tree = ET.parse(full_file_path)
   data = {'dt': [], 'rate3m':[], 'rate2y': [], 'rate3y': [], 'rate10y': [], 'rate30y': []}
   df_us_treasury_yields = pd.DataFrame(data=data)
 
