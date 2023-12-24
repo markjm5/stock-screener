@@ -675,45 +675,62 @@ def get_financialmodelingprep_price_action(ticker,logger):
 
   return json_module_profile, json_module_quote, json_module_balance_sheet, json_module_key_metrics, json_module_company_outlook, json_module_price_target_summary,json_module_key_metrics_ttm, json_module_company_core_information, json_module_company_income_statement, error
 
-def get_financialmodelingprep_dcf(logger):
-  ticker = 'CRM'  
-  url_dcf_url = 'https://financialmodelingprep.com/api/v3/discounted-cash-flow/%s?apikey=%s' % (ticker,config.API_KEY_FMP)
-  #'https://financialmodelingprep.com/api/v4/advanced_levered_discounted_cash_flow?symbol=%s&apikey=%s' % (ticker,config.API_KEY_FMP) 
-  # https://www.youtube.com/watch?v=gLULdxrS-CU - The Theory
-  # https://www.youtube.com/watch?v=Vi-BQx4gE3k&t=646s - Using Python
-  json_module_dcf_inputs = json.loads(get_page(url_dcf_url).content)
+def set_financialmodelingprep_dcf(df_tickers,logger):
+  success = False
 
-  dcf = json_module_dcf_inputs[0]['dcf']
-  stock_price =  json_module_dcf_inputs[0]['Stock Price']
-  v_close = False
-  mod_close = False
-  v_far = False
-  is_close = ""
-  #TODO calculate how far current price is from dcf value
-  if(np.isclose(dcf,stock_price,rtol=0.10)):
-    is_close = "fair price"
-  elif(np.isclose(dcf,stock_price,rtol=0.20)):
-    is_close = "moderate"
-  else:
-    is_close = "grossly"
-  valued = ""
-  if(float(dcf) < float(stock_price)):
-    valued = "overvalued"
-  else:
-    valued = "undervalued"
+  for index, row in df_tickers.iterrows():
+    ticker = row['symbol'] 
 
-  print(f'DCF: {dcf}')
-  print(f'Stock Price: {stock_price}')
-  print()
-  if(is_close == 'fair price'):
-    print(f'{is_close}')
-  else:
-    print(f'{is_close} {valued}')
+    url_dcf_url = 'https://financialmodelingprep.com/api/v3/discounted-cash-flow/%s?apikey=%s' % (ticker,config.API_KEY_FMP)
+    json_module_dcf_inputs = json.loads(get_page(url_dcf_url).content)
 
-  import pdb; pdb.set_trace()
-  #Create DF containing this data
+    dcf = json_module_dcf_inputs[0]['dcf']
+    stock_price =  json_module_dcf_inputs[0]['Stock Price']
+    is_close = ""
+    valued = ""
+    # calculate how far current price is from dcf value
+    if(np.isclose(dcf,stock_price,rtol=0.10)):
+      is_close = "fair price"
+    elif(np.isclose(dcf,stock_price,rtol=0.20)):
+      is_close = "moderate"
+    else:
+      is_close = "grossly"
+    if(float(dcf) < float(stock_price)):
+      valued = "overvalued"
+    else:
+      valued = "undervalued"
 
-  return dcf
+    #print(f'DCF: {dcf}')
+    #print(f'Stock Price: {stock_price}')
+    #print()
+    if(is_close == 'fair price'):
+      under_over = f'{is_close}'
+    else:
+      under_over = f'{is_close} {valued}'
+
+    list_dcf = [stock_price, dcf, under_over]
+    #Create DF containing this data
+    data = {'stock_price': [], 'dcf': [], 'under_over': []}
+
+    # Convert the dictionary into DataFrame
+    df_dcf = pd.DataFrame(data)
+    df_dcf.loc[len(df_dcf.index)] = list_dcf
+    # get ticker cid
+    try:
+      cid = sql_get_cid(ticker)
+      if(cid):
+        rename_cols = {}
+        add_col_values = {"cid": cid}
+        conflict_cols = "cid"
+
+        success = sql_write_df_to_db(df_dcf, "CompanyStockValueDCF", rename_cols, add_col_values, conflict_cols)
+
+        logger.info(f'Successfully Saved Stock Value DCF for {ticker}')
+
+    except Exception as e:
+      logger.exception(f'Could Not Save Stock Value DCF for {ticker}: {e}')    
+
+  return success
 
 def write_zacks_ticker_data_to_db(df_tickers, logger):
   #create new df using columns from old df

@@ -31,7 +31,7 @@ from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manu
 from common import display_chart, display_chart_ism, append_two_df, standard_display, display_chart_assets
 from common import calculate_etf_performance, calculate_annual_etf_performance, format_bullish_bearish, format_earnings_surprises
 from common import get_financialmodelingprep_price_action, set_summary_ratios, get_summary_ratios, set_2y_rates, set_10y_rates, calc_ir_metrics
-from common import set_us_treasury_yields
+from common import set_us_treasury_yields, set_financialmodelingprep_dcf
 import seaborn as sns
 from copy import deepcopy
 
@@ -115,6 +115,7 @@ if option == 'Download Data':
             e1p3 = executor.submit(set_whitehouse_news, logger)
             e1p4 = executor.submit(set_geopolitical_calendar, logger)
             e1p5 = executor.submit(set_price_action_ta, df_tickers, logger)
+            e1p6 = executor.submit(set_financialmodelingprep_dcf, df_tickers, logger)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
@@ -144,7 +145,7 @@ if option == 'Download Data':
         data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
-        for x in range(1,6):
+        for x in range(1,7):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
             temp_row = [executor_count,x,result]
             df_result.loc[len(df_result.index)] = temp_row
