@@ -374,7 +374,7 @@ REGIONS_ASIA_PACIFIC = [
     'India',
 ]
 
-REGIONS_EUROPE_MIDDLEEAST_AFRICA = [
+REGIONS_EUROPE_MIDDLE_EAST_AFRICA = [
     'Europe',
     'Middle East',
     'Africa',

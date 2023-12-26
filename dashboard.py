@@ -2839,18 +2839,36 @@ if option == 'Bottom Up Ideas':
             st.subheader(f'Country Exposure')
             df_geography = get_data(table="companygeography")
             df_regions = df_geography.groupby(['region']).count().reset_index()['region']
-            #import pdb; pdb.set_trace()
-            #df_regions = df_regions.to_frame()
-            rename_cols = {}
-            cols_gradient = []
-            cols_drop = []
-            format_cols = {}
 
             st.markdown("Regions")
-            disp,df = style_df_for_display(df_regions.to_frame(),cols_gradient,rename_cols,cols_drop,format_cols)
-            st.markdown(disp.to_html(), unsafe_allow_html=True)
+            options_amer = st.multiselect(
+                'Americas',
+                config.REGIONS_AMERICAS,
+                [])
 
-            #import pdb; pdb.set_trace()
+            options_apac = st.multiselect(
+                'Asia Pacific',
+                config.REGIONS_ASIA_PACIFIC,
+                [])
+
+            options_emea = st.multiselect(
+                'Middle East & Africa',
+                config.REGIONS_EUROPE_MIDDLE_EAST_AFRICA,
+                [])
+
+            options_selected = options_amer + options_apac + options_emea
+
+            if(len(options_selected) > 0):
+                st.write('Options Selected: ', options_selected)
+
+                #TODO: Select companies where geography matches selection
+                #df_geography[df_geography['region'].isin([3, 6])]
+                #df_geography[df_geography.region.str.contains('oo', regex= True, na=False)]
+
+            else:
+                st.write("No Selections")
+
+
         #if option_one_pager == 'Twitter':        
         #    st.subheader(f'Twitter')
 
