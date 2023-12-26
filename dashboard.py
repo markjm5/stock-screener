@@ -2867,6 +2867,7 @@ if option == 'Bottom Up Ideas':
                 # Using for loop
                 df_results = pd.DataFrame()
                 for i in options_selected:
+                    #TODO: Adjust regex to take into account caps lock and illepsis
                     df_results = df_results.append(df_geography[df_geography.region.str.contains(i, regex= True, na=False)], ignore_index=True)
 
                 list_cids = df_results.cid.unique().tolist()
