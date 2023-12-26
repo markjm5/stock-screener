@@ -345,3 +345,82 @@ RENAME_ETF = {
     '_bsesn': 'BSE SENSEX (India)',
     '_nsei': 'Nifty 50 (India)',    
 }
+
+REGIONS_AMERICAS = [
+    'US',
+    'Canada',
+    'North America',
+    'South America',
+    'Americas',
+    'U.S',
+    'United States',
+    'Latin America',
+    'Mexico',
+    'LATAM',
+    'Brazil',
+    'Argentina',
+]
+
+REGIONS_ASIA_PACIFIC = [
+    'Asia',
+    'China',
+    'Taiwan',
+    'Japan',
+    'Korea',
+    'Asia Pacific',
+    'Australia',
+    'Australasia',
+    'APAC',
+    'India',
+]
+
+REGIONS_EUROPE_MIDDLEEAST_AFRICA = [
+    'Europe',
+    'Middle East',
+    'Africa',
+    'EMEA',
+    'Bahrain',
+    'Belgium',
+    'United Kingdom',
+    'France',
+    'Germany',
+    'Italy',
+    'U.K'
+]
+
+#REGIONS_ALL = [
+#    'Asia',
+#    'Europe',
+#    'US',
+#    'Canada',
+#    'Middle East',
+#    'Africa',
+#    'North America',
+#    'South America',
+#    'China',
+#    'Taiwan',
+#    'Japan',
+#    'Korea',
+#    'Americas',
+#    'Asia Pacific',
+#    'EMEA',
+#    'U.S',
+#    'United States',
+#    'Latin America',
+#    'Asia Pacific',
+#    'Australia',
+#    'Australasia',
+#    'Mexico',
+#    'LATAM',
+#    'APAC',
+#    'Bahrain',
+#    'Brazil',
+#    'Belgium',
+#    'United Kingdom',
+#    'Argentina',
+#    'France',
+#    'Germany',
+#    'Italy',
+#    'India',
+#    'U.K'
+#]

@@ -2558,7 +2558,7 @@ if option == 'ATR Calculator':
             st.write("Please enter 2 ticker symbols")
 
 if option == 'Bottom Up Ideas':
-        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','TA Patterns', 'Country Exposure'), 0)
+        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Volume','TA Patterns', 'DCF Stock Valuation','Country Exposure'), 0)
         if option_one_pager == 'Volume':        
             df_stock_volume = sql_get_volume()
 
@@ -2755,9 +2755,102 @@ if option == 'Bottom Up Ideas':
 
         #    st.write(style_insider_trading)
 
+        if option_one_pager == 'DCF Stock Valuation':
+
+            #TODO: Sort results by SECTOR so that I know which sectors are overvalued-undervalued. Or create a new tab for summary.
+            st.subheader(f'DCF Stock Valuation')
+            df_dcf = get_data(table="companystockvaluedcf")
+            df_dcf = df_dcf.rename(columns={"dt": "DATE"})
+            df_tickers = get_data(table="company") 
+            df_inner_join = pd.merge(df_dcf, df_tickers, left_on='cid', right_on='cid', how='inner')
+            df_inner_join = df_inner_join.drop(['exchange', 'market_cap', 'shares_outstanding'], axis=1)
+            df_moderate_undervalued = df_inner_join.loc[df_inner_join['under_over'] == 'moderate undervalued'] #.sort_values(by=['sector'], ascending=True)         
+            df_grossly_undervalued = df_inner_join.loc[df_inner_join['under_over'] == 'grossly undervalued'] #.sort_values(by=['sector'], ascending=True) 
+            df_moderate_overvalued = df_inner_join.loc[df_inner_join['under_over'] == 'moderate overvalued'] #.sort_values(by=['sector'], ascending=True) 
+            df_grossly_overvalued = df_inner_join.loc[df_inner_join['under_over'] == 'grossly overvalued'] #.sort_values(by=['sector'], ascending=True) 
+
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(["📈 Summary","📈 Grossly Undervalued", "📈 Moderately Undervalued", "📈 Moderately Overvalued", "📈 Grossly Overvalued"])
+
+            # TAB 1
+            col1, col2, col3, col4 = tab1.columns(4)
+
+            df_dcf_group_grossly_undervalued = df_grossly_undervalued.groupby(['sector']).count()['under_over']
+            df_dcf_group_moderate_undervalued = df_moderate_undervalued.groupby(['sector']).count()['under_over']
+            df_dcf_group_moderate_overvalued = df_moderate_overvalued.groupby(['sector']).count()['under_over']
+            df_dcf_group_grossly_overvalued = df_grossly_overvalued.groupby(['sector']).count()['under_over']
+
+            df_dcf_group_grossly_undervalued = df_dcf_group_grossly_undervalued.to_frame().reset_index().sort_values(by=['under_over'], ascending=False)
+            df_dcf_group_moderate_undervalued = df_dcf_group_moderate_undervalued.to_frame().reset_index().sort_values(by=['under_over'], ascending=False)
+            df_dcf_group_moderate_overvalued = df_dcf_group_moderate_overvalued.to_frame().reset_index().sort_values(by=['under_over'], ascending=False)
+            df_dcf_group_grossly_overvalued = df_dcf_group_grossly_overvalued.to_frame().reset_index().sort_values(by=['under_over'], ascending=False)
+
+            rename_cols = {'sector':'Sector', 'under_over': 'Count'}
+            cols_gradient = []
+            cols_drop = []
+            format_cols = {}
+
+            col1.markdown("Grossly Undervalued")
+            disp,df = style_df_for_display(df_dcf_group_grossly_undervalued,cols_gradient,rename_cols,cols_drop,format_cols)
+            col1.markdown(disp.to_html(), unsafe_allow_html=True)
+
+            col2.markdown("Moderately Undervalued")
+            disp,df = style_df_for_display(df_dcf_group_moderate_undervalued,cols_gradient,rename_cols,cols_drop,format_cols)
+            col2.markdown(disp.to_html(), unsafe_allow_html=True)
+
+            col3.markdown("Moderately Overvalued")
+            disp,df = style_df_for_display(df_dcf_group_moderate_overvalued,cols_gradient,rename_cols,cols_drop,format_cols)
+            col3.markdown(disp.to_html(), unsafe_allow_html=True)
+
+            col4.markdown("Grossly Overvalued")
+            disp,df = style_df_for_display(df_dcf_group_grossly_overvalued,cols_gradient,rename_cols,cols_drop,format_cols)
+            col4.markdown(disp.to_html(), unsafe_allow_html=True)
+
+            # TAB 2
+
+            rename_cols = {'DATE': 'Date', 'company_name': 'Company', 'stock_price': 'Stock Price', 'dcf': 'DCF Valuation','symbol':'Ticker', 'sector':'Sector','industry':'Industry'}
+            cols_gradient = []
+            cols_drop = ['id','cid','under_over']
+            format_cols = {
+                'DCF Valuation': '{:,.2f}'.format,
+                'Stock Price': '{:,.2f}'.format,
+                'Date': lambda t: t.strftime("%d-%m-%Y"),
+            }
+            format_date = True
+
+            disp,df = style_df_for_display_date(df_grossly_undervalued,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab2.markdown(disp.to_html(), unsafe_allow_html=True)
+
+            # TAB 3
+
+            disp,df = style_df_for_display_date(df_moderate_undervalued,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab3.markdown(disp.to_html(), unsafe_allow_html=True)
+
+            # TAB 4
+
+            disp,df = style_df_for_display_date(df_moderate_overvalued,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab4.markdown(disp.to_html(), unsafe_allow_html=True)
+
+            # TAB 5
+
+            disp,df = style_df_for_display_date(df_grossly_overvalued,cols_gradient,rename_cols,cols_drop,format_cols)
+            tab5.markdown(disp.to_html(), unsafe_allow_html=True)
+
         if option_one_pager == 'Country Exposure':
             st.subheader(f'Country Exposure')
+            df_geography = get_data(table="companygeography")
+            df_regions = df_geography.groupby(['region']).count().reset_index()['region']
+            #import pdb; pdb.set_trace()
+            #df_regions = df_regions.to_frame()
+            rename_cols = {}
+            cols_gradient = []
+            cols_drop = []
+            format_cols = {}
 
+            st.markdown("Regions")
+            disp,df = style_df_for_display(df_regions.to_frame(),cols_gradient,rename_cols,cols_drop,format_cols)
+            st.markdown(disp.to_html(), unsafe_allow_html=True)
+
+            #import pdb; pdb.set_trace()
         #if option_one_pager == 'Twitter':        
         #    st.subheader(f'Twitter')
 
