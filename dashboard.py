@@ -2860,11 +2860,19 @@ if option == 'Bottom Up Ideas':
 
             if(len(options_selected) > 0):
                 st.write('Options Selected: ', options_selected)
-
+                
                 #TODO: Select companies where geography matches selection
                 #df_geography[df_geography['region'].isin([3, 6])]
                 #df_geography[df_geography.region.str.contains('oo', regex= True, na=False)]
+                # Using for loop
+                df_results = pd.DataFrame()
+                for i in options_selected:
+                    df_results = df_results.append(df_geography[df_geography.region.str.contains(i, regex= True, na=False)], ignore_index=True)
 
+                list_cids = df_results.cid.unique().tolist()
+                st.write('Results: ', len(list_cids))
+                #TODO: Replace with actual company tickers and names
+                st.write(list_cids)
             else:
                 st.write("No Selections")
 
