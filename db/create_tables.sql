@@ -727,3 +727,14 @@ CREATE TABLE IF NOT EXISTS Macro_USTreasuryYields (
     rate30y NUMERIC,
     PRIMARY KEY (dt)
 );
+
+CREATE TABLE IF NOT EXISTS CompanyStockValueDCF (
+    id SERIAL,
+    cid INTEGER NOT NULL,
+    dt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    stock_price NUMERIC NULL,
+    dcf NUMERIC NULL,
+    under_over TEXT NULL,
+    PRIMARY KEY (cid),
+    CONSTRAINT fk_company_stock_value_dcf FOREIGN KEY (cid) REFERENCES Company (cid)
+);
