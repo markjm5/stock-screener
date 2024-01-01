@@ -89,8 +89,8 @@ st.header(option)
 if option == 'Download Data':
 
     #num_days = st.sidebar.slider('Number of days', 1, 30, 3)
-    clicked1 = st.markdown("Download Price Action Data (takes 15 minutes)")
-    clicked1 = st.button(label="Click to Download Price Action Data",key="price_data")
+    clicked1 = st.markdown("Download Economic Calendar Data (takes 15 minutes)")
+    clicked1 = st.button(label="Click to Download Economic Calendar Data",key="economic_cal_data")
 
     clicked2 = st.markdown("Download Stock Data (takes 2 hours)")
     clicked2 = st.button(label="Click to Download Stock Data", key="stock_data")
@@ -98,7 +98,7 @@ if option == 'Download Data':
     clicked3 = st.markdown("Download Stock Row Data (takes 6 hours)")
     clicked3 = st.button(label="Click to Download Stock Row Data", key="stock_row_data")
 
-    clicked4 = st.markdown("Download Macroeconomic Data (takes 45 minutes)")
+    clicked4 = st.markdown("Download Macroeconomic Data (takes 1 hour)")
     clicked4 = st.button(label="Click to Download Macroeconomic Data", key="macro_data")
 
     if(clicked1):
@@ -107,15 +107,13 @@ if option == 'Download Data':
         now_start = dt.now()
         start_time = now_start.strftime("%H:%M:%S")    
 
-        st.write(f'{start_time} - Downloading Price Data...')
+        st.write(f'{start_time} - Downloading Economic Calendars...')
         df_tickers = get_data(table="company") 
         with concurrent.futures.ProcessPoolExecutor() as executor:
             e1p1 = executor.submit(set_earningswhispers_earnings_calendar, df_tickers_all, logger)
             e1p2 = executor.submit(set_marketscreener_economic_calendar, logger)
             e1p3 = executor.submit(set_whitehouse_news, logger)
             e1p4 = executor.submit(set_geopolitical_calendar, logger)
-            e1p5 = executor.submit(set_price_action_ta, df_tickers, logger)
-            e1p6 = executor.submit(set_financialmodelingprep_dcf, df_tickers, logger)
 
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
@@ -145,7 +143,7 @@ if option == 'Download Data':
         data = {'Executor':[],'Process':[],'Error':[]}
         df_result = pd.DataFrame(data)
         
-        for x in range(1,7):
+        for x in range(1,5):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
             temp_row = [executor_count,x,result]
             df_result.loc[len(df_result.index)] = temp_row
@@ -453,10 +451,10 @@ if option == 'Download Data':
             e1p4 = executor.submit(set_yf_historical_data, config.YF_ETF_SERIES,logger)
             e1p5 = executor.submit(set_10y_rates, logger)
             e1p6 = executor.submit(set_2y_rates, logger)
-            e1p7 = executor.submit(set_10y_rates,logger)
-            e1p8 = executor.submit(set_2y_rates,logger)
-            e1p9 = executor.submit(set_country_credit_rating,logger)
-            e1p10 = executor.submit(set_us_treasury_yields,logger)
+            e1p7 = executor.submit(set_country_credit_rating,logger)
+            e1p8 = executor.submit(set_us_treasury_yields,logger)
+            e1p9 = executor.submit(set_price_action_ta, df_tickers, logger)
+            e1p10 = executor.submit(set_financialmodelingprep_dcf, df_tickers, logger)
 
         #import pdb; pdb.set_trace()
         calculate_annual_etf_performance_status = calculate_annual_etf_performance(df_historical_etf_data,logger)        
@@ -1653,7 +1651,7 @@ if option == 'Macroeconomic Data':
             df_interest_rates_10y = df_interest_rates_10y.sort_values('dt').fillna(method='ffill')           
             rename_cols = {'australia':'Australia','brazil':'Brazil','canada':'Canada','china':'China','france':'France','germany':'Germany', 'uk': 'United Kingdom', 'us': 'United States'}
             df_interest_rates_10y = df_interest_rates_10y.rename(columns=rename_cols)
-
+            #import pdb; pdb.set_trace()
             df_interest_rates_10y_australia = calc_ir_metrics(df_interest_rates_10y[["dt", "Australia"]])
             df_interest_rates_10y_brazil = calc_ir_metrics(df_interest_rates_10y[["dt", "Brazil"]])
             df_interest_rates_10y_canada = calc_ir_metrics(df_interest_rates_10y[["dt", "Canada"]])
@@ -1727,7 +1725,7 @@ if option == 'Macroeconomic Data':
 
             rename_cols = {}
             #cols_gradient = ['Last','1w','1m','3m','YTD','YoY']
-            cols_gradient = []
+            cols_gradient = ['1w','1m','YoY']
             cols_drop = []
             format_cols = {
                 'Last': '{:,.2f}'.format,
@@ -1748,7 +1746,7 @@ if option == 'Macroeconomic Data':
 
             rename_cols = {}
             #cols_gradient = ['Last','1w','1m','3m','YTD','YoY']
-            cols_gradient = []
+            cols_gradient = ['1w','1m','YoY']
             cols_drop = []
             format_cols = {
                 'Last': '{:,.2f}'.format,
@@ -1769,7 +1767,7 @@ if option == 'Macroeconomic Data':
 
             rename_cols = {}
             #cols_gradient = ['Last','1w','1m','3m','YTD','YoY']
-            cols_gradient = []
+            cols_gradient = ['1w','1m','YoY']
             cols_drop = []
             format_cols = {
                 'Last': '{:,.2f}'.format,
@@ -2763,7 +2761,7 @@ if option == 'Bottom Up Ideas':
             df_dcf = df_dcf.rename(columns={"dt": "DATE"})
             df_tickers = get_data(table="company") 
             df_inner_join = pd.merge(df_dcf, df_tickers, left_on='cid', right_on='cid', how='inner')
-            df_inner_join = df_inner_join.drop(['exchange', 'market_cap', 'shares_outstanding'], axis=1)
+            df_inner_join = df_inner_join.drop(['exchange', 'shares_outstanding'], axis=1)
             df_moderate_undervalued = df_inner_join.loc[df_inner_join['under_over'] == 'moderate undervalued'] #.sort_values(by=['sector'], ascending=True)         
             df_grossly_undervalued = df_inner_join.loc[df_inner_join['under_over'] == 'grossly undervalued'] #.sort_values(by=['sector'], ascending=True) 
             df_moderate_overvalued = df_inner_join.loc[df_inner_join['under_over'] == 'moderate overvalued'] #.sort_values(by=['sector'], ascending=True) 
@@ -2804,35 +2802,36 @@ if option == 'Bottom Up Ideas':
             col4.markdown("Grossly Overvalued")
             disp,df = style_df_for_display(df_dcf_group_grossly_overvalued,cols_gradient,rename_cols,cols_drop,format_cols)
             col4.markdown(disp.to_html(), unsafe_allow_html=True)
-
+            #import pdb; pdb.set_trace()
             # TAB 2
-
-            rename_cols = {'DATE': 'Date', 'company_name': 'Company', 'stock_price': 'Stock Price', 'dcf': 'DCF Valuation','symbol':'Ticker', 'sector':'Sector','industry':'Industry'}
+            df_grossly_undervalued_sorted = df_grossly_undervalued.sort_values(by=['market_cap'], ascending=False).copy()
+            rename_cols = {'DATE': 'Date', 'company_name': 'Company', 'stock_price': 'Stock Price', 'dcf': 'DCF Valuation','symbol':'Ticker', 'sector':'Sector','industry':'Industry', 'market_cap': 'Market Cap (mil)'}
             cols_gradient = []
             cols_drop = ['id','cid','under_over']
             format_cols = {
                 'DCF Valuation': '{:,.2f}'.format,
                 'Stock Price': '{:,.2f}'.format,
                 'Date': lambda t: t.strftime("%d-%m-%Y"),
+                'Market Cap (mil)': '{:,.2f}'.format,
             }
             format_date = True
 
-            disp,df = style_df_for_display_date(df_grossly_undervalued,cols_gradient,rename_cols,cols_drop,format_cols)
+            disp,df = style_df_for_display(df_grossly_undervalued_sorted,cols_gradient,rename_cols,cols_drop,format_cols)
             tab2.markdown(disp.to_html(), unsafe_allow_html=True)
 
             # TAB 3
-
-            disp,df = style_df_for_display_date(df_moderate_undervalued,cols_gradient,rename_cols,cols_drop,format_cols)
+            df_moderate_undervalued_sorted = df_moderate_undervalued.sort_values(by=['market_cap'], ascending=False).copy()
+            disp,df = style_df_for_display(df_moderate_undervalued_sorted,cols_gradient,rename_cols,cols_drop,format_cols)
             tab3.markdown(disp.to_html(), unsafe_allow_html=True)
 
             # TAB 4
-
-            disp,df = style_df_for_display_date(df_moderate_overvalued,cols_gradient,rename_cols,cols_drop,format_cols)
+            df_moderate_overvalued_sorted = df_moderate_overvalued.sort_values(by=['market_cap'], ascending=False).copy()
+            disp,df = style_df_for_display(df_moderate_overvalued_sorted,cols_gradient,rename_cols,cols_drop,format_cols)
             tab4.markdown(disp.to_html(), unsafe_allow_html=True)
 
             # TAB 5
-
-            disp,df = style_df_for_display_date(df_grossly_overvalued,cols_gradient,rename_cols,cols_drop,format_cols)
+            df_grossly_overvalued_sorted = df_grossly_overvalued.sort_values(by=['market_cap'], ascending=False).copy()
+            disp,df = style_df_for_display(df_grossly_overvalued_sorted,cols_gradient,rename_cols,cols_drop,format_cols)
             tab5.markdown(disp.to_html(), unsafe_allow_html=True)
 
         if option_one_pager == 'Country Exposure':

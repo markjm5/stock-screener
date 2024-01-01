@@ -4162,10 +4162,13 @@ def calc_ir_metrics(df):
   #ytd   
   year_first_day = date(date.today().year, 1, 1)
   df_ytd = util_return_date_values(df_series,year_first_day)
-  ytd_value = df_ytd[country].values[0]
-  # minus last price
-  ytd_value = decimal.Decimal(last_value) - decimal.Decimal(ytd_value)
-  ytd_value = round(ytd_value, 2)
+  try:
+    ytd_value = df_ytd[country].values[0]
+    # minus last price
+    ytd_value = decimal.Decimal(last_value) - decimal.Decimal(ytd_value)
+    ytd_value = round(ytd_value, 2)
+  except IndexError as e:
+    ytd_value = None
 
   #yoy
   rd = relativedelta(years=+1)
