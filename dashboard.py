@@ -108,7 +108,7 @@ if option == 'Download Data':
         start_time = now_start.strftime("%H:%M:%S")    
 
         st.write(f'{start_time} - Downloading Economic Calendars...')
-        df_tickers = get_data(table="company") 
+        #df_tickers = get_data(table="company") 
         with concurrent.futures.ProcessPoolExecutor() as executor:
             e1p1 = executor.submit(set_earningswhispers_earnings_calendar, df_tickers_all, logger)
             e1p2 = executor.submit(set_marketscreener_economic_calendar, logger)
@@ -444,6 +444,10 @@ if option == 'Download Data':
 
         # Update ISM Services
         #success = set_ism_services(logger)
+        #df_tickers, success = write_zacks_ticker_data_to_db(df_tickers_all, logger)
+        #TODO: DF Tickers_all = rename col to "symbol"
+
+        df_tickers = get_data(table="company") 
         with concurrent.futures.ProcessPoolExecutor() as executor:
             e1p1 = executor.submit(set_stlouisfed_data, config.STLOUISFED_SERIES, logger)
             e1p2 = executor.submit(set_ism_manufacturing, logger)
@@ -2097,7 +2101,7 @@ if option == 'Single Stock One Pager':
         if option_one_pager == 'Quantitative Data':
             #Get all the data for this stock from the database
             try:
-                df_company_details, df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data = get_one_pager(symbol)
+                df_company_details, df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data, df_dcf_valuation = get_one_pager(symbol)
             except UnboundLocalError as e:
                 st.markdown("Company Not Found")
             else:
@@ -2178,6 +2182,12 @@ if option == 'Single Stock One Pager':
                     earnings_date_str = None
 
                 try:
+                    dcf_valuation = df_dcf_valuation['dcf'][0]
+                    dcf_valuation ='{:,.2f}'.format(dcf_valuation) 
+                except KeyError as e:
+                    dcf_valuation = None
+
+                try:
                     beta = json_module_profile[0]['beta']
                     beta ='{:,.3f}'.format(beta) 
 
@@ -2237,8 +2247,8 @@ if option == 'Single Stock One Pager':
                 moving_avg_50d = df_yf_key_stats['moving_avg_50d'][0]
                 moving_avg_200d = df_yf_key_stats['moving_avg_200d'][0]
 
-                column_names = ['Next Earnings Call','Last','52 Week High','52 Week Low','YTD Change %','Market Cap', 'EV', 'Days to Cover', 'Target Price']
-                column_data = [earnings_date_str,last, annual_high, annual_low, percent_change_ytd_formatted, market_cap, ev, days_to_cover_short_ratio_formatted, target_price]
+                column_names = ['Next Earnings Call','Last','52 Week High','52 Week Low','YTD Change %','Market Cap', 'EV', 'Days to Cover', 'Target Price', 'DCF Valuation']
+                column_data = [earnings_date_str,last, annual_high, annual_low, percent_change_ytd_formatted, market_cap, ev, days_to_cover_short_ratio_formatted, target_price,dcf_valuation]
                 style_t1 = format_fields_for_dashboard(column_names, column_data)
 
                 column_names = ['Trailing P/E','Forward P/E','PEG','Divedend Y0','Dividend Yield', 'Beta', 'Currency','ROE','Exchange','Sector','Industry','Website', 'Year End']
@@ -2293,7 +2303,10 @@ if option == 'Single Stock One Pager':
                 }
 
                 disp,df = style_df_for_display(df_stockrow_stock_data,cols_gradient,rename_cols,cols_drop,format_cols)
-                st.markdown(disp.to_html(), unsafe_allow_html=True)           
+                try:
+                    st.markdown(disp.to_html(), unsafe_allow_html=True)           
+                except TypeError as e:
+                    st.dataframe(df_stockrow_stock_data, use_container_width=True)
 
                 st.markdown("""---""")
 

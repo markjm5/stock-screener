@@ -544,10 +544,14 @@ def calculate_asset_percentage_changes(df_series):
   rd = relativedelta(years=+5)
   last_5_years_date = last_date - rd
   df_last_5_years = util_return_date_values(df_series,last_5_years_date)
-  last_5_years_value = df_last_5_years[asset].values[0]
+  try:
+    last_5_years_value = df_last_5_years[asset].values[0]
+  except IndexError as e:
+    df_last_5_years = 0
+
   try:
     last_5_years_pct = (last_value - df_last_5_years[asset].values[0]) / df_last_5_years[asset].values[0]
-  except ZeroDivisionError as e:
+  except (ZeroDivisionError, TypeError) as e:
     df_last_5_years = 0
 
   return asset, last_date, last_value, ytd_value, ytd_pct, last_5_days_value, last_5_days_pct, last_month_value, last_month_pct, last_3_months_value, last_3_months_pct, last_5_years_value, last_5_years_pct
@@ -2203,12 +2207,13 @@ def get_one_pager(ticker):
   df_yf_key_stats = pd.DataFrame()
   df_zacks_peer_comparison = pd.DataFrame()
   df_finwiz_stock_data = pd.DataFrame()
+  df_dcf_valuation = pd.DataFrame()
 
   # get ticker cid
   cid = sql_get_cid(ticker)
 
   if(cid):
-    #TODO: Query database tables and retrieve all data for the ticker
+    # Query database tables and retrieve all data for the ticker
     df_company_details = get_data(table="company", cid=cid)
     df_zacks_balance_sheet_shares = get_data(table="balancesheet",cid=cid)
     df_zacks_earnings_surprises = get_data(table="earningssurprise",cid=cid)
@@ -2217,8 +2222,9 @@ def get_one_pager(ticker):
     df_yf_key_stats = get_data(table="companymovingaverage",cid=cid)
     df_zacks_peer_comparison = get_data(table="companypeercomparison",cid=cid)
     df_finwiz_stock_data = get_data(table="companyratio",cid=cid)
+    df_dcf_valuation = get_data(table="companystockvaluedcf",cid=cid)
 
-  return df_company_details, df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data
+  return df_company_details, df_zacks_balance_sheet_shares, df_zacks_earnings_surprises, df_zacks_product_line_geography, df_stockrow_stock_data, df_yf_key_stats, df_zacks_peer_comparison, df_finwiz_stock_data,df_dcf_valuation
 
 def get_data(table=None, cid=None, innerjoin=None):
   df = sql_get_records_as_df(table, cid, innerjoin)
