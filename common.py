@@ -4420,7 +4420,7 @@ def total_signal(df, current_candle, backcandles):
   return 0
 
 
-def pointpos(x):
+def pointpos_ema(x):
   if x['TotalSignal']==2:
       return x['Low']-1e-3
   elif x['TotalSignal']==1:
@@ -4429,8 +4429,8 @@ def pointpos(x):
       return np.nan
 
 #TODO: Run this, and use to find signals in recent data
-def plot_ticker_signals(ticker, logger):
-  df_ticker = get_ticker_price_summary(ticker, 0, logger)
+def plot_ticker_signals_ema(ticker, logger):
+
   filename = "{}.csv".format(ticker)
 
   df = pd.read_csv('data/daily_prices/{}'.format(filename))
@@ -4456,10 +4456,10 @@ def plot_ticker_signals(ticker, logger):
   df['EMASignal'] = df.progress_apply(lambda row: ema_signal(df, row.name, 7) , axis=1) #if row.name >= 20 else 0
   df['TotalSignal'] = df.progress_apply(lambda row: total_signal(df, row.name, 7), axis=1)
   df[df.TotalSignal != 0].head(20)
-  df['pointpos'] = df.apply(lambda row: pointpos(row), axis=1)
+  df['pointpos'] = df.apply(lambda row: pointpos_ema(row), axis=1)
   #import pdb; pdb.set_trace()
   #st=100
-  fin = len(df) - 1
+  fin = len(df)
   st = fin - 100
   dfpl = df[st:fin]
   x_index = dfpl['Date']
@@ -4492,11 +4492,205 @@ def plot_ticker_signals(ticker, logger):
   fig.update_xaxes(tickangle = 90)
   fig.update_layout(
     autosize=False,
-    width=1000,
-    height=800,
+    width=config.PLOTLY_CHART_WIDTH,
+    height=config.PLOTLY_CHART_HEIGHT,
+  )
+
+  return fig
+
+def TotalSignalVWAP(l, df):
+    if (df.VWAPSignal[l]==2
+        and df.Close[l]<=df['BBL_14_2.0'][l]
+        and df.RSI[l]<45):
+            return 2
+    if (df.VWAPSignal[l]==1
+        and df.Close[l]>=df['BBU_14_2.0'][l]
+        and df.RSI[l]>55):
+            return 1
+    return 0
+
+def pointposbreak_vwap(x):
+    if x['TotalSignal']==1:
+        return x['High']+1e-4
+    elif x['TotalSignal']==2:
+        return x['Low']-1e-4
+    else:
+        return np.nan
+
+def plot_ticker_signals_vwap(ticker, logger):
+
+  filename = "{}.csv".format(ticker)
+
+  df = pd.read_csv('data/daily_prices/{}'.format(filename))
+
+  df['Date']=pd.to_datetime(df['Date'],format='%Y-%m-%d')
+  df=df[df.High!=df.Low]
+  df.set_index("Date", inplace=True)  
+
+  df["VWAP"]=ta.vwap(df.High, df.Low, df.Close, df.Volume)
+  df['RSI']=ta.rsi(df.Close, length=16)
+  my_bbands = ta.bbands(df.Close, length=14, std=2.0)
+  df=df.join(my_bbands)
+
+  VWAPsignal = [0]*len(df)
+  backcandles = 15
+
+  for row in range(backcandles, len(df)):
+      upt = 1
+      dnt = 1
+      for i in range(row-backcandles, row+1):
+          if max(df.Open[i], df.Close[i])>=df.VWAP[i]:
+              dnt=0
+          if min(df.Open[i], df.Close[i])<=df.VWAP[i]:
+              upt=0
+      if upt==1 and dnt==1:
+          VWAPsignal[row]=3
+      elif upt==1:
+          VWAPsignal[row]=2
+      elif dnt==1:
+          VWAPsignal[row]=1
+
+  df['VWAPSignal'] = VWAPsignal
+
+  TotSignal = [0]*len(df)
+  for row in range(backcandles, len(df)): #careful backcandles used previous cell
+      TotSignal[row] = TotalSignalVWAP(row,df)
+  df['TotalSignal'] = TotSignal
+
+  print(df[df.TotalSignal!=0].count())
+    
+  df['pointposbreak'] = df.apply(lambda row: pointposbreak_vwap(row), axis=1)
+
+  fin = len(df)
+  st = fin - 100
+  dfpl = df[st:fin]
+
+  x_index = dfpl.index
+
+  dfpl.reset_index(inplace=True)
+  fig = go.Figure(data=[go.Candlestick(x=x_index,
+                  open=dfpl['Open'],
+                  high=dfpl['High'],
+                  low=dfpl['Low'],
+                  close=dfpl['Close']),
+                  go.Scatter(x=x_index, y=dfpl.VWAP, 
+                            line=dict(color='blue', width=1), 
+                            name="VWAP"), 
+                  go.Scatter(x=x_index, y=dfpl['BBL_14_2.0'], 
+                            line=dict(color='green', width=1), 
+                            name="BBL"),
+                  go.Scatter(x=x_index, y=dfpl['BBU_14_2.0'], 
+                            line=dict(color='green', width=1), 
+                            name="BBU")])
+
+  fig.add_scatter(x=x_index, y=dfpl['pointposbreak'], mode="markers",
+                  marker=dict(size=10, color="MediumPurple"),
+                  name="Signal")
+  #fig.show()
+
+  fig.update_yaxes(nticks=10)
+  fig.update_xaxes(tickangle = 90)
+  fig.update_layout(
+    autosize=False,
+    width=config.PLOTLY_CHART_WIDTH,
+    height=config.PLOTLY_CHART_HEIGHT,
   )
 
   return fig
 
 
+##TODO: KEY LEVELS HISTOGRAM
+
+def pivotid(df1, l, n1, n2): #n1 n2 before and after candle l
+  if l-n1 < 0 or l+n2 >= len(df1):
+      return 0
+  
+  pividlow=1
+  pividhigh=1
+  for i in range(l-n1, l+n2+1):
+      if(df1.Low[l]>df1.Low[i]):
+          pividlow=0
+      if(df1.High[l]<df1.High[i]):
+          pividhigh=0
+  if pividlow and pividhigh:
+      return 3
+  elif pividlow:
+      return 1
+  elif pividhigh:
+      return 2
+  else:
+      return 0
     
+
+def pointpos_key_levels(x):
+  if x['pivot']==1:
+      return x['Low']-1e-3
+  elif x['pivot']==2:
+      return x['High']+1e-3
+  else:
+      return np.nan
+  
+
+def plot_ticker_signals_histogram(ticker, logger):
+
+  filename = "{}.csv".format(ticker)
+
+  df = pd.read_csv('data/daily_prices/{}'.format(filename))
+  df['Date']=pd.to_datetime(df['Date'],format='%Y-%m-%d')
+  df=df[df.High!=df.Low]
+  df=df[df['Volume']!=0]
+  df.reset_index(drop=True, inplace=True)
+
+  df['pivot'] = df.apply(lambda x: pivotid(df, x.name,10,10), axis=1)
+  df['pointpos'] = df.apply(lambda row: pointpos_key_levels(row), axis=1)
+
+  dfpl = df[-300:-1]
+  x_index = dfpl['Date']
+  fig = go.Figure(data=[go.Candlestick(x=x_index,
+                  open=dfpl['Open'],
+                  high=dfpl['High'],
+                  low=dfpl['Low'],
+                  close=dfpl['Close'],
+                  increasing_line_color= 'green', 
+                  decreasing_line_color= 'red')])
+
+  fig.add_scatter(x=x_index, y=dfpl['pointpos'], mode="markers",
+                  marker=dict(size=5, color="MediumPurple"),
+                  name="pivot")
+  fig.update_layout(xaxis_rangeslider_visible=False)
+  fig.update_xaxes(showgrid=False)
+  fig.update_yaxes(showgrid=False)
+  fig.update_layout(paper_bgcolor='black', plot_bgcolor='black')
+
+  #fin = len(df)
+  #st = fin - 100
+  #dfkeys = df[st:fin]
+
+  dfkeys = df[:]
+
+  # Filter the dataframe based on the pivot column
+  high_values = dfkeys[dfkeys['pivot'] == 2]['High']
+  low_values = dfkeys[dfkeys['pivot'] == 1]['Low']
+
+  # Define the bin width
+  bin_width = 5.0  # Change this value as needed
+
+  # Calculate the number of bins
+  bins = int((high_values.max() - low_values.min()) / bin_width)
+
+  # Create the histograms
+  plt.figure(figsize=(10, 5))
+  plt.hist(high_values, bins=bins, alpha=0.5, label='High Values', color='red')
+  plt.hist(low_values, bins=bins, alpha=0.5, label='Low Values', color='blue')
+
+  plt.xlabel('Value')
+  plt.ylabel('Frequency')
+  plt.title('Histogram of High and Low Values')
+  plt.legend()
+
+  #col.pyplot(plt)
+
+  #plt.clf()
+
+
+  return fig, plt

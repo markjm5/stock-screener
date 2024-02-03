@@ -31,7 +31,7 @@ from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manu
 from common import display_chart, display_chart_ism, append_two_df, standard_display, display_chart_assets
 from common import calculate_etf_performance, calculate_annual_etf_performance, format_bullish_bearish, format_earnings_surprises
 from common import get_financialmodelingprep_price_action, set_summary_ratios, get_summary_ratios, set_2y_rates, set_10y_rates, calc_ir_metrics
-from common import set_us_treasury_yields, set_financialmodelingprep_dcf, plot_ticker_signals
+from common import set_us_treasury_yields, set_financialmodelingprep_dcf, plot_ticker_signals_ema, plot_ticker_signals_vwap, plot_ticker_signals_histogram
 import seaborn as sns
 from copy import deepcopy
 
@@ -2468,12 +2468,23 @@ if option == 'Single Stock One Pager':
                 #st.dataframe(df_peers) ##TODO: CHANGE FORMATTING OF TABLE
 
         if option_one_pager == 'Price Action':
-            st.subheader(f'Chart For: {symbol}')
-            fig = plot_ticker_signals(symbol,logger)
-            st.plotly_chart(fig)
-            #fig.show()
+            st.subheader(f'EMA Entries For: {symbol}')
+            fig1 = plot_ticker_signals_ema(symbol,logger)
+            st.plotly_chart(fig1)
 
-            #st.markdown("""---""")
+            st.markdown("""---""")
+
+            st.subheader(f'VWAP Entries For: {symbol}')
+            fig2 = plot_ticker_signals_vwap(symbol,logger)
+            st.plotly_chart(fig2)
+
+            st.markdown("""---""")
+
+            #TODO: Price Action Histogram
+            st.subheader(f'Support and Resistance Levels For: {symbol}')
+            fig3, plt = plot_ticker_signals_histogram(symbol, logger)
+            st.plotly_chart(fig3)
+            st.pyplot(plt)
 
             #st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
 
