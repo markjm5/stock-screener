@@ -31,7 +31,7 @@ from common import set_stlouisfed_data, temp_load_excel_data_to_db, set_ism_manu
 from common import display_chart, display_chart_ism, append_two_df, standard_display, display_chart_assets
 from common import calculate_etf_performance, calculate_annual_etf_performance, format_bullish_bearish, format_earnings_surprises
 from common import get_financialmodelingprep_price_action, set_summary_ratios, get_summary_ratios, set_2y_rates, set_10y_rates, calc_ir_metrics
-from common import set_us_treasury_yields, set_financialmodelingprep_dcf
+from common import set_us_treasury_yields, set_financialmodelingprep_dcf, plot_ticker_signals
 import seaborn as sns
 from copy import deepcopy
 
@@ -2096,7 +2096,7 @@ if option == 'Single Stock One Pager':
         if('single_stock_one_pager_clicked' not in st.session_state):
             st.session_state['single_stock_one_pager_clicked'] = True
 
-        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Quantitative Data',), 0)
+        option_one_pager = st.sidebar.selectbox("Which Dashboard?", ('Quantitative Data','Price Action',), 0)
 
         if option_one_pager == 'Quantitative Data':
             #Get all the data for this stock from the database
@@ -2203,7 +2203,7 @@ if option == 'Single Stock One Pager':
                     #target_price = dataFinancialData['targetHighPrice']['fmt']
                     target_price = json_module_price_target_summary[0]['lastMonthAvgPriceTarget']
                     target_price ='{:,.2f}'.format(target_price)
-                except KeyError as e:
+                except (IndexError, KeyError) as e:
                     target_price = None
 
                 try:
@@ -2467,11 +2467,15 @@ if option == 'Single Stock One Pager':
 
                 #st.dataframe(df_peers) ##TODO: CHANGE FORMATTING OF TABLE
 
-        #if option_one_pager == 'Chart':
-        #    st.subheader(f'Chart For: {symbol}')
-                st.markdown("""---""")
+        if option_one_pager == 'Price Action':
+            st.subheader(f'Chart For: {symbol}')
+            fig = plot_ticker_signals(symbol,logger)
+            st.plotly_chart(fig)
+            #fig.show()
 
-                st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
+            #st.markdown("""---""")
+
+            #st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
 
         #if option_one_pager == 'Stock Twits':
 

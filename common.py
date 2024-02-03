@@ -42,6 +42,11 @@ from selenium.webdriver.common.by import By
 import xml.etree.ElementTree as ET
 #from zipfile import ZipFile
 
+import pandas_ta as ta
+from tqdm import tqdm
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
 isWindows = False
 
 if(sys.platform == 'win32'):
@@ -4383,3 +4388,115 @@ def set_us_treasury_yields(logger):
 
   return success
 #  return df_us_treasury_yields
+
+def ema_signal(df, current_candle, backcandles):
+  df_slice = df.reset_index().copy()
+  # Get the range of candles to consider
+  start = max(0, current_candle - backcandles)
+  end = current_candle
+  relevant_rows = df_slice.iloc[start:end]
+
+  # Check if all EMA_fast values are below EMA_slow values
+  if all(relevant_rows["EMA_fast"] < relevant_rows["EMA_slow"]):
+      return 1
+  elif all(relevant_rows["EMA_fast"] > relevant_rows["EMA_slow"]):
+      return 2
+  else:
+      return 0
+    
+
+def total_signal(df, current_candle, backcandles):
+  if (ema_signal(df, current_candle, backcandles)==2
+      and df.Close[current_candle]<=df['BBL_15_1.5'][current_candle]
+      #and df.RSI[current_candle]<60
+      ):
+          return 2
+  if (ema_signal(df, current_candle, backcandles)==1
+      and df.Close[current_candle]>=df['BBU_15_1.5'][current_candle]
+      #and df.RSI[current_candle]>40
+      ):
+  
+          return 1
+  return 0
+
+
+def pointpos(x):
+  if x['TotalSignal']==2:
+      return x['Low']-1e-3
+  elif x['TotalSignal']==1:
+      return x['High']+1e-3
+  else:
+      return np.nan
+
+#TODO: Run this, and use to find signals in recent data
+def plot_ticker_signals(ticker, logger):
+  df_ticker = get_ticker_price_summary(ticker, 0, logger)
+  filename = "{}.csv".format(ticker)
+
+  df = pd.read_csv('data/daily_prices/{}'.format(filename))
+
+  #Replace with getting data from file
+  #df = pd.read_csv("EURUSD_Candlestick_5_M_ASK_30.09.2019-30.09.2022.csv")
+
+  #df["Gmt time"]=df["Gmt time"].str.replace(".000","")
+  df['Date']=pd.to_datetime(df['Date'],format='%Y-%m-%d')
+  df=df[df.High!=df.Low]
+  df.set_index("Date", inplace=True)  
+
+  df["EMA_slow"]=ta.ema(df.Close, length=50)
+  df["EMA_fast"]=ta.ema(df.Close, length=30)
+  df['RSI']=ta.rsi(df.Close, length=10)
+  my_bbands = ta.bbands(df.Close, length=15, std=1.5)
+  df['ATR']=ta.atr(df.High, df.Low, df.Close, length=7)
+  df=df.join(my_bbands)
+
+  df=df[-10000:-1]
+  tqdm.pandas()
+  df.reset_index(inplace=True)
+  df['EMASignal'] = df.progress_apply(lambda row: ema_signal(df, row.name, 7) , axis=1) #if row.name >= 20 else 0
+  df['TotalSignal'] = df.progress_apply(lambda row: total_signal(df, row.name, 7), axis=1)
+  df[df.TotalSignal != 0].head(20)
+  df['pointpos'] = df.apply(lambda row: pointpos(row), axis=1)
+  #import pdb; pdb.set_trace()
+  #st=100
+  fin = len(df) - 1
+  st = fin - 100
+  dfpl = df[st:fin]
+  x_index = dfpl['Date']
+  #x_index = dfpl.index
+  #dfpl.reset_index(inplace=True)
+  fig = go.Figure(data=[go.Candlestick(x=x_index,
+                  open=dfpl['Open'],
+                  high=dfpl['High'],
+                  low=dfpl['Low'],
+                  close=dfpl['Close']), 
+
+                  go.Scatter(x=x_index, y=dfpl['BBL_15_1.5'], 
+                            line=dict(color='green', width=1), 
+                            name="BBL"),
+                  go.Scatter(x=x_index, y=dfpl['BBU_15_1.5'], 
+                            line=dict(color='green', width=1), 
+                            name="BBU"),
+                  go.Scatter(x=x_index, y=dfpl['EMA_fast'], 
+                            line=dict(color='black', width=1), 
+                            name="EMA_fast"),
+                  go.Scatter(x=x_index, y=dfpl['EMA_slow'], 
+                            line=dict(color='blue', width=1), 
+                            name="EMA_slow")])
+
+  fig.add_scatter(x=x_index, y=dfpl['pointpos'], mode="markers",
+                  marker=dict(size=10, color="MediumPurple"),
+                  name="entry")
+  
+  fig.update_yaxes(nticks=10)
+  fig.update_xaxes(tickangle = 90)
+  fig.update_layout(
+    autosize=False,
+    width=1000,
+    height=800,
+  )
+
+  return fig
+
+
+    
