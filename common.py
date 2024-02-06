@@ -2685,7 +2685,7 @@ def format_columns(df, gradient_cols):
 
 def download_yf_data_as_csv(df_tickers):
   todays_date = date.today()
-  start_date = todays_date - relativedelta(years=2)
+  start_date = todays_date - relativedelta(years=5)
   date_str_today = "%s-%s-%s" % (todays_date.year, todays_date.month, todays_date.day)
   date_str_start = "%s-%s-%s" % (start_date.year, start_date.month, start_date.day)
 
@@ -4660,7 +4660,13 @@ def plot_ticker_signals_histogram(ticker, logger):
   fig.update_layout(xaxis_rangeslider_visible=False)
   fig.update_xaxes(showgrid=False)
   fig.update_yaxes(showgrid=False)
-  fig.update_layout(paper_bgcolor='black', plot_bgcolor='black')
+  fig.update_layout(
+    paper_bgcolor='black', 
+    plot_bgcolor='black',
+    autosize=False,
+    width=config.PLOTLY_CHART_WIDTH,
+    height=config.PLOTLY_CHART_HEIGHT,
+  )
 
   #fin = len(df)
   #st = fin - 100
@@ -4673,7 +4679,7 @@ def plot_ticker_signals_histogram(ticker, logger):
   low_values = dfkeys[dfkeys['pivot'] == 1]['Low']
 
   # Define the bin width
-  bin_width = 5.0  # Change this value as needed
+  bin_width = config.HISTOGRAM_BIN_SIZE  # Change this value as needed
 
   # Calculate the number of bins
   bins = int((high_values.max() - low_values.min()) / bin_width)
@@ -4688,9 +4694,40 @@ def plot_ticker_signals_histogram(ticker, logger):
   plt.title('Histogram of High and Low Values')
   plt.legend()
 
-  #col.pyplot(plt)
-
-  #plt.clf()
-
-
   return fig, plt
+
+def import_report_data():
+
+  list_of_files = glob.glob('data/trading_reports/*') # * means all if need specific format then *.csv
+  latest_file = max(list_of_files, key=os.path.getctime)
+  latest_file = latest_file.split('\\')[1]
+
+  df = pd.read_csv('data/trading_reports/{}'.format(latest_file), header=None, names=range(17))
+
+  # Strip out all rows except Trades
+  df1 = df.loc[df[0] == 'Trades']
+  df2 = df1.drop(df.columns[[0,1,2,3,4,7,9,10,11,13, 14, 15,16]],axis = 1)
+  df3 = df2.loc[df[12] != '0']
+
+  df3.columns = df3.iloc[0]
+  df3 = df3[1:]
+  #In case there is another row containing the header
+  df3.drop(df3[df3['Symbol'] == 'Symbol'].index, inplace = True)
+  df3['T. Price'] = pd.to_numeric(df3['T. Price'])
+  df3['Realized P/L'] = pd.to_numeric(df3['Realized P/L'])
+
+  df4 = df3.loc[df3['T. Price'].notna()]
+  df4 = df4.drop('T. Price', axis=1)
+
+  # Format Datetime field
+  df4['Date/Time'] = pd.to_datetime(df4['Date/Time'],format='%Y-%m-%d, %H:%M:%S')
+  # Rename columns to remove /
+  df4 = df4.rename(columns={"Date/Time": "Date_Time", "Realized P/L": "Realized_PL"})
+  df4.sort_values(by='Date_Time', inplace = True)
+  df4 = df4.reset_index(drop=True)
+  df4 = df4.rename_axis(None, axis=1)
+
+  # TODO: Write to database
+  import pdb; pdb.set_trace()  
+
+  # TODO: Return all rows from database

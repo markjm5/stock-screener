@@ -32,6 +32,7 @@ from common import display_chart, display_chart_ism, append_two_df, standard_dis
 from common import calculate_etf_performance, calculate_annual_etf_performance, format_bullish_bearish, format_earnings_surprises
 from common import get_financialmodelingprep_price_action, set_summary_ratios, get_summary_ratios, set_2y_rates, set_10y_rates, calc_ir_metrics
 from common import set_us_treasury_yields, set_financialmodelingprep_dcf, plot_ticker_signals_ema, plot_ticker_signals_vwap, plot_ticker_signals_histogram
+from common import import_report_data
 import seaborn as sns
 from copy import deepcopy
 
@@ -82,7 +83,7 @@ st.markdown(f'''
     </style>
 ''',unsafe_allow_html=True)
 
-option = st.sidebar.selectbox("Which Option?", ('Download Data','Market Data','Macroeconomic Data','Calendar', 'Single Stock One Pager','ATR Calculator', 'Bottom Up Ideas'), 2)
+option = st.sidebar.selectbox("Which Option?", ('Download Data','Market Data','Macroeconomic Data','Calendar', 'Single Stock One Pager','ATR Calculator', 'Bottom Up Ideas', 'Trading Report'), 2)
 
 st.header(option)
 
@@ -2480,7 +2481,6 @@ if option == 'Single Stock One Pager':
 
             st.markdown("""---""")
 
-            #TODO: Price Action Histogram
             st.subheader(f'Support and Resistance Levels For: {symbol}')
             fig3, plt = plot_ticker_signals_histogram(symbol, logger)
             st.plotly_chart(fig3)
@@ -2923,3 +2923,11 @@ if option == 'Bottom Up Ideas':
         #                        st.write(tweet.text)
 
         #                        st.image(f'https://finviz.com/chart.ashx?t={symbol}&ty=c&ta=1&p=d&s=l')
+if option=='Trading Report':
+    clicked1 = st.markdown("Performance & Reports > Realized Summary > Year to Date")
+    clicked1 = st.button(label="Import Report",key="import_report_data")
+    if(clicked1):
+
+        df_imported_report_data = import_report_data()
+
+        st.write(f'Successfully Imported')
