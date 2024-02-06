@@ -32,7 +32,7 @@ from common import display_chart, display_chart_ism, append_two_df, standard_dis
 from common import calculate_etf_performance, calculate_annual_etf_performance, format_bullish_bearish, format_earnings_surprises
 from common import get_financialmodelingprep_price_action, set_summary_ratios, get_summary_ratios, set_2y_rates, set_10y_rates, calc_ir_metrics
 from common import set_us_treasury_yields, set_financialmodelingprep_dcf, plot_ticker_signals_ema, plot_ticker_signals_vwap, plot_ticker_signals_histogram
-from common import set_report_data, get_report_data
+from common import set_report_data, get_report_data, format_positive_negative
 import seaborn as sns
 from copy import deepcopy
 
@@ -2937,5 +2937,18 @@ if option=='Trading Report':
     df_report, total = get_report_data()
 
     #TODO: Display Report Data in Table including summary data
-    st.dataframe(df_report)
-    st.write(total)
+    #Display formatted table
+    format_cols = { }
+    cols_gradient = []
+    rename_cols = {'symbol': 'Symbol', 'date_time': 'Date', 'realized_pl': 'Realized P/L'}
+    drop_cols = ['id']
+
+    disp, df_display_table = style_df_for_display(df_report,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
+    df_style = disp.apply(format_positive_negative, subset=['Realized P/L'], axis=1)
+    st.subheader(f'Realized Profit/Loss on Closed Positions')
+    st.markdown(df_style.to_html(), unsafe_allow_html=True)   
+
+    #TODO: Put total into df and have highlighting
+
+    #st.dataframe(df_report)
+    #st.write(total)

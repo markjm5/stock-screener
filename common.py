@@ -2534,6 +2534,17 @@ def format_earnings_surprises(row):
     else:
       return [normal, negative]
 
+def format_positive_negative(row):    
+
+    negative = 'background-color: lightcoral;'
+    positive = 'background-color: mediumseagreen;'
+    normal = ''
+    ##import pdb; pdb.set_trace()
+    if(row[0] > 0):
+      return [positive]
+    else:
+      return [negative]
+
 
 def style_df_for_display(df, cols_gradient, cols_rename, cols_drop, cols_format=None,format_rows=False):
 
