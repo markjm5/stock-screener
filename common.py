@@ -4696,7 +4696,7 @@ def plot_ticker_signals_histogram(ticker, logger):
 
   return fig, plt
 
-def import_report_data():
+def set_report_data():
 
   list_of_files = glob.glob('data/trading_reports/*') # * means all if need specific format then *.csv
   latest_file = max(list_of_files, key=os.path.getctime)
@@ -4722,12 +4722,30 @@ def import_report_data():
   # Format Datetime field
   df4['Date/Time'] = pd.to_datetime(df4['Date/Time'],format='%Y-%m-%d, %H:%M:%S')
   # Rename columns to remove /
-  df4 = df4.rename(columns={"Date/Time": "Date_Time", "Realized P/L": "Realized_PL"})
-  df4.sort_values(by='Date_Time', inplace = True)
+  #df4 = df4.rename(columns={"Date/Time": "Date_Time", "Realized P/L": "Realized_PL"})
+  df4.sort_values(by='Date/Time', inplace = True)
   df4 = df4.reset_index(drop=True)
   df4 = df4.rename_axis(None, axis=1)
 
-  # TODO: Write to database
-  import pdb; pdb.set_trace()  
+  # write records to database
+  rename_cols = {"Date/Time": "date_time", "Realized P/L": "realized_pl"}
+  add_col_values = {}
+  conflict_cols = "Symbol"
+
+  success = sql_write_df_to_db(df4, "Trading_Report", rename_cols, add_col_values, conflict_cols)
+
+  return success
+
+def get_report_data():
 
   # TODO: Return all rows from database
+  df_report_data = get_data(table="trading_report").reset_index(drop=True)
+  df_report_data['realized_pl'] = pd.to_numeric(df_report_data['realized_pl'])
+
+  # Format Datetime field
+  df_report_data['date_time'] = pd.to_datetime(df_report_data['date_time'],format='%Y-%m-%d')
+
+  df_report_data['realized_pl'] = df_report_data.realized_pl.round(2)
+  total = df_report_data['realized_pl'].sum().round(2)
+
+  return df_report_data, total
