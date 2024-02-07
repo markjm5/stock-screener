@@ -2935,10 +2935,25 @@ if option=='Trading Report':
             st.write(f'Error: Import Failed')
 
     df_report, total = get_report_data()
+    #import pdb; pdb.set_trace()
     if total:
+
+        #sort_cols = []
+        #drop_cols = []
+        #rename_cols =  {'asset': 'Asset', 'date_time': 'Date', 'realized_pl': 'Realized P/L'}
+        #number_format_cols = ['market_cap_mil']
+        #format_cols = {'realized_pl': 'number', 'date_time': 'date' }
+
+        #disp = format_df_for_dashboard(df_report, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+
+        #df_style = disp.apply(format_positive_negative, axis=1)
+
+
+        #st.markdown(disp.to_html(), unsafe_allow_html=True)   
+
         #TODO: Display Report Data in Table including summary data
         #Display formatted table
-        format_cols = { }
+        format_cols = {}
         cols_gradient = []
         rename_cols = {'asset': 'Asset', 'date_time': 'Date', 'realized_pl': 'Realized P/L'}
         drop_cols = []
@@ -2946,7 +2961,9 @@ if option=='Trading Report':
         disp, df_display_table = style_df_for_display(df_report,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
         df_style = disp.apply(format_positive_negative, subset=['Realized P/L'], axis=1)
         st.subheader(f'Realized Profit/Loss on Closed Positions')
-        st.markdown(df_style.to_html(), unsafe_allow_html=True)   
+        st.markdown(df_style.to_html(), unsafe_allow_html=True) 
+        st.markdown('---')  
+        st.write('TOTAL PROFIT/LOSS: ${:,.2f}'.format(total))
     else:
         st.markdown("No data to display")   
 

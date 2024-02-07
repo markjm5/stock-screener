@@ -2535,7 +2535,7 @@ def format_earnings_surprises(row):
       return [normal, negative]
 
 def format_positive_negative(row):    
-
+    #import pdb; pdb.set_trace()
     negative = 'background-color: lightcoral;'
     positive = 'background-color: mediumseagreen;'
     normal = ''
