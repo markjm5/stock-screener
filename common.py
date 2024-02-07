@@ -4737,6 +4737,7 @@ def set_report_data():
   df4.sort_values(by='Date/Time', inplace = True)
   df4 = df4.reset_index(drop=True)
   df4 = df4.rename_axis(None, axis=1)
+  df4[['asset']] = df4['Symbol'].str.extract('(^[A-Z]*)', expand=True)
 
   # write records to database
   rename_cols = {"Date/Time": "date_time", "Realized P/L": "realized_pl"}
@@ -4751,12 +4752,18 @@ def get_report_data():
 
   # TODO: Return all rows from database
   df_report_data = get_data(table="trading_report").reset_index(drop=True)
-  df_report_data['realized_pl'] = pd.to_numeric(df_report_data['realized_pl'])
+  total = None
+  try:
+    df_report_data['realized_pl'] = pd.to_numeric(df_report_data['realized_pl'])
 
-  # Format Datetime field
-  df_report_data['date_time'] = pd.to_datetime(df_report_data['date_time'],format='%Y-%m-%d')
+    # Format Datetime field
+    df_report_data['date_time'] = pd.to_datetime(df_report_data['date_time'],format='%Y-%m-%d')
+    
+    total = df_report_data['realized_pl'].sum().round(2)
 
-  df_report_data['realized_pl'] = df_report_data.realized_pl.round(2)
-  total = df_report_data['realized_pl'].sum().round(2)
+    df_report_data = df_report_data.groupby(["asset","date_time"])['realized_pl'].sum().reset_index(name ='realized_pl').sort_values(by=['date_time'], ascending=True) 
+    df_report_data['realized_pl'] = df_report_data.realized_pl.round(2)
+  except KeyError as e:
+     pass
 
   return df_report_data, total
