@@ -2547,7 +2547,7 @@ if option == 'ATR Calculator':
             rename_cols = {}
             cols_gradient = []
             drop_cols = []
-            format_cols = {'DATE': 'date','ATR %': 'percentage' }
+            format_cols = {}
             symbol1_last_price = "USD ${:.2f}".format(symbol1_last_price)
             st.write(f'Last Price: {symbol1_last_price}')   
 
@@ -3014,10 +3014,15 @@ if option=='Trading Report':
 
         #TODO: Display Report Data in Table including summary data
         #Display formatted table
-        format_cols = {}
         cols_gradient = []
         rename_cols = {'asset': 'Asset', 'date_time': 'Date', 'realized_pl': 'Realized P/L'}
         drop_cols = []
+        format_cols = {
+            'Date': lambda t: t.strftime("%d-%m-%Y"),
+            'Realized P/L': '{:,.2f}'.format,
+        }
+
+
 
         disp, df_display_table = style_df_for_display(df_report,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
         df_style = disp.apply(format_positive_negative, subset=['Realized P/L'], axis=1)
