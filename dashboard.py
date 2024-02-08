@@ -2505,81 +2505,119 @@ if option == 'Single Stock One Pager':
 if option == 'ATR Calculator':
 
     symbol1 = st.sidebar.text_input("Symbol 1", value='MSFT', max_chars=None, key=None, type='default')
-    symbol2 = st.sidebar.text_input("Symbol 2", value='CRM', max_chars=None, key=None, type='default')
+    #symbol2 = st.sidebar.text_input("Symbol 2", value='CRM', max_chars=None, key=None, type='default')
 
     clicked = st.sidebar.button("Get ATR")
 
     if(clicked):
-        if(len(symbol1.strip()) > 0 and len(symbol2.strip()) > 0):        
+        #if(len(symbol1.strip()) > 0 and len(symbol2.strip()) > 0):  
+        if(len(symbol1.strip()) > 0):  
+
             #TODO: Need to add formats for date and %
-            sort_cols = []
-            drop_cols = ['Open','High','Low','Close','H-L','H-C','L-C','TR','ATR']
-            rename_cols = {}
-            format_cols = {'DATE': 'date','ATR %': 'percentage' }
+            #sort_cols = []
+            #drop_cols = ['Open','High','Low','Close','H-L','H-C','L-C','TR','ATR']
+            #rename_cols = {}
+            #format_cols = {'DATE': 'date','ATR %': 'percentage' }
 
             index1 = symbol1.strip()
             df_symbol1_sorted_daily_atr, df_symbol1_sorted_monthly_atr, df_symbol1_sorted_quarterly_atr, df_symbol1_sorted_daily_price = get_atr_prices(index1, 1)
             df_index1 = df_symbol1_sorted_daily_price.drop(['Open', 'High', 'Low','ATR %'], axis=1)
 
-            col1,col2,col3 = st.columns(3)
+            symbol1_last_price = df_index1[symbol1].iloc[0]
+            symbol1_monthly_atr = df_symbol1_sorted_monthly_atr['ATR %'].iloc[0]            
+            symbol1_quarterly_atr = df_symbol1_sorted_quarterly_atr['ATR %'].iloc[0]
+            lower_bound_price_monthly = 0
+            lower_bound_price_quarterly = 0
+            upper_bound_price_monthly = 0
+            upper_bound_price_quarterly = 0
 
-            col1.markdown(f"{index1} Daily ATR") 
-            col2.markdown(f"{index1} Monthly ATR") 
-            col3.markdown(f"{index1} Quarterly ATR") 
+            data = {'Metric': [],'Monthly': [],'Quarterly':[]}
 
-            style_t1 = format_df_for_dashboard(df_symbol1_sorted_daily_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
-            col1.write(style_t1)
+            # Convert the dictionary into DataFrame
+            df_atr_data = pd.DataFrame(data)
+            atr = ['ATR',"{:.2%}".format(symbol1_monthly_atr), "{:.2%}".format(symbol1_quarterly_atr)]
+            lower_bound = ['Lower Bound Price',"{:.2f}".format(lower_bound_price_monthly),"{:.2f}".format(lower_bound_price_quarterly)]
+            upper_bound = ['Upper Bound Price',"{:.2f}".format(upper_bound_price_monthly),"{:.2f}".format(upper_bound_price_quarterly)]
 
-            style_t2 = format_df_for_dashboard(df_symbol1_sorted_monthly_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
-            col2.write(style_t2)
+            df_atr_data.loc[len(df_atr_data.index)] = atr
+            df_atr_data.loc[len(df_atr_data.index)] = lower_bound
+            df_atr_data.loc[len(df_atr_data.index)] = upper_bound
 
-            style_t3 = format_df_for_dashboard(df_symbol1_sorted_quarterly_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
-            col3.write(style_t3)
+            rename_cols = {}
+            cols_gradient = []
+            drop_cols = []
+            format_cols = {}
+            symbol1_last_price = "USD ${:.2f}".format(symbol1_last_price)
+            st.write(f'Last Price: {symbol1_last_price}')   
 
-            index2 = symbol2.strip()
-            df_symbol2_sorted_daily_atr, df_symbol2_sorted_monthly_atr, df_symbol2_sorted_quarterly_atr, df_symbol2_sorted_daily_price = get_atr_prices(index2, 2)
-            df_index2 = df_symbol2_sorted_daily_price.drop(['Open', 'High', 'Low','ATR %'], axis=1)
+            disp, df_display_table = style_df_for_display(df_atr_data,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
+            #df_style = disp.apply(format_bullish_bearish, subset=['Outlook'], axis=1)
 
-            col1.markdown(f"{index2} Daily ATR") 
-            col2.markdown(f"{index2} Monthly ATR") 
-            col3.markdown(f"{index2} Quarterly ATR") 
+            st.markdown(disp.to_html(), unsafe_allow_html=True)   
 
-            style_t4 = format_df_for_dashboard(df_symbol2_sorted_daily_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
-            col1.write(style_t4)
+            #index2 = symbol2.strip()
+            #df_symbol2_sorted_daily_atr, df_symbol2_sorted_monthly_atr, df_symbol2_sorted_quarterly_atr, df_symbol2_sorted_daily_price = get_atr_prices(index2, 2)
+            #df_index2 = df_symbol2_sorted_daily_price.drop(['Open', 'High', 'Low','ATR %'], axis=1)
 
-            style_t5 = format_df_for_dashboard(df_symbol2_sorted_monthly_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
-            col2.write(style_t5)
+            #col1,col2,col3 = st.columns(3)
 
-            style_t6 = format_df_for_dashboard(df_symbol2_sorted_quarterly_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
-            col3.write(style_t6)
+            #col1.markdown(f"{index1} Daily ATR") 
+            #col2.markdown(f"{index1} Monthly ATR") 
+            #col3.markdown(f"{index1} Quarterly ATR") 
 
-            st.markdown("""---""")
+            #style_t1 = format_df_for_dashboard(df_symbol1_sorted_daily_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+            #col1.write(style_t1)
 
-            df_updated_indexes = combine_df_on_index(df_index1, df_index2, 'DATE')
+            #style_t2 = format_df_for_dashboard(df_symbol1_sorted_monthly_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+            #col2.write(style_t2)
 
-            df_sorted = df_updated_indexes.sort_values(by='DATE', ascending = False)
+            #style_t3 = format_df_for_dashboard(df_symbol1_sorted_quarterly_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+            #col3.write(style_t3)
+
+            #index2 = symbol2.strip()
+            #df_symbol2_sorted_daily_atr, df_symbol2_sorted_monthly_atr, df_symbol2_sorted_quarterly_atr, df_symbol2_sorted_daily_price = get_atr_prices(index2, 2)
+            #df_index2 = df_symbol2_sorted_daily_price.drop(['Open', 'High', 'Low','ATR %'], axis=1)
+
+            #col1.markdown(f"{index2} Daily ATR") 
+            #col2.markdown(f"{index2} Monthly ATR") 
+            #col3.markdown(f"{index2} Quarterly ATR") 
+
+            #style_t4 = format_df_for_dashboard(df_symbol2_sorted_daily_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+            #col1.write(style_t4)
+
+            #style_t5 = format_df_for_dashboard(df_symbol2_sorted_monthly_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+            #col2.write(style_t5)
+
+            #style_t6 = format_df_for_dashboard(df_symbol2_sorted_quarterly_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+            #col3.write(style_t6)
+
+            #st.markdown("""---""")
+
+            #df_updated_indexes = combine_df_on_index(df_index1, df_index2, 'DATE')
+
+            #df_sorted = df_updated_indexes.sort_values(by='DATE', ascending = False)
 
             # Sort by putting symbol1 first and symbol2 second. 
-            df_ordered = df_sorted.loc[:, ['DATE',symbol1,symbol2]]
+            #df_ordered = df_sorted.loc[:, ['DATE',symbol1,symbol2]]
 
             # Format Date Field
-            df_ordered['DATE'] = df_ordered['DATE'].dt.strftime('%d-%m-%Y')
-            file_date = dt.now().strftime('%Y%m%d_%H%M%S')
+            #df_ordered['DATE'] = df_ordered['DATE'].dt.strftime('%d-%m-%Y')
+            #file_date = dt.now().strftime('%Y%m%d_%H%M%S')
 
-            filename = f'ATR_{symbol1}_{symbol2}_{file_date}.xlsx'
+            #filename = f'ATR_{symbol1}_{symbol2}_{file_date}.xlsx'
 
             #TODO: Write to excel file with multiple tabs - Price Action, ATR Daily, ATR Monthly, ATR Quarterly
-            df_xlsx = atr_to_excel(df_ordered,
-                               df_symbol1_sorted_daily_atr,
-                               df_symbol1_sorted_monthly_atr,
-                               df_symbol1_sorted_quarterly_atr,
-                               df_symbol2_sorted_daily_atr,
-                               df_symbol2_sorted_monthly_atr,
-                               df_symbol2_sorted_quarterly_atr                               
-                               )
-            st.download_button(label='📥 Download ATR Results',
-                                            data=df_xlsx ,
-                                            file_name=filename)
+            #df_xlsx = atr_to_excel(df_ordered,
+            #                   df_symbol1_sorted_daily_atr,
+            #                   df_symbol1_sorted_monthly_atr,
+            #                   df_symbol1_sorted_quarterly_atr,
+            #                   df_symbol2_sorted_daily_atr,
+            #                   df_symbol2_sorted_monthly_atr,
+            #                   df_symbol2_sorted_quarterly_atr                               
+            #                   )
+            #st.download_button(label='📥 Download ATR Results',
+            #                                data=df_xlsx ,
+            #                                file_name=filename)
         else:
             st.write("Please enter 2 ticker symbols")
 
