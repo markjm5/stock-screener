@@ -2526,10 +2526,11 @@ if option == 'ATR Calculator':
             symbol1_last_price = df_index1[symbol1].iloc[0]
             symbol1_monthly_atr = df_symbol1_sorted_monthly_atr['ATR %'].iloc[0]            
             symbol1_quarterly_atr = df_symbol1_sorted_quarterly_atr['ATR %'].iloc[0]
-            lower_bound_price_monthly = 0
-            lower_bound_price_quarterly = 0
-            upper_bound_price_monthly = 0
-            upper_bound_price_quarterly = 0
+
+            lower_bound_price_monthly = symbol1_last_price - (symbol1_monthly_atr * symbol1_last_price)
+            lower_bound_price_quarterly = symbol1_last_price - (symbol1_quarterly_atr * symbol1_last_price)
+            upper_bound_price_monthly = symbol1_last_price + (symbol1_monthly_atr * symbol1_last_price)
+            upper_bound_price_quarterly = symbol1_last_price + (symbol1_quarterly_atr * symbol1_last_price)
 
             data = {'Metric': [],'Monthly': [],'Quarterly':[]}
 
@@ -2546,14 +2547,36 @@ if option == 'ATR Calculator':
             rename_cols = {}
             cols_gradient = []
             drop_cols = []
-            format_cols = {}
+            format_cols = {'DATE': 'date','ATR %': 'percentage' }
             symbol1_last_price = "USD ${:.2f}".format(symbol1_last_price)
             st.write(f'Last Price: {symbol1_last_price}')   
 
             disp, df_display_table = style_df_for_display(df_atr_data,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
-            #df_style = disp.apply(format_bullish_bearish, subset=['Outlook'], axis=1)
-
             st.markdown(disp.to_html(), unsafe_allow_html=True)   
+
+            #style_t1 = format_df_for_dashboard(df_symbol1_sorted_daily_atr, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
+            #col1.write(style_t1)
+
+            st.markdown("---")
+            col1,col2 = st.columns(2)
+
+            #Display formatted table
+            format_cols = {
+                'DATE': lambda t: t.strftime("%m-%d-%Y"),
+                'ATR %': '{:,.2%}'.format,
+            }
+            cols_gradient = ['ATR %']
+            rename_cols = {}
+            drop_cols = ['Open','High','Low','Close','H-L','H-C','L-C','TR','ATR']
+
+
+            col1.write(f'Monthly ATR For {symbol1}')
+            disp, df_display_table = style_df_for_display(df_symbol1_sorted_monthly_atr,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
+            col1.markdown(disp.to_html(), unsafe_allow_html=True)   
+
+            col2.write(f'Quarterly ATR For {symbol1}')
+            disp, df_display_table = style_df_for_display(df_symbol1_sorted_quarterly_atr,cols_gradient,rename_cols,drop_cols,cols_format=format_cols,format_rows=False)
+            col2.markdown(disp.to_html(), unsafe_allow_html=True)   
 
             #index2 = symbol2.strip()
             #df_symbol2_sorted_daily_atr, df_symbol2_sorted_monthly_atr, df_symbol2_sorted_quarterly_atr, df_symbol2_sorted_daily_price = get_atr_prices(index2, 2)
