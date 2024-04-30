@@ -29,7 +29,7 @@ from selenium.webdriver.firefox.options import Options
 from chromedriver_py import binary_path
 #from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.chrome.options import Options
-#from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.chrome import ChromeDriverManager
 from datetime import date, timedelta
 from datetime import datetime as dt
 #from yahoo_earnings_calendar import YahooEarningsCalendar
@@ -91,6 +91,7 @@ def get_page_selenium(url,wait_until_element_id=None, no_sandbox=False):
 
   svc = webdriver.ChromeService(executable_path=binary_path)
   driver = webdriver.Chrome(service=svc, options=chrome_options)
+  #driver = webdriver.Chrome(ChromeDriverManager().install())
   html = ''
   #TODO: https://stackoverflow.com/questions/22130109/cant-use-chrome-driver-for-selenium
   #driver = webdriver.Chrome(executable_path=CHROME_EXECUTABLE_PATH,options=chrome_options)
