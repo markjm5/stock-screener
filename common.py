@@ -1667,8 +1667,10 @@ def set_marketscreener_economic_calendar(logger):
 
   tables = soup.find_all('table', recursive=True)
 
-  #table = tables[0]
-  table = tables[1]
+  try:
+    table = tables[1]
+  except IndexError as e:   
+    table = tables[0]
 
   table_rows = table.find_all('tr')
 

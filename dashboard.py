@@ -116,6 +116,8 @@ if option == 'Download Data':
             e1p3 = executor.submit(set_whitehouse_news, logger)
             e1p4 = executor.submit(set_geopolitical_calendar, logger)
 
+        methods = ['set_earningswhispers_earnings_calendar','set_marketscreener_economic_calendar','set_whitehouse_news','set_geopolitical_calendar']
+
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
         difference = now_finish - now_start
@@ -141,12 +143,12 @@ if option == 'Download Data':
         logger.info(f"Total Time: {total_time}")
 
         executor_count = 1
-        data = {'Executor':[],'Process':[],'Error':[]}
+        data = {'Executor':[],'Process':[],'Error':[], 'Method':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,5):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
-            temp_row = [executor_count,x,result]
+            temp_row = [executor_count,x,result, methods[x - 1]]
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
@@ -188,7 +190,7 @@ if option == 'Download Data':
             e1p3 = executor.submit(set_zacks_balance_sheet_shares, df_tickers3, logger)
             e1p4 = executor.submit(set_zacks_balance_sheet_shares, df_tickers4, logger)
             e1p5 = executor.submit(set_zacks_balance_sheet_shares, df_tickers5, logger)
-                                   
+ 
             #Executor 2: set_zacks_earnings_surprises
             e2p1 = executor.submit(set_zacks_earnings_surprises, df_tickers1, logger)
             e2p2 = executor.submit(set_zacks_earnings_surprises, df_tickers2, logger)
@@ -235,6 +237,8 @@ if option == 'Download Data':
             e6p4 = executor.submit(set_summary_ratios, df_tickers4, logger)
             e6p5 = executor.submit(set_summary_ratios, df_tickers5, logger)
 
+        methods = ['set_zacks_balance_sheet_shares','set_zacks_earnings_surprises','set_zacks_product_line_geography','set_yf_key_stats','set_zacks_peer_comparison','set_summary_ratios']
+
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
         difference = now_finish - now_start
@@ -260,12 +264,12 @@ if option == 'Download Data':
         logger.info(f"Total Time: {total_time}")
 
         executor_count = 1
-        data = {'Executor':[],'Process':[],'Error':[]}
+        data = {'Executor':[],'Process':[],'Error':[], 'Method':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,6):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
-            temp_row = [executor_count,x,result]
+            temp_row = [executor_count,x,result, methods[executor_count - 1]]
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
@@ -275,12 +279,12 @@ if option == 'Download Data':
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         executor_count = 2
-        data = {'Executor':[],'Process':[],'Error':[]}
+        data = {'Executor':[],'Process':[],'Error':[],'Method':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,6):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
-            temp_row = [executor_count,x,result]
+            temp_row = [executor_count,x,result,methods[executor_count - 1]]
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
@@ -290,12 +294,12 @@ if option == 'Download Data':
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         executor_count = 3
-        data = {'Executor':[],'Process':[],'Error':[]}
+        data = {'Executor':[],'Process':[],'Error':[],'Method':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,6):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
-            temp_row = [executor_count,x,result]
+            temp_row = [executor_count,x,result,methods[executor_count - 1]]
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
@@ -305,12 +309,12 @@ if option == 'Download Data':
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         executor_count = 4
-        data = {'Executor':[],'Process':[],'Error':[]}
+        data = {'Executor':[],'Process':[],'Error':[],'Method':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,6):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
-            temp_row = [executor_count,x,result]
+            temp_row = [executor_count,x,result,methods[executor_count - 1]]
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
@@ -320,12 +324,12 @@ if option == 'Download Data':
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
         executor_count = 5
-        data = {'Executor':[],'Process':[],'Error':[]}
+        data = {'Executor':[],'Process':[],'Error':[],'Method':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,6):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
-            temp_row = [executor_count,x,result]
+            temp_row = [executor_count,x,result,methods[executor_count - 1]]
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
@@ -337,12 +341,12 @@ if option == 'Download Data':
         st.write(f'Status of Finwiz Stock Data: {finwiz_stock_data_status}')
 
         executor_count = 6
-        data = {'Executor':[],'Process':[],'Error':[]}
+        data = {'Executor':[],'Process':[],'Error':[],'Method':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,6):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
-            temp_row = [executor_count,x,result]
+            temp_row = [executor_count,x,result,methods[executor_count - 1]]
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
@@ -378,6 +382,8 @@ if option == 'Download Data':
             e1p4 = executor.submit(set_stockrow_stock_data, df_tickers4, logger)
             e1p5 = executor.submit(set_stockrow_stock_data, df_tickers5, logger)
 
+        methods = ['set_stockrow_stock_data']
+
         now_finish = dt.now()
         finish_time = now_finish.strftime("%H:%M:%S")
         difference = now_finish - now_start
@@ -403,12 +409,12 @@ if option == 'Download Data':
         logger.info(f"Total Time: {total_time}")
 
         executor_count = 1
-        data = {'Executor':[],'Process':[],'Error':[]}
+        data = {'Executor':[],'Process':[],'Error':[],'Method':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,6):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
-            temp_row = [executor_count,x,result]
+            temp_row = [executor_count,x,result,methods[0]]
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
@@ -460,6 +466,8 @@ if option == 'Download Data':
             e1p8 = executor.submit(set_us_treasury_yields,logger)
             e1p9 = executor.submit(set_price_action_ta, df_tickers, logger)
             e1p10 = executor.submit(set_financialmodelingprep_dcf, df_tickers, logger)
+
+        methods = ['set_stlouisfed_data','set_ism_manufacturing','set_ism_services','set_yf_historical_data','set_10y_rates','set_2y_rates','set_country_credit_rating','set_us_treasury_yields','set_price_action_ta','set_financialmodelingprep_dcf']
 
         #import pdb; pdb.set_trace()
         calculate_annual_etf_performance_status = calculate_annual_etf_performance(df_historical_etf_data,logger)        
@@ -524,12 +532,12 @@ if option == 'Download Data':
         logger.info(f"Total Time: {total_time}")
 
         executor_count = 1
-        data = {'Executor':[],'Process':[],'Error':[]}
+        data = {'Executor':[],'Process':[],'Error':[],'Method':[]}
         df_result = pd.DataFrame(data)
         
         for x in range(1,11):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
-            temp_row = [executor_count,x,result]
+            temp_row = [executor_count,x,result,methods[x - 1]]
             df_result.loc[len(df_result.index)] = temp_row
 
         rename_cols = {}
@@ -539,59 +547,58 @@ if option == 'Download Data':
         st.markdown(disp.to_html(), unsafe_allow_html=True)
 
 if option == 'Calendar':
-    #st.subheader(f'Calendar')
+
     col1, col2 = st.columns(2)
     df1 = get_data(table="macro_earningscalendar")
     col1.markdown("Earnings Calendar")
 
-    sort_cols = ['dt']
-    drop_cols = ['id' ]
     rename_cols = {'dt': 'Date', 'ticker':'Ticker', 'company_name':'Company Name', 'market_cap_mil':'Market Cap (M)'}
-    #number_format_cols = ['market_cap_mil']
+    cols_gradient = []
+    cols_drop = ['id']
     format_cols = {'market_cap_mil': 'number', 'dt': 'date' }
 
-    style_t1 = format_df_for_dashboard(df1, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
-    col1.write(style_t1)
+    disp,df = style_df_for_display(df1,cols_gradient,rename_cols,cols_drop,format_cols)
+    col1.markdown(disp.to_html(), unsafe_allow_html=True)
 
     df2 = get_data(table="macro_economiccalendar")
     col2.markdown("Economic Calendar")
 
-    sort_cols = ['dt']
-    drop_cols = ['id']
     rename_cols = {'dt': 'Date','dt_time': 'Time', 'country':'Country', 'economic_event':'Economic Event', 'previous':'Previous Data'}
-    #number_format_cols = []
+    cols_gradient = []
+    cols_drop = ['id']
     format_cols = {'dt': 'date' }
-    #import pdb; pdb.set_trace()
+
     if(len(df2) > 0):
-        style_t2 = format_df_for_dashboard(df2, sort_cols, drop_cols, rename_cols,format_cols=format_cols)
-        col2.write(style_t2)
+        disp,df = style_df_for_display(df2,cols_gradient,rename_cols,cols_drop,format_cols)
+        col2.markdown(disp.to_html(), unsafe_allow_html=True)
     else:
         col2.write("Could not retrieve economic calendar")
 
-    df3 = get_data(table="macro_whitehouseannouncement")
-    st.markdown("Whitehouse News")
-    #st.dataframe(df3)
+    col1.markdown("""---""")
 
-    sort_cols = ['dt']
-    drop_cols = ['id' ]
-    rename_cols = {'dt': 'Date','post_title': 'Title', 'post_url':'URL'}
-    #number_format_cols = []
+    df3 = get_data(table="macro_whitehouseannouncement")
+    col1.markdown("Whitehouse News")
+
+    rename_cols = {'dt': 'Date','post_title': 'Title'}
+    cols_gradient = []
+    cols_drop = ['id','post_url']
     format_cols = {'dt': 'date' }
 
-    style_t3 = format_df_for_dashboard(df3, sort_cols, drop_cols, rename_cols, format_cols=format_cols)
-    st.write(style_t3)
+    disp,df = style_df_for_display(df3,cols_gradient,rename_cols,cols_drop,format_cols)
+    col1.markdown(disp.to_html(), unsafe_allow_html=True)
+
+    col1.markdown("""---""")
 
     df4 = get_data(table="macro_geopoliticalcalendar")
-    st.markdown("Geopolitical Calendar")
-    #st.dataframe(df4)
+    col1.markdown("Geopolitical Calendar")
 
-    sort_cols = []
-    drop_cols = ['id']
     rename_cols = {'event_date': 'Date','event_name': 'Event', 'event_location':'Location'}
-    number_format_cols = []
+    cols_gradient = []
+    cols_drop = ['id']
+    format_cols = {}
 
-    style_t4 = format_df_for_dashboard(df4, sort_cols, drop_cols, rename_cols, number_format_cols)
-    st.write(style_t4)
+    disp,df = style_df_for_display(df4,cols_gradient,rename_cols,cols_drop,format_cols)
+    col1.markdown(disp.to_html(), unsafe_allow_html=True)
 
 if option == 'Market Data':
     option_indicator_type = st.sidebar.selectbox("Market Data", ('Market Levels','Asset Class Performance'), 0)

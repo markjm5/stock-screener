@@ -738,3 +738,12 @@ CREATE TABLE IF NOT EXISTS CompanyStockValueDCF (
     PRIMARY KEY (cid),
     CONSTRAINT fk_company_stock_value_dcf FOREIGN KEY (cid) REFERENCES Company (cid)
 );
+
+CREATE TABLE IF NOT EXISTS Trading_Report (
+    id SERIAL,
+    asset TEXT NOT NULL,    
+    symbol TEXT NOT NULL,    
+    date_time DATE NOT NULL,        
+    realized_pl NUMERIC NOT NULL,
+    PRIMARY KEY (symbol)
+);
