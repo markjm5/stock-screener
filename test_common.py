@@ -107,8 +107,8 @@ class TestCommon(unittest.TestCase):
     #def test_temp_load_excel_data_to_db(self):
     #    self.assertEqual(temp_load_excel_data_to_db(excel_file_path, sheet_name, database_table,rename_cols, conflict_cols), True)
 
-    #def test_set_10y_rates(self):
-    #    self.assertEqual(set_10y_rates(logger), True)
+    def test_set_10y_rates(self):
+        self.assertEqual(set_10y_rates(logger), True)
 
     #def test_set_2y_rates(self):
     #    self.assertEqual(set_2y_rates(logger), True)
@@ -125,8 +125,8 @@ class TestCommon(unittest.TestCase):
     #def test_set_ta_pattern_stocks(self):
     #    self.assertEqual(set_ta_pattern_stocks(df_tickers_alternate,logger), True)
 
-    def test_set_ism_manufacturing(self):
-        self.assertEqual(set_ism_manufacturing(logger), True)
+    #def test_set_ism_manufacturing(self):
+    #    self.assertEqual(set_ism_manufacturing(logger), True)
 
     #def test_set_ism_services(self):
     #    self.assertEqual(set_ism_services(logger), True)

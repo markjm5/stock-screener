@@ -4331,6 +4331,8 @@ def return_selenium_rates_table_to_df(url):
   #import pdb; pdb.set_trace() #Need to check that the URL is getting the data
   page = get_page_selenium(url)
   soup = BeautifulSoup(page, 'html.parser')
+  #import pdb; pdb.set_trace()
+
   table = soup.find_all('table')[0]
   df = convert_html_table_to_df(table, False)
 

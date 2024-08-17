@@ -460,14 +460,14 @@ if option == 'Download Data':
             e1p2 = executor.submit(set_ism_manufacturing, logger)
             e1p3 = executor.submit(set_ism_services, logger)
             e1p4 = executor.submit(set_yf_historical_data, config.YF_ETF_SERIES,logger)
-            e1p5 = executor.submit(set_10y_rates, logger)
-            e1p6 = executor.submit(set_2y_rates, logger)
-            e1p7 = executor.submit(set_country_credit_rating,logger)
-            e1p8 = executor.submit(set_us_treasury_yields,logger)
-            e1p9 = executor.submit(set_price_action_ta, df_tickers, logger)
-            e1p10 = executor.submit(set_financialmodelingprep_dcf, df_tickers, logger)
+            #e1p5 = executor.submit(set_10y_rates, logger)
+            #e1p6 = executor.submit(set_2y_rates, logger)
+            e1p5 = executor.submit(set_country_credit_rating,logger)
+            e1p6 = executor.submit(set_us_treasury_yields,logger)
+            e1p7 = executor.submit(set_price_action_ta, df_tickers, logger)
+            e1p8 = executor.submit(set_financialmodelingprep_dcf, df_tickers, logger)
 
-        methods = ['set_stlouisfed_data','set_ism_manufacturing','set_ism_services','set_yf_historical_data','set_10y_rates','set_2y_rates','set_country_credit_rating','set_us_treasury_yields','set_price_action_ta','set_financialmodelingprep_dcf']
+        methods = ['set_stlouisfed_data','set_ism_manufacturing','set_ism_services','set_yf_historical_data','set_country_credit_rating','set_us_treasury_yields','set_price_action_ta','set_financialmodelingprep_dcf']
 
         #import pdb; pdb.set_trace()
         calculate_annual_etf_performance_status = calculate_annual_etf_performance(df_historical_etf_data,logger)        
@@ -535,7 +535,7 @@ if option == 'Download Data':
         data = {'Executor':[],'Process':[],'Error':[],'Method':[]}
         df_result = pd.DataFrame(data)
         
-        for x in range(1,11):
+        for x in range(1,9):
             result = handle_exceptions_print_result(eval('e{0}p{1}'.format(int(executor_count), int(x))),int(executor_count), int(x), logger)
             temp_row = [executor_count,x,result,methods[x - 1]]
             df_result.loc[len(df_result.index)] = temp_row
