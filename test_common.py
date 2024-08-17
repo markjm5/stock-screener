@@ -6,7 +6,7 @@ from common import dataframe_convert_to_numeric, get_logger
 from common import set_earningswhispers_earnings_calendar, set_marketscreener_economic_calendar
 from common import set_whitehouse_news, set_geopolitical_calendar, set_yf_price_action, set_price_action_ta
 from common import set_todays_insider_trades, get_data, set_stlouisfed_data, set_yf_historical_data, calculate_etf_performance, calculate_annual_etf_performance
-from common import set_ism_manufacturing, set_summary_ratios, set_ta_pattern_stocks, set_10y_rates, set_2y_rates, temp_load_excel_data_to_db
+from common import set_ism_manufacturing, set_ism_services, set_summary_ratios, set_ta_pattern_stocks, set_10y_rates, set_2y_rates, temp_load_excel_data_to_db
 from common import calc_ir_metrics, set_country_credit_rating, set_us_treasury_yields, set_financialmodelingprep_dcf
 from datetime import date
 from config import YF_ETF_SERIES
@@ -128,6 +128,9 @@ class TestCommon(unittest.TestCase):
     def test_set_ism_manufacturing(self):
         self.assertEqual(set_ism_manufacturing(logger), True)
 
+    #def test_set_ism_services(self):
+    #    self.assertEqual(set_ism_services(logger), True)
+
     #def test_set_yf_historical_data(self):
     #    self.assertEqual(set_yf_historical_data(YF_ETF_SERIES, logger),True)
 
@@ -139,7 +142,7 @@ class TestCommon(unittest.TestCase):
 
     #def test_set_yf_price_action(self):
     #    self.assertEqual(set_yf_price_action(df_tickers_one_ticker, logger),True)
-        
+    
     #def test_set_earningswhispers_earnings_calendar(self):
     #    self.assertEqual(set_earningswhispers_earnings_calendar(df_tickers,logger),True)
 
@@ -161,10 +164,8 @@ class TestCommon(unittest.TestCase):
     #def test_set_whitehouse_news(self):
     #    self.assertEqual(set_whitehouse_news(logger),True)
     
-
     #def test_set_geopolitical_calendar(self):
     #    self.assertEqual(set_geopolitical_calendar(logger),True)
-
     
     #Executor 1
     #def test_set_zacks_balance_sheet_shares(self):

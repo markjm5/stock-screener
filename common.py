@@ -89,6 +89,7 @@ def get_page_selenium(url,wait_until_element_id=None, no_sandbox=False):
   chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows Phone 10.0; Android 4.2.1; Microsoft; Lumia 640 XL LTE) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Mobile Safari/537.36 Edge/12.10166")
   #try:
 
+# 1. pip install chromedriver_py --upgrade
   svc = webdriver.ChromeService(executable_path=binary_path)
   driver = webdriver.Chrome(service=svc, options=chrome_options)
   #driver = webdriver.Chrome(ChromeDriverManager().install())
@@ -3320,24 +3321,24 @@ def set_ism_manufacturing(logger):
   #TODO: Write to database
   rename_cols = {
     'DATE':'ism_date',                                          
-    'Apparel, Leather & Allied Products':'apparel_leather_allied_products',                      
-    'Chemical Products':'chemical_products',                                 
-    'Computer & Electronic Products':'computer_electronic_products',                           
-    'Electrical Equipment, Appliances & Components':'electrical_equipment_appliances_components',             
-    'Fabricated Metal Products':'fabricated_metal_products',                                 
-    'Food, Beverage & Tobacco Products':'food_beverage_tobacco_products',                        
-    'Furniture & Related Products':'furniture_related_products',                             
+    'Apparel,Leather&AlliedProducts':'apparel_leather_allied_products',                      
+    'ChemicalProducts':'chemical_products',                                 
+    'Computer&ElectronicProducts':'computer_electronic_products',                           
+    'ElectricalEquipment,Appliances&Components':'electrical_equipment_appliances_components',             
+    'FabricatedMetalProducts':'fabricated_metal_products',                                 
+    'Food,Beverage&TobaccoProducts':'food_beverage_tobacco_products',                        
+    'Furniture&RelatedProducts':'furniture_related_products',                             
     'Machinery':'machinery',                                               
-    'Miscellaneous Manufacturing':'miscellaneous_manufacturing',                              
-    'Nonmetallic Mineral Products':'nonmetallic_mineral_products',                              
-    'Paper Products':'paper_products',                                            
-    'Petroleum & Coal Products':'petroleum_coal_products',                                 
-    'Plastics & Rubber Products':'plastics_rubber_products',                                
-    'Primary Metals':'primary_metals',                                            
-    'Printing & Related Support Activities':'printing_related_support_activities',                     
-    'Textile Mills':'textile_mills',                                            
-    'Transportation Equipment':'transportation_equipment',                                  
-    'Wood Products':'wood_products'  
+    'MiscellaneousManufacturing':'miscellaneous_manufacturing',                              
+    'NonmetallicMineralProducts':'nonmetallic_mineral_products',                              
+    'PaperProducts':'paper_products',                                            
+    'Petroleum&CoalProducts':'petroleum_coal_products',                                 
+    'Plastics&RubberProducts':'plastics_rubber_products',                                
+    'PrimaryMetals':'primary_metals',                                            
+    'Printing&RelatedSupportActivities':'printing_related_support_activities',                     
+    'TextileMills':'textile_mills',                                            
+    'TransportationEquipment':'transportation_equipment',                                  
+    'WoodProducts':'wood_products'  
   }
   add_col_values = None
   conflict_cols = 'ism_date'
@@ -3452,20 +3453,30 @@ def extract_ism_manufacturing_rankings(industry_str, ism_date):
     ranking = len(increase_arr)
     index = 0
     for industry in increase_arr:
-        df_rankings[industry.lstrip()] = [ranking - index]      
+        industry = industry.replace(' ','')
+        #df_rankings[industry.lstrip()] = [ranking - index]      
+        df_rankings[industry] = [ranking - index]      
+
         index += 1
 
     ranking = len(decrease_arr)
     index = 0
     for industry in decrease_arr:
-        df_rankings[industry.lstrip()] = [0 - (ranking - index)]      
+        industry = industry.replace(' ','')
+        #df_rankings[industry.lstrip()] = [0 - (ranking - index)]      
+        df_rankings[industry] = [0 - (ranking - index)]      
         index += 1
 
     if(len(df_rankings.columns) < 18):
-        df_columns_18_industries = ['Machinery','Computer & Electronic Products','Paper Products','Apparel, Leather & Allied Products','Printing & Related Support Activities',
-                            'Primary Metals','Nonmetallic Mineral Products','Petroleum & Coal Products','Plastics & Rubber Products','Miscellaneous Manufacturing',
-                            'Food, Beverage & Tobacco Products','Furniture & Related Products','Transportation Equipment','Chemical Products','Fabricated Metal Products',
-                            'Electrical Equipment, Appliances & Components','Textile Mills','Wood Products']
+        #df_columns_18_industries = ['Machinery','Computer & Electronic Products','Paper Products','Apparel, Leather & Allied Products','Printing & Related Support Activities',
+        #                    'Primary Metals','Nonmetallic Mineral Products','Petroleum & Coal Products','Plastics & Rubber Products','Miscellaneous Manufacturing',
+        #                    'Food, Beverage & Tobacco Products','Furniture & Related Products','Transportation Equipment','Chemical Products','Fabricated Metal Products',
+        #                    'Electrical Equipment, Appliances & Components','Textile Mills','Wood Products']
+
+        df_columns_18_industries = ['Machinery','Computer&ElectronicProducts','PaperProducts','Apparel,Leather&AlliedProducts','Printing&RelatedSupportActivities',
+                            'PrimaryMetals','NonmetallicMineralProducts','Petroleum&CoalProducts','Plastics&RubberProducts','MiscellaneousManufacturing',
+                            'Food,Beverage&TobaccoProducts','Furniture&RelatedProducts','TransportationEquipment','ChemicalProducts','FabricatedMetalProducts',
+                            'ElectricalEquipment,Appliances&Components','TextileMills','WoodProducts']
 
         #Find out what columns are missing
         missing_columns = _util_check_diff_list(df_columns_18_industries,df_rankings.columns)
@@ -3482,24 +3493,24 @@ def extract_ism_manufacturing_rankings(industry_str, ism_date):
     cols = list(df_rankings)
     # move the column to head of list using index, pop and insert
     cols.insert(0, cols.pop(cols.index('DATE')))
-    cols.insert(1, cols.pop(cols.index('Apparel, Leather & Allied Products')))
+    cols.insert(1, cols.pop(cols.index('Apparel,Leather&AlliedProducts')))
     cols.insert(2, cols.pop(cols.index('Machinery')))
-    cols.insert(3, cols.pop(cols.index('Paper Products')))
-    cols.insert(4, cols.pop(cols.index('Computer & Electronic Products')))
-    cols.insert(5, cols.pop(cols.index('Petroleum & Coal Products')))
-    cols.insert(6, cols.pop(cols.index('Primary Metals')))
-    cols.insert(7, cols.pop(cols.index('Printing & Related Support Activities')))
-    cols.insert(8, cols.pop(cols.index('Furniture & Related Products')))
-    cols.insert(9, cols.pop(cols.index('Transportation Equipment')))
-    cols.insert(10, cols.pop(cols.index('Chemical Products')))
-    cols.insert(11, cols.pop(cols.index('Food, Beverage & Tobacco Products')))
-    cols.insert(12, cols.pop(cols.index('Miscellaneous Manufacturing')))
-    cols.insert(13, cols.pop(cols.index('Electrical Equipment, Appliances & Components')))
-    cols.insert(14, cols.pop(cols.index('Plastics & Rubber Products')))
-    cols.insert(15, cols.pop(cols.index('Fabricated Metal Products')))
-    cols.insert(16, cols.pop(cols.index('Wood Products')))
-    cols.insert(17, cols.pop(cols.index('Textile Mills')))
-    cols.insert(18, cols.pop(cols.index('Nonmetallic Mineral Products')))
+    cols.insert(3, cols.pop(cols.index('PaperProducts')))
+    cols.insert(4, cols.pop(cols.index('Computer&ElectronicProducts')))
+    cols.insert(5, cols.pop(cols.index('Petroleum&CoalProducts')))
+    cols.insert(6, cols.pop(cols.index('PrimaryMetals')))
+    cols.insert(7, cols.pop(cols.index('Printing&RelatedSupportActivities')))
+    cols.insert(8, cols.pop(cols.index('Furniture&RelatedProducts')))
+    cols.insert(9, cols.pop(cols.index('TransportationEquipment')))
+    cols.insert(10, cols.pop(cols.index('ChemicalProducts')))
+    cols.insert(11, cols.pop(cols.index('Food,Beverage&TobaccoProducts')))
+    cols.insert(12, cols.pop(cols.index('MiscellaneousManufacturing')))
+    cols.insert(13, cols.pop(cols.index('ElectricalEquipment,Appliances&Components')))
+    cols.insert(14, cols.pop(cols.index('Plastics&RubberProducts')))
+    cols.insert(15, cols.pop(cols.index('FabricatedMetalProducts')))
+    cols.insert(16, cols.pop(cols.index('WoodProducts')))
+    cols.insert(17, cols.pop(cols.index('TextileMills')))
+    cols.insert(18, cols.pop(cols.index('NonmetallicMineralProducts')))
 
     # reorder
     df_rankings = df_rankings[cols]
@@ -3587,12 +3598,17 @@ def set_ism_services(logger):
   success = False
   logger.info("Getting ISM Services")
   para_services, para_new_orders, para_business, ism_date, ism_month = scrape_services_new_orders_production()
-
   df_services_rankings = extract_ism_services_rankings(para_services, ism_date)
   df_business_rankings = extract_ism_services_rankings(para_business, ism_date)
   df_new_orders_rankings = extract_ism_services_rankings(para_new_orders, ism_date)
   df_ism_headline_index = scrape_ism_services_headline_index(ism_date, ism_month)
 
+  df_services_rankings.columns = df_services_rankings.columns.str.replace(' ', '')
+  df_business_rankings.columns = df_business_rankings.columns.str.replace(' ', '')
+  df_new_orders_rankings.columns = df_new_orders_rankings.columns.str.replace(' ', '')
+  df_ism_headline_index.columns = df_ism_headline_index.columns.str.replace(' ', '')
+
+  """
   rename_cols = {
       'DATE':'ism_date',
       'Arts, Entertainment & Recreation':'arts_entertainment_recreation',
@@ -3614,10 +3630,31 @@ def set_ism_services(logger):
       'Retail Trade':'retail_trade',
       'Utilities':'utilities',
   }
-
+  """
+  rename_cols = {
+      'DATE':'ism_date',
+      'Arts,Entertainment&Recreation':'arts_entertainment_recreation',
+      'OtherServices':'other_services',
+      'HealthCare&SocialAssistance':'health_care_social_assistance',
+      'Accommodation&FoodServices':'accommodation_food_services',
+      'Finance&Insurance':'finance_insurance',
+      'RealEstate,Rental&Leasing':'real_estate_rental_leasing',
+      'Transportation&Warehousing':'transportation_warehousing',
+      'Mining':'mining',
+      'Construction':'construction',
+      'WholesaleTrade':'wholesale_trade',
+      'PublicAdministration':'public_administration',
+      'Professional,Scientific&TechnicalServices':'professional_scientific_technical_services',
+      'Agriculture,Forestry,Fishing&Hunting':'agriculture_forestry_fishing_hunting',
+      'Information':'information',
+      'EducationalServices':'educational_services',
+      'ManagementofCompanies&SupportServices':'management_of_companies_support_services',
+      'RetailTrade':'retail_trade',
+      'Utilities':'utilities',
+  }
+  #import pdb; pdb.set_trace()
   add_col_values = None
   conflict_cols = 'ism_date'
-
   success = sql_write_df_to_db(df_services_rankings, "macro_us_ism_services_sectors", rename_cols, add_col_values, conflict_cols)
   success = sql_write_df_to_db(df_business_rankings, "macro_us_ism_services_business_activity", rename_cols, add_col_values, conflict_cols)
   success = sql_write_df_to_db(df_new_orders_rankings, "macro_us_ism_services_new_orders", rename_cols, add_col_values, conflict_cols)
@@ -3699,20 +3736,30 @@ def extract_ism_services_rankings(industry_str, ism_date):
     ranking = len(increase_arr)
     index = 0
     for industry in increase_arr:
-        df_rankings[industry.lstrip()] = [ranking - index]      
+        industry = industry.replace(' ','')        
+        #df_rankings[industry.lstrip()] = [ranking - index]      
+        df_rankings[industry] = [ranking - index]      
         index += 1
 
     ranking = len(decrease_arr)
     index = 0
     for industry in decrease_arr:
-        df_rankings[industry.lstrip()] = [0 - (ranking - index)]      
+        industry = industry.replace(' ','')
+        #df_rankings[industry.lstrip()] = [0 - (ranking - index)]      
+        df_rankings[industry] = [0 - (ranking - index)]      
         index += 1
 
     if(len(df_rankings.columns) < 18):
-        df_columns_18_industries = ['Utilities','Retail Trade','Arts, Entertainment & Recreation','Other Services','Health Care & Social Assistance','Accommodation & Food Services',
-                                    'Transportation & Warehousing','Finance & Insurance','Real Estate, Rental & Leasing','Public Administration','Agriculture, Forestry, Fishing & Hunting',
-                                    'Construction','Professional, Scientific & Technical Services','Wholesale Trade','Management of Companies & Support Services','Mining',
-                                    'Information','Educational Services']
+        #df_columns_18_industries = ['Utilities','Retail Trade','Arts, Entertainment & Recreation','Other Services','Health Care & Social Assistance','Accommodation & Food Services',
+        #                            'Transportation & Warehousing','Finance & Insurance','Real Estate, Rental & Leasing','Public Administration','Agriculture, Forestry, Fishing & Hunting',
+        #                            'Construction','Professional, Scientific & Technical Services','Wholesale Trade','Management of Companies & Support Services','Mining',
+        #                            'Information','Educational Services']
+
+        df_columns_18_industries = ['Utilities','RetailTrade','Arts,Entertainment&Recreation','OtherServices','HealthCare&SocialAssistance','Accommodation&FoodServices',
+                                    'Transportation&Warehousing','Finance&Insurance','RealEstate,Rental&Leasing','PublicAdministration','Agriculture,Forestry,Fishing&Hunting',
+                                    'Construction','Professional,Scientific&TechnicalServices','WholesaleTrade','ManagementofCompanies&SupportServices','Mining',
+                                    'Information','EducationalServices']
+
 
         #Find out what columns are missing
         missing_columns = _util_check_diff_list(df_columns_18_industries,df_rankings.columns)
@@ -3811,6 +3858,7 @@ def get_ism_services_content():
 
   ism_date, ism_month = get_ism_date(1)
   #url_ism = get_ism_services_url(ism_month)
+
   url_ism = 'https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/services/%s' % (ism_month.lower(),)
 
   #This is duplicate code found in get_page function but we need to handle special case of ism data where page may not be found and we need to switch to 1 month previous
@@ -3962,8 +4010,6 @@ def display_chart_assets(settings, df,x_axis,y_axis, tab, series2=None, col=None
 
 
 def display_chart_ism(settings, df,series, col=None):
-
-  #import pdb; pdb.set_trace()
 
   #TODO: Need to fix the following:
   # 1) Ticks on the x axis needs to reflect df values
@@ -4178,11 +4224,15 @@ def calc_ir_metrics(df):
   #3m
   rd = relativedelta(months=+3)
   last_3_months_date = last_date - rd
+
   df_last_3_months = util_return_date_values(df_series,last_3_months_date)
-  last_3_months_value = df_last_3_months[country].values[0]
-  # minus last price
-  last_3_months_value = decimal.Decimal(last_value) - decimal.Decimal(last_3_months_value)
-  last_3_months_value = round(last_3_months_value, 2)
+  try:
+    last_3_months_value = df_last_3_months[country].values[0]
+    # minus last price
+    last_3_months_value = decimal.Decimal(last_value) - decimal.Decimal(last_3_months_value)
+    last_3_months_value = round(last_3_months_value, 2)
+  except IndexError as e:
+     last_3_months_value = None
 
   #ytd   
   year_first_day = date(date.today().year, 1, 1)
